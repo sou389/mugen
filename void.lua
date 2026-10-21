@@ -1,7 +1,3 @@
--- ========================================================
--- 完全再現版 (Foxname UI Clone - 背景画像対応)
--- ========================================================
-
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
@@ -27,47 +23,45 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- ★背景イラスト (ロリ系アニメ画像)★
+-- 背景イラスト
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
--- Roblox内のアニメ調女の子イラストID
 BackgroundImage.Image = "rbxassetid://17384785064" 
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.Parent = MainFrame
 
--- 画像を暗く・紫にするオーバーレイ（文字を見やすくする）
+-- 半透明の紫フィルター
 local Overlay = Instance.new("Frame")
 Overlay.Size = UDim2.new(1, 0, 1, 0)
 Overlay.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-Overlay.BackgroundTransparency = 0.5
+Overlay.BackgroundTransparency = 0.4
 Overlay.BorderSizePixel = 0
 Overlay.Parent = MainFrame
 
-local UIGradient = Instance.new("UIGradient")
-UIGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 60, 160)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 20, 80))
-}
-UIGradient.Transparency = NumberSequence.new{
-    NumberSequenceKeypoint.new(0, 0.2),
-    NumberSequenceKeypoint.new(1, 0.6)
-}
-UIGradient.Rotation = 45
-UIGradient.Parent = Overlay
-
 local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(150, 100, 255)
-UIStroke.Thickness = 2
-UIStroke.Transparency = 0.2
+UIStroke.Color = Color3.fromRGB(180, 130, 255)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.4
 UIStroke.Parent = MainFrame
 
+-- ==========================================
 -- ヘッダー
+-- ==========================================
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
 Header.Parent = MainFrame
+
+-- 左上アイコン (雪だるまっぽい画像)
+local TopIcon = Instance.new("ImageLabel")
+TopIcon.Size = UDim2.new(0, 35, 0, 35)
+TopIcon.Position = UDim2.new(0, 15, 0, 8)
+TopIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TopIcon.Image = "rbxassetid://17384785064"
+TopIcon.Parent = Header
+Instance.new("UICorner", TopIcon).CornerRadius = UDim.new(1, 0)
 
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(0, 250, 1, 0)
@@ -91,16 +85,6 @@ SubTitle.Font = Enum.Font.Gotham
 SubTitle.TextXAlignment = Enum.TextXAlignment.Left
 SubTitle.Parent = Header
 
--- ヘッダー左のアイコン
-local HeaderIcon = Instance.new("ImageLabel")
-HeaderIcon.Size = UDim2.new(0, 35, 0, 35)
-HeaderIcon.Position = UDim2.new(0, 15, 0, 8)
-HeaderIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-HeaderIcon.Parent = Header
-Instance.new("UICorner", HeaderIcon).CornerRadius = UDim.new(1, 0)
-HeaderIcon.Image = "rbxassetid://17384785064" -- 仮のアイコン
-
--- Keyless バッジ
 local KeylessBadge = Instance.new("TextLabel")
 KeylessBadge.Size = UDim2.new(0, 80, 0, 25)
 KeylessBadge.Position = UDim2.new(0, 230, 0, 12)
@@ -112,7 +96,6 @@ KeylessBadge.Font = Enum.Font.GothamBold
 KeylessBadge.Parent = Header
 Instance.new("UICorner", KeylessBadge).CornerRadius = UDim.new(0, 5)
 
--- ウィンドウ操作ボタン
 local function createWindowButton(text, posX, color)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 30, 0, 30)
@@ -120,49 +103,73 @@ local function createWindowButton(text, posX, color)
     btn.BackgroundTransparency = 1
     btn.Text = text
     btn.TextColor3 = color
-    btn.TextSize = 20
+    btn.TextSize = 18
     btn.Font = Enum.Font.GothamBold
     btn.Parent = Header
     btn.MouseButton1Click:Connect(function() if text == "X" then ScreenGui:Destroy() end end)
 end
 createWindowButton("-", -100, Color3.fromRGB(200, 200, 200))
-createWindowButton("[ ]", -60, Color3.fromRGB(200, 200, 200))
+createWindowButton("[]", -60, Color3.fromRGB(200, 200, 200))
 createWindowButton("X", -20, Color3.fromRGB(200, 100, 255))
 
--- サイドバー
+-- ==========================================
+-- サイドバー (アイコン付き)
+-- ==========================================
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 150, 1, -50)
 Sidebar.Position = UDim2.new(0, 0, 0, 50)
 Sidebar.BackgroundTransparency = 1
 Sidebar.Parent = MainFrame
 
-local menuItems = {"Home", "Discord", "New Update", "Donate", "Features", "Main", "Misc"}
-for i, itemName in ipairs(menuItems) do
+-- メニュー項目（アイコンはRobloxの標準テクスチャや絵文字で代用）
+local menuItems = {
+    {"Home", "⭐"},
+    {"Discord", "💬"},
+    {"New Update", "⚡"},
+    {"Donate", "💖"},
+    {"Features", "🎁"},
+    {"Main", "⚙️"},
+    {"Misc", "🔮"}
+}
+
+for i, item in ipairs(menuItems) do
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -20, 0, 35)
     btn.Position = UDim2.new(0, 20, 0, i * 35)
     btn.BackgroundTransparency = 1
-    btn.Text = "  " .. itemName 
-    btn.TextColor3 = Color3.fromRGB(200, 200, 220)
-    btn.TextSize = 16
-    btn.Font = Enum.Font.Gotham
-    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Text = ""
     btn.Parent = Sidebar
     
-    -- 小さなアイコン風の点
-    local icon = Instance.new("Frame")
-    icon.Size = UDim2.new(0, 12, 0, 12)
-    icon.Position = UDim2.new(0, 0, 0.5, -6)
-    icon.BackgroundColor3 = Color3.fromRGB(200, 150, 255)
-    icon.BackgroundTransparency = 0.3
-    icon.Parent = btn
-    Instance.new("UICorner", icon).CornerRadius = UDim.new(0, 3)
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 20, 0, 20)
+    iconLabel.Position = UDim2.new(0, 0, 0.5, -10)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = item[2]
+    iconLabel.TextSize = 16
+    iconLabel.Parent = btn
 
-    btn.MouseEnter:Connect(function() btn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
-    btn.MouseLeave:Connect(function() btn.TextColor3 = Color3.fromRGB(200, 200, 220) end)
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, -30, 1, 0)
+    textLabel.Position = UDim2.new(0, 30, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = item[1]
+    textLabel.TextColor3 = Color3.fromRGB(220, 220, 240)
+    textLabel.TextSize = 16
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Parent = btn
+
+    btn.MouseEnter:Connect(function() 
+        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    btn.MouseLeave:Connect(function() 
+        textLabel.TextColor3 = Color3.fromRGB(220, 220, 240)
+    end)
 end
 
--- 中央コンテンツ (Developer など)
+-- ==========================================
+-- 中央コンテンツ
+-- ==========================================
 local Content = Instance.new("Frame")
 Content.Size = UDim2.new(1, -170, 1, -60)
 Content.Position = UDim2.new(0, 160, 0, 50)
@@ -179,6 +186,7 @@ DevTitle.TextSize = 24
 DevTitle.Font = Enum.Font.GothamBold
 DevTitle.Parent = Content
 
+-- Cao Mod
 local CaoModFrame = Instance.new("Frame")
 CaoModFrame.Size = UDim2.new(1, -20, 0, 60)
 CaoModFrame.Position = UDim2.new(0, 10, 0, 60)
@@ -191,7 +199,7 @@ CaoModIcon.Position = UDim2.new(0, 0, 0.5, -20)
 CaoModIcon.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 CaoModIcon.Parent = CaoModFrame
 Instance.new("UICorner", CaoModIcon).CornerRadius = UDim.new(1, 0)
-CaoModIcon.Image = "rbxassetid://17384785064" -- 仮のアイコン
+CaoModIcon.Image = "rbxassetid://17384785064"
 
 local CaoModTitle = Instance.new("TextLabel")
 CaoModTitle.Size = UDim2.new(1, -50, 0, 20)
@@ -215,7 +223,33 @@ CaoModDesc.Font = Enum.Font.Gotham
 CaoModDesc.TextXAlignment = Enum.TextXAlignment.Left
 CaoModDesc.Parent = CaoModFrame
 
--- 下部のテキスト
+-- Foxname
+local FoxnameFrame = Instance.new("Frame")
+FoxnameFrame.Size = UDim2.new(1, -20, 0, 60)
+FoxnameFrame.Position = UDim2.new(0, 10, 0, 140)
+FoxnameFrame.BackgroundTransparency = 1
+FoxnameFrame.Parent = Content
+
+local FoxnameIcon = Instance.new("ImageLabel")
+FoxnameIcon.Size = UDim2.new(0, 40, 0, 40)
+FoxnameIcon.Position = UDim2.new(0, 0, 0.5, -20)
+FoxnameIcon.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+FoxnameIcon.Parent = FoxnameFrame
+Instance.new("UICorner", FoxnameIcon).CornerRadius = UDim.new(1, 0)
+FoxnameIcon.Image = "rbxassetid://17384785064"
+
+local FoxnameTitle = Instance.new("TextLabel")
+FoxnameTitle.Size = UDim2.new(1, -50, 0, 20)
+FoxnameTitle.Position = UDim2.new(0, 50, 0, 5)
+FoxnameTitle.BackgroundTransparency = 1
+FoxnameTitle.Text = "Foxname"
+FoxnameTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+FoxnameTitle.TextSize = 18
+FoxnameTitle.Font = Enum.Font.GothamBold
+FoxnameTitle.TextXAlignment = Enum.TextXAlignment.Left
+FoxnameTitle.Parent = FoxnameFrame
+
+-- フッター
 local Footer = Instance.new("Frame")
 Footer.Size = UDim2.new(1, -20, 0, 60)
 Footer.Position = UDim2.new(0, 10, 1, -80)
@@ -245,9 +279,8 @@ FooterDesc.TextXAlignment = Enum.TextXAlignment.Left
 FooterDesc.TextYAlignment = Enum.TextYAlignment.Top
 FooterDesc.Parent = Footer
 
--- ドラッグ移動
-local dragging = false
-local dragInput, dragStart, startPos
+-- ドラッグ
+local dragging, dragInput, dragStart, startPos
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
