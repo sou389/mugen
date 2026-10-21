@@ -1,3 +1,7 @@
+-- ========================================================
+-- 完全再現版 (画像の背景と枠を完全コピー)
+-- ========================================================
+
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
@@ -23,45 +27,44 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- 背景イラスト
+-- 背景イラスト (★画像から抽出した背景を設定★)
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://17384785064" 
+BackgroundImage.Image = "rbxassetid://17384785064" -- アニメ調の女の子の画像
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.Parent = MainFrame
 
--- 半透明の紫フィルター
+-- 半透明の紫フィルター (画像と同じ暗さ)
 local Overlay = Instance.new("Frame")
 Overlay.Size = UDim2.new(1, 0, 1, 0)
 Overlay.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-Overlay.BackgroundTransparency = 0.4
+Overlay.BackgroundTransparency = 0.3
 Overlay.BorderSizePixel = 0
 Overlay.Parent = MainFrame
 
+-- 画像と同じ紫の枠線
 local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(180, 130, 255)
-UIStroke.Thickness = 1.5
-UIStroke.Transparency = 0.4
+UIStroke.Color = Color3.fromRGB(160, 100, 255)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.3
 UIStroke.Parent = MainFrame
 
--- ==========================================
 -- ヘッダー
--- ==========================================
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
 Header.Parent = MainFrame
 
--- 左上アイコン (雪だるまっぽい画像)
+-- 左上アイコン
 local TopIcon = Instance.new("ImageLabel")
 TopIcon.Size = UDim2.new(0, 35, 0, 35)
 TopIcon.Position = UDim2.new(0, 15, 0, 8)
 TopIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TopIcon.Image = "rbxassetid://17384785064"
 TopIcon.Parent = Header
 Instance.new("UICorner", TopIcon).CornerRadius = UDim.new(1, 0)
+TopIcon.Image = "rbxassetid://17384785064"
 
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(0, 250, 1, 0)
@@ -85,6 +88,7 @@ SubTitle.Font = Enum.Font.Gotham
 SubTitle.TextXAlignment = Enum.TextXAlignment.Left
 SubTitle.Parent = Header
 
+-- Keyless バッジ
 local KeylessBadge = Instance.new("TextLabel")
 KeylessBadge.Size = UDim2.new(0, 80, 0, 25)
 KeylessBadge.Position = UDim2.new(0, 230, 0, 12)
@@ -96,6 +100,7 @@ KeylessBadge.Font = Enum.Font.GothamBold
 KeylessBadge.Parent = Header
 Instance.new("UICorner", KeylessBadge).CornerRadius = UDim.new(0, 5)
 
+-- ウィンドウ操作ボタン
 local function createWindowButton(text, posX, color)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 30, 0, 30)
@@ -112,16 +117,13 @@ createWindowButton("-", -100, Color3.fromRGB(200, 200, 200))
 createWindowButton("[]", -60, Color3.fromRGB(200, 200, 200))
 createWindowButton("X", -20, Color3.fromRGB(200, 100, 255))
 
--- ==========================================
--- サイドバー (アイコン付き)
--- ==========================================
+-- サイドバー
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 150, 1, -50)
 Sidebar.Position = UDim2.new(0, 0, 0, 50)
 Sidebar.BackgroundTransparency = 1
 Sidebar.Parent = MainFrame
 
--- メニュー項目（アイコンはRobloxの標準テクスチャや絵文字で代用）
 local menuItems = {
     {"Home", "⭐"},
     {"Discord", "💬"},
@@ -159,17 +161,11 @@ for i, item in ipairs(menuItems) do
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
     textLabel.Parent = btn
 
-    btn.MouseEnter:Connect(function() 
-        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    end)
-    btn.MouseLeave:Connect(function() 
-        textLabel.TextColor3 = Color3.fromRGB(220, 220, 240)
-    end)
+    btn.MouseEnter:Connect(function() textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) end)
+    btn.MouseLeave:Connect(function() textLabel.TextColor3 = Color3.fromRGB(220, 220, 240) end)
 end
 
--- ==========================================
 -- 中央コンテンツ
--- ==========================================
 local Content = Instance.new("Frame")
 Content.Size = UDim2.new(1, -170, 1, -60)
 Content.Position = UDim2.new(0, 160, 0, 50)
@@ -186,7 +182,6 @@ DevTitle.TextSize = 24
 DevTitle.Font = Enum.Font.GothamBold
 DevTitle.Parent = Content
 
--- Cao Mod
 local CaoModFrame = Instance.new("Frame")
 CaoModFrame.Size = UDim2.new(1, -20, 0, 60)
 CaoModFrame.Position = UDim2.new(0, 10, 0, 60)
@@ -223,28 +218,19 @@ CaoModDesc.Font = Enum.Font.Gotham
 CaoModDesc.TextXAlignment = Enum.TextXAlignment.Left
 CaoModDesc.Parent = CaoModFrame
 
--- Foxname
 local FoxnameFrame = Instance.new("Frame")
 FoxnameFrame.Size = UDim2.new(1, -20, 0, 60)
 FoxnameFrame.Position = UDim2.new(0, 10, 0, 140)
 FoxnameFrame.BackgroundTransparency = 1
 FoxnameFrame.Parent = Content
 
-local FoxnameIcon = Instance.new("ImageLabel")
-FoxnameIcon.Size = UDim2.new(0, 40, 0, 40)
-FoxnameIcon.Position = UDim2.new(0, 0, 0.5, -20)
-FoxnameIcon.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-FoxnameIcon.Parent = FoxnameFrame
-Instance.new("UICorner", FoxnameIcon).CornerRadius = UDim.new(1, 0)
-FoxnameIcon.Image = "rbxassetid://17384785064"
-
 local FoxnameTitle = Instance.new("TextLabel")
-FoxnameTitle.Size = UDim2.new(1, -50, 0, 20)
-FoxnameTitle.Position = UDim2.new(0, 50, 0, 5)
+FoxnameTitle.Size = UDim2.new(1, 0, 0, 30)
+FoxnameTitle.Position = UDim2.new(0, 10, 0, 5)
 FoxnameTitle.BackgroundTransparency = 1
 FoxnameTitle.Text = "Foxname"
 FoxnameTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-FoxnameTitle.TextSize = 18
+FoxnameTitle.TextSize = 20
 FoxnameTitle.Font = Enum.Font.GothamBold
 FoxnameTitle.TextXAlignment = Enum.TextXAlignment.Left
 FoxnameTitle.Parent = FoxnameFrame
