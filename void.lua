@@ -1,194 +1,253 @@
 -- ========================================================
--- [void] Ultimate Hub - Main Loader
+-- 完全再現版 (Foxname UI Clone - 背景画像対応)
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
-local old = CoreGui:FindFirstChild("VoidUltimateHub")
-if old then old:Destroy() end
+local oldUI = CoreGui:FindFirstChild("FoxnameUI")
+if oldUI then oldUI:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VoidUltimateHub"
+ScreenGui.Name = "FoxnameUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- メインフレーム（グラスモーフィズム）
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 600, 0, 380)
+-- メインフレーム
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 600, 0, 350)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
-MainFrame.BackgroundTransparency = 0.2
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+MainFrame.Parent = ScreenGui
 
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Color3.fromRGB(150, 100, 255)
-MainStroke.Thickness = 2
-MainStroke.Transparency = 0.2
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
 
--- 背景画像（少し暗めに）
-local BackgroundImage = Instance.new("ImageLabel", MainFrame)
+-- ★背景イラスト (ロリ系アニメ画像)★
+local BackgroundImage = Instance.new("ImageLabel")
+BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://10154837654" 
+-- Roblox内のアニメ調女の子イラストID
+BackgroundImage.Image = "rbxassetid://17384785064" 
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ImageTransparency = 0.6
+BackgroundImage.Parent = MainFrame
 
--- グラデーションオーバーレイ
-local GradientOverlay = Instance.new("Frame", MainFrame)
-GradientOverlay.Size = UDim2.new(1, 0, 1, 0)
-GradientOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-GradientOverlay.BackgroundTransparency = 1
-local UIGradient = Instance.new("UIGradient", GradientOverlay)
-UIGradient.Color = ColorSequence.new(Color3.fromRGB(60, 30, 120), Color3.fromRGB(10, 5, 20))
+-- 画像を暗く・紫にするオーバーレイ（文字を見やすくする）
+local Overlay = Instance.new("Frame")
+Overlay.Size = UDim2.new(1, 0, 1, 0)
+Overlay.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
+Overlay.BackgroundTransparency = 0.5
+Overlay.BorderSizePixel = 0
+Overlay.Parent = MainFrame
+
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 60, 160)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 20, 80))
+}
+UIGradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.2),
+    NumberSequenceKeypoint.new(1, 0.6)
+}
 UIGradient.Rotation = 45
+UIGradient.Parent = Overlay
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(150, 100, 255)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.2
+UIStroke.Parent = MainFrame
 
 -- ヘッダー
-local Header = Instance.new("Frame", MainFrame)
-Header.Size = UDim2.new(1, 0, 0, 55)
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
+Header.Parent = MainFrame
 
-local Title = Instance.new("TextLabel", Header)
+local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(0, 250, 1, 0)
-Title.Position = UDim2.new(0, 25, 0, -2)
+Title.Position = UDim2.new(0, 55, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "void | ULTIMATE"
+Title.Text = "Foxname - Steal An Egg"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 20
-Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.TextStrokeTransparency = 1
+Title.Parent = Header
 
-local SubTitle = Instance.new("TextLabel", Header)
+local SubTitle = Instance.new("TextLabel")
 SubTitle.Size = UDim2.new(0, 200, 1, 0)
-SubTitle.Position = UDim2.new(0, 25, 0, 18)
+SubTitle.Position = UDim2.new(0, 55, 0, 15)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Premium Script Hub"
-SubTitle.TextColor3 = Color3.fromRGB(180, 160, 220)
+SubTitle.Text = "foxname.top"
+SubTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
 SubTitle.TextSize = 12
 SubTitle.Font = Enum.Font.Gotham
 SubTitle.TextXAlignment = Enum.TextXAlignment.Left
-SubTitle.TextStrokeTransparency = 1
+SubTitle.Parent = Header
 
--- 閉じるボタン
-local CloseBtn = Instance.new("TextButton", Header)
-CloseBtn.Size = UDim2.new(0, 35, 0, 35)
-CloseBtn.Position = UDim2.new(1, -45, 0, 10)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-CloseBtn.BackgroundTransparency = 1
-CloseBtn.Text = "✕"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-CloseBtn.TextSize = 22
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextStrokeTransparency = 1
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
+-- ヘッダー左のアイコン
+local HeaderIcon = Instance.new("ImageLabel")
+HeaderIcon.Size = UDim2.new(0, 35, 0, 35)
+HeaderIcon.Position = UDim2.new(0, 15, 0, 8)
+HeaderIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+HeaderIcon.Parent = Header
+Instance.new("UICorner", HeaderIcon).CornerRadius = UDim.new(1, 0)
+HeaderIcon.Image = "rbxassetid://17384785064" -- 仮のアイコン
 
--- 左側サイドバー
-local Sidebar = Instance.new("Frame", MainFrame)
-Sidebar.Size = UDim2.new(0, 160, 1, -55)
-Sidebar.Position = UDim2.new(0, 0, 0, 55)
-Sidebar.BackgroundTransparency = 1
+-- Keyless バッジ
+local KeylessBadge = Instance.new("TextLabel")
+KeylessBadge.Size = UDim2.new(0, 80, 0, 25)
+KeylessBadge.Position = UDim2.new(0, 230, 0, 12)
+KeylessBadge.BackgroundColor3 = Color3.fromRGB(50, 120, 255)
+KeylessBadge.Text = "Keyless"
+KeylessBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeylessBadge.TextSize = 14
+KeylessBadge.Font = Enum.Font.GothamBold
+KeylessBadge.Parent = Header
+Instance.new("UICorner", KeylessBadge).CornerRadius = UDim.new(0, 5)
 
--- ========================================================
--- タブ切り替えシステム
--- ========================================================
-local ContentContainer = Instance.new("Frame", MainFrame)
-ContentContainer.Size = UDim2.new(1, -160, 1, -55)
-ContentContainer.Position = UDim2.new(0, 160, 0, 55)
-ContentContainer.BackgroundTransparency = 1
-
-local CurrentTab = nil
-local TabButtons = {}
-
-local function CreateTab(name, displayName)
-    -- タブボタン作成
-    local btn = Instance.new("TextButton", Sidebar)
-    btn.Size = UDim2.new(1, -20, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, (#TabButtons * 45) + 10)
-    btn.BackgroundColor3 = Color3.fromRGB(40, 30, 60)
-    btn.BackgroundTransparency = 0.5
-    btn.Text = "  " .. displayName
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.TextSize = 15
+-- ウィンドウ操作ボタン
+local function createWindowButton(text, posX, color)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 30, 0, 30)
+    btn.Position = UDim2.new(1, posX, 0, 10)
+    btn.BackgroundTransparency = 1
+    btn.Text = text
+    btn.TextColor3 = color
+    btn.TextSize = 20
     btn.Font = Enum.Font.GothamBold
+    btn.Parent = Header
+    btn.MouseButton1Click:Connect(function() if text == "X" then ScreenGui:Destroy() end end)
+end
+createWindowButton("-", -100, Color3.fromRGB(200, 200, 200))
+createWindowButton("[ ]", -60, Color3.fromRGB(200, 200, 200))
+createWindowButton("X", -20, Color3.fromRGB(200, 100, 255))
+
+-- サイドバー
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 150, 1, -50)
+Sidebar.Position = UDim2.new(0, 0, 0, 50)
+Sidebar.BackgroundTransparency = 1
+Sidebar.Parent = MainFrame
+
+local menuItems = {"Home", "Discord", "New Update", "Donate", "Features", "Main", "Misc"}
+for i, itemName in ipairs(menuItems) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.Position = UDim2.new(0, 20, 0, i * 35)
+    btn.BackgroundTransparency = 1
+    btn.Text = "  " .. itemName 
+    btn.TextColor3 = Color3.fromRGB(200, 200, 220)
+    btn.TextSize = 16
+    btn.Font = Enum.Font.Gotham
     btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.TextStrokeTransparency = 1
-    btn.AutoButtonColor = false
+    btn.Parent = Sidebar
+    
+    -- 小さなアイコン風の点
+    local icon = Instance.new("Frame")
+    icon.Size = UDim2.new(0, 12, 0, 12)
+    icon.Position = UDim2.new(0, 0, 0.5, -6)
+    icon.BackgroundColor3 = Color3.fromRGB(200, 150, 255)
+    icon.BackgroundTransparency = 0.3
+    icon.Parent = btn
+    Instance.new("UICorner", icon).CornerRadius = UDim.new(0, 3)
 
-    local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0, 6)
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = Color3.fromRGB(100, 80, 150)
-    stroke.Thickness = 1.5
-    stroke.Transparency = 0.5
-
-    -- タブの中身を入れるフレーム
-    local page = Instance.new("Frame", ContentContainer)
-    page.Size = UDim2.new(1, -20, 1, -20)
-    page.Position = UDim2.new(0, 10, 0, 10)
-    page.BackgroundTransparency = 1
-    page.Visible = false
-
-    -- ボタンクリック時の処理
-    btn.MouseButton1Click:Connect(function()
-        for _, p in ipairs(ContentContainer:GetChildren()) do
-            if p:IsA("Frame") then p.Visible = false end
-        end
-        for _, b in ipairs(Sidebar:GetChildren()) do
-            if b:IsA("TextButton") then
-                TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
-            end
-        end
-        page.Visible = true
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1, TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-        CurrentTab = name
-    end)
-
-    table.insert(TabButtons, btn)
-    return page
+    btn.MouseEnter:Connect(function() btn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
+    btn.MouseLeave:Connect(function() btn.TextColor3 = Color3.fromRGB(200, 200, 220) end)
 end
 
--- タブの生成
-local HomeTab = CreateTab("Home", "🏠 Home")
-local PlayerTab = CreateTab("Player", "👤 Player")
-local VisualTab = CreateTab("Visuals", "👁️ Visuals")
-local MiscTab = CreateTab("Misc", "⚙️ Misc")
+-- 中央コンテンツ (Developer など)
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, -170, 1, -60)
+Content.Position = UDim2.new(0, 160, 0, 50)
+Content.BackgroundTransparency = 1
+Content.Parent = MainFrame
 
--- 初期タブを開く
-TabButtons[1].MouseButton1Click:Fire()
+local DevTitle = Instance.new("TextLabel")
+DevTitle.Size = UDim2.new(1, 0, 0, 40)
+DevTitle.Position = UDim2.new(0, 0, 0, 10)
+DevTitle.BackgroundTransparency = 1
+DevTitle.Text = "Developer"
+DevTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+DevTitle.TextSize = 24
+DevTitle.Font = Enum.Font.GothamBold
+DevTitle.Parent = Content
 
--- 左下プロフィールアイコン
-local PlayerIcon = Instance.new("ImageLabel", MainFrame)
-PlayerIcon.Size = UDim2.new(0, 45, 0, 45)
-PlayerIcon.Position = UDim2.new(0, 15, 1, -60)
-PlayerIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-PlayerIcon.BorderSizePixel = 0
-Instance.new("UICorner", PlayerIcon).CornerRadius = UDim.new(1, 0)
+local CaoModFrame = Instance.new("Frame")
+CaoModFrame.Size = UDim2.new(1, -20, 0, 60)
+CaoModFrame.Position = UDim2.new(0, 10, 0, 60)
+CaoModFrame.BackgroundTransparency = 1
+CaoModFrame.Parent = Content
 
-local iconStroke = Instance.new("UIStroke", PlayerIcon)
-iconStroke.Color = Color3.fromRGB(150, 100, 255)
-iconStroke.Thickness = 2
+local CaoModIcon = Instance.new("ImageLabel")
+CaoModIcon.Size = UDim2.new(0, 40, 0, 40)
+CaoModIcon.Position = UDim2.new(0, 0, 0.5, -20)
+CaoModIcon.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+CaoModIcon.Parent = CaoModFrame
+Instance.new("UICorner", CaoModIcon).CornerRadius = UDim.new(1, 0)
+CaoModIcon.Image = "rbxassetid://17384785064" -- 仮のアイコン
 
-local player = Players.LocalPlayer
-local function updateIcon()
-    if player then
-        local content, isReady = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-        if content then PlayerIcon.Image = content end
-    end
-end
-updateIcon()
-player.CharacterAdded:Connect(function() task.wait(1) updateIcon() end)
+local CaoModTitle = Instance.new("TextLabel")
+CaoModTitle.Size = UDim2.new(1, -50, 0, 20)
+CaoModTitle.Position = UDim2.new(0, 50, 0, 5)
+CaoModTitle.BackgroundTransparency = 1
+CaoModTitle.Text = "Cao Mod"
+CaoModTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+CaoModTitle.TextSize = 18
+CaoModTitle.Font = Enum.Font.GothamBold
+CaoModTitle.TextXAlignment = Enum.TextXAlignment.Left
+CaoModTitle.Parent = CaoModFrame
 
--- ドラッグ機能
-local dragging, dragInput, dragStart, startPos
+local CaoModDesc = Instance.new("TextLabel")
+CaoModDesc.Size = UDim2.new(1, -50, 0, 20)
+CaoModDesc.Position = UDim2.new(0, 50, 0, 30)
+CaoModDesc.BackgroundTransparency = 1
+CaoModDesc.Text = "Script Developer & Owner"
+CaoModDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
+CaoModDesc.TextSize = 14
+CaoModDesc.Font = Enum.Font.Gotham
+CaoModDesc.TextXAlignment = Enum.TextXAlignment.Left
+CaoModDesc.Parent = CaoModFrame
+
+-- 下部のテキスト
+local Footer = Instance.new("Frame")
+Footer.Size = UDim2.new(1, -20, 0, 60)
+Footer.Position = UDim2.new(0, 10, 1, -80)
+Footer.BackgroundTransparency = 1
+Footer.Parent = Content
+
+local FooterTitle = Instance.new("TextLabel")
+FooterTitle.Size = UDim2.new(1, 0, 0, 20)
+FooterTitle.BackgroundTransparency = 1
+FooterTitle.Text = "Community unavailable"
+FooterTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+FooterTitle.TextSize = 16
+FooterTitle.Font = Enum.Font.GothamBold
+FooterTitle.TextXAlignment = Enum.TextXAlignment.Left
+FooterTitle.Parent = Footer
+
+local FooterDesc = Instance.new("TextLabel")
+FooterDesc.Size = UDim2.new(1, 0, 0, 40)
+FooterDesc.Position = UDim2.new(0, 0, 0, 20)
+FooterDesc.BackgroundTransparency = 1
+FooterDesc.Text = "Discord did not return server information.\nUse Refresh stats to try again."
+FooterDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
+FooterDesc.TextSize = 13
+FooterDesc.Font = Enum.Font.Gotham
+FooterDesc.TextWrapped = true
+FooterDesc.TextXAlignment = Enum.TextXAlignment.Left
+FooterDesc.TextYAlignment = Enum.TextYAlignment.Top
+FooterDesc.Parent = Footer
+
+-- ドラッグ移動
+local dragging = false
+local dragInput, dragStart, startPos
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
@@ -207,391 +266,4 @@ UserInputService.InputChanged:Connect(function(input)
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-end)
-
--- UIの登場アニメーション
-MainFrame.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 600, 0, 380)}):Play()
-
--- ここから下に各タブの機能を追加していく
--- (※実際の機能は「パート2」のスクリプトで追加します)
--- ========================================================
--- [void] Ultimate Hub - Part 2 (Functions & Interactions)
--- ========================================================
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-local plr = Players.LocalPlayer
-
------------------------------------------------------------
--- 1. 機能パーツ作成用の便利関数
------------------------------------------------------------
-local function CreateToggle(parent, text, default, callback)
-    local ToggleFrame = Instance.new("Frame", parent)
-    ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
-    ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 50)
-    ToggleFrame.BackgroundTransparency = 0.5
-    Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
-    
-    local Label = Instance.new("TextLabel", ToggleFrame)
-    Label.Size = UDim2.new(1, -60, 1, 0)
-    Label.Position = UDim2.new(0, 10, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.TextSize = 14
-    Label.Font = Enum.Font.Gotham
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.TextStrokeTransparency = 1
-
-    local ToggleBtn = Instance.new("TextButton", ToggleFrame)
-    ToggleBtn.Size = UDim2.new(0, 40, 0, 20)
-    ToggleBtn.Position = UDim2.new(1, -50, 0.5, -10)
-    ToggleBtn.BackgroundColor3 = default and Color3.fromRGB(100, 50, 200) or Color3.fromRGB(50, 50, 50)
-    ToggleBtn.Text = ""
-    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-    
-    local Circle = Instance.new("Frame", ToggleBtn)
-    Circle.Size = UDim2.new(0, 16, 0, 16)
-    Circle.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-    Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
-
-    local isActive = default
-
-    ToggleBtn.MouseButton1Click:Connect(function()
-        isActive = not isActive
-        game:GetService("TweenService"):Create(ToggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = isActive and Color3.fromRGB(100, 50, 200) or Color3.fromRGB(50, 50, 50)}):Play()
-        game:GetService("TweenService"):Create(Circle, TweenInfo.new(0.2), {Position = isActive and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}):Play()
-        if callback then callback(isActive) end
-    end)
-    return ToggleFrame
-end
-
-local function CreateButton(parent, text, callback)
-    local Btn = Instance.new("TextButton", parent)
-    Btn.Size = UDim2.new(1, 0, 0, 35)
-    Btn.BackgroundColor3 = Color3.fromRGB(40, 30, 70)
-    Btn.BackgroundTransparency = 0.4
-    Btn.Text = text
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.TextSize = 14
-    Btn.Font = Enum.Font.GothamBold
-    Btn.TextStrokeTransparency = 1
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-    local stroke = Instance.new("UIStroke", Btn)
-    stroke.Color = Color3.fromRGB(100, 80, 150)
-    
-    Btn.MouseEnter:Connect(function() game:GetService("TweenService"):Create(Btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play() end)
-    Btn.MouseLeave:Connect(function() game:GetService("TweenService"):Create(Btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play() end)
-    
-    Btn.MouseButton1Click:Connect(function()
-        Btn.BackgroundColor3 = Color3.fromRGB(150, 100, 250)
-        task.wait(0.1)
-        Btn.BackgroundColor3 = Color3.fromRGB(40, 30, 70)
-        if callback then callback() end
-    end)
-    return Btn
-end
-
--- レイアウト用のリストレイアウト
-local function ApplyListLayout(parent)
-    local layout = Instance.new("UIListLayout", parent)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 10)
-end
-
-ApplyListLayout(HomeTab)
-ApplyListLayout(PlayerTab)
-ApplyListLayout(VisualTab)
-ApplyListLayout(MiscTab)
-
------------------------------------------------------------
--- 2. Homeタブ（ウェルカム画面）
------------------------------------------------------------
-local welcomeText = Instance.new("TextLabel", HomeTab)
-welcomeText.Size = UDim2.new(1, 0, 0, 50)
-welcomeText.BackgroundTransparency = 1
-welcomeText.Text = "Welcome to void Hub, " .. plr.Name .. "!"
-welcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
-welcomeText.TextSize = 20
-welcomeText.Font = Enum.Font.GothamBold
-welcomeText.TextXAlignment = Enum.TextXAlignment.Left
-welcomeText.TextStrokeTransparency = 1
-
-local updateText = Instance.new("TextLabel", HomeTab)
-updateText.Size = UDim2.new(1, 0, 0, 40)
-updateText.BackgroundTransparency = 1
-updateText.Text = "Status: Undetected | Version: 4.0 Ultimate"
-updateText.TextColor3 = Color3.fromRGB(180, 255, 180)
-updateText.TextSize = 14
-updateText.Font = Enum.Font.Gotham
-updateText.TextXAlignment = Enum.TextXAlignment.Left
-updateText.TextStrokeTransparency = 1
-
------------------------------------------------------------
--- 3. Playerタブ（キャラクター強化）
------------------------------------------------------------
-local walkSpeedToggle = CreateToggle(PlayerTab, "Speed Hack (WalkSpeed 100)", false, function(state)
-    local char = plr.Character or plr.CharacterAdded:Wait()
-    local hum = char:WaitForChild("Humanoid")
-    hum.WalkSpeed = state and 100 or 16
-end)
-plr.CharacterAdded:Connect(function(char) -- リスポーン時に適用
-    local hum = char:WaitForChild("Humanoid")
-    if walkSpeedToggle:FindFirstChild("TextButton").BackgroundColor3 == Color3.fromRGB(100, 50, 200) then
-        hum.WalkSpeed = 100
-    end
-end)
-
-local jumpPowerToggle = CreateToggle(PlayerTab, "Jump Hack (JumpPower 150)", false, function(state)
-    local char = plr.Character or plr.CharacterAdded:Wait()
-    local hum = char:WaitForChild("Humanoid")
-    if state then
-        hum.UseJumpPower = true
-        hum.JumpPower = 150
-    else
-        hum.JumpPower = 50
-    end
-end)
-
-local infJumpToggle = CreateToggle(PlayerTab, "Infinite Jump", false)
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if infJumpToggle:FindFirstChild("TextButton").BackgroundColor3 == Color3.fromRGB(100, 50, 200) then
-        local char = plr.Character
-        if char and char:FindFirstChildOfClass("Humanoid") then
-            char.Humanoid:ChangeState("Jumping")
-        end
-    end
-end)
-
------------------------------------------------------------
--- 4. Visualsタブ（視覚エフェクト）
------------------------------------------------------------
-local fullbrightToggle = CreateToggle(VisualTab, "Fullbright (Clear Fog)", false, function(state)
-    local lighting = game:GetService("Lighting")
-    if state then
-        lighting.Brightness = 5
-        lighting.FogEnd = 100000
-    else
-        lighting.Brightness = 2
-        lighting.FogEnd = 1000
-    end
-end)
-
-local espToggle = CreateToggle(VisualTab, "Player ESP (Highlight)", false, function(state)
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= plr and p.Character then
-            if state then
-                local hl = Instance.new("Highlight", p.Character)
-                hl.Name = "VoidESP"
-                hl.FillColor = Color3.fromRGB(255, 0, 0)
-                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-            else
-                local hl = p.Character:FindFirstChild("VoidESP")
-                if hl then hl:Destroy() end
-            end
-        end
-    end
-end)
-
------------------------------------------------------------
--- 5. Miscタブ（その他のヤバい機能）
------------------------------------------------------------
-local flyToggle = CreateToggle(MiscTab, "Fly Hack (E to Fly)", false)
-local flying = false
-local bv, bg
-
-flyToggle:FindFirstChild("TextButton").MouseButton1Click:Connect(function()
-    local char = plr.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    flying = flyToggle:FindFirstChild("TextButton").BackgroundColor3 == Color3.fromRGB(100, 50, 200)
-    
-    if flying then
-        bv = Instance.new("BodyVelocity", hrp)
-        bv.Name = "VoidFly"
-        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-        bv.Velocity = Vector3.new(0,0,0)
-        
-        bg = Instance.new("BodyGyro", hrp)
-        bg.Name = "VoidFlyGyro"
-        bg.P = 1000
-        bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-        bg.CFrame = hrp.CFrame
-    else
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if flying and bv and bg then
-        local char = plr.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        
-        local moveDir = game:GetService("UserInputService"):GetMoveVector()
-        local camCFrame = workspace.CurrentCamera.CFrame
-        
-        if moveDir.Magnitude > 0 then
-            bv.Velocity = (camCFrame.LookVector * -moveDir.Z + camCFrame.RightVector * moveDir.X) * 100
-        else
-            bv.Velocity = Vector3.new(0,0,0)
-        end
-        
-        bg.CFrame = camCFrame
-    end
-end)
-
-local antiAfkBtn = CreateButton(MiscTab, "Anti-AFK (Prevent Kick)", function()
-    local VirtualUser = game:GetService("VirtualUser")
-    plr.Idled:Connect(function()
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
-    end)
-    antiAfkBtn.Text = "Anti-AFK Activated!"
-    task.wait(2)
-    antiAfkBtn.Text = "Anti-AFK (Prevent Kick)"
-end)
--- ========================================================
--- [void] Ultimate Hub - Part 3: The Cheats
--- ========================================================
-
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-local VirtualUser = game:GetService("VirtualUser")
-local plr = game:GetService("Players").LocalPlayer
-
--- Homeタブ
-local welcomeText = Instance.new("TextLabel", _G.HomeTab)
-welcomeText.Size = UDim2.new(1, 0, 0, 50)
-welcomeText.BackgroundTransparency = 1
-welcomeText.Text = "Welcome to void Hub, " .. plr.Name .. "!"
-welcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
-welcomeText.TextSize = 20
-welcomeText.Font = Enum.Font.GothamBold
-welcomeText.TextXAlignment = Enum.TextXAlignment.Left
-welcomeText.TextStrokeTransparency = 1
-
-local updateText = Instance.new("TextLabel", _G.HomeTab)
-updateText.Size = UDim2.new(1, 0, 0, 40)
-updateText.BackgroundTransparency = 1
-updateText.Text = "Status: Undetected | Version: 4.0 Ultimate"
-updateText.TextColor3 = Color3.fromRGB(180, 255, 180)
-updateText.TextSize = 14
-updateText.Font = Enum.Font.Gotham
-updateText.TextXAlignment = Enum.TextXAlignment.Left
-updateText.TextStrokeTransparency = 1
-
--- Playerタブ
-local walkSpeedToggle = CreateToggle(_G.PlayerTab, "Speed Hack (WalkSpeed 100)", false, function(state)
-    local char = plr.Character or plr.CharacterAdded:Wait()
-    local hum = char:WaitForChild("Humanoid")
-    hum.WalkSpeed = state and 100 or 16
-end)
-
-local jumpPowerToggle = CreateToggle(_G.PlayerTab, "Jump Hack (JumpPower 150)", false, function(state)
-    local char = plr.Character or plr.CharacterAdded:Wait()
-    local hum = char:WaitForChild("Humanoid")
-    if state then
-        hum.UseJumpPower = true
-        hum.JumpPower = 150
-    else
-        hum.JumpPower = 50
-    end
-end)
-
-local infJumpToggle = CreateToggle(_G.PlayerTab, "Infinite Jump", false)
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if infJumpToggle:FindFirstChild("TextButton").BackgroundColor3 == Color3.fromRGB(100, 50, 200) then
-        local char = plr.Character
-        if char and char:FindFirstChildOfClass("Humanoid") then
-            char.Humanoid:ChangeState("Jumping")
-        end
-    end
-end)
-
--- Visualsタブ
-local fullbrightToggle = CreateToggle(_G.VisualTab, "Fullbright (Clear Fog)", false, function(state)
-    if state then
-        Lighting.Brightness = 5
-        Lighting.FogEnd = 100000
-    else
-        Lighting.Brightness = 2
-        Lighting.FogEnd = 1000
-    end
-end)
-
-local espToggle = CreateToggle(_G.VisualTab, "Player ESP (Highlight)", false, function(state)
-    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= plr and p.Character then
-            if state then
-                local hl = Instance.new("Highlight", p.Character)
-                hl.Name = "VoidESP"
-                hl.FillColor = Color3.fromRGB(255, 0, 0)
-                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-            else
-                local hl = p.Character:FindFirstChild("VoidESP")
-                if hl then hl:Destroy() end
-            end
-        end
-    end
-end)
-
--- Miscタブ
-local flying = false
-local bv, bg
-local flyToggle = CreateToggle(_G.MiscTab, "Fly Hack (Camera Direction)", false, function(state)
-    flying = state
-    local char = plr.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    if flying then
-        bv = Instance.new("BodyVelocity", hrp)
-        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-        bv.Velocity = Vector3.new(0,0,0)
-        bg = Instance.new("BodyGyro", hrp)
-        bg.P = 1000
-        bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-        bg.CFrame = hrp.CFrame
-    else
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if flying and bv and bg then
-        local char = plr.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        
-        local moveDir = game:GetService("UserInputService"):GetMoveVector()
-        local camCFrame = workspace.CurrentCamera.CFrame
-        
-        if moveDir.Magnitude > 0 then
-            bv.Velocity = (camCFrame.LookVector * -moveDir.Z + camCFrame.RightVector * moveDir.X) * 100
-        else
-            bv.Velocity = Vector3.new(0,0,0)
-        end
-        bg.CFrame = camCFrame
-    end
-end)
-
-local antiAfkBtn = CreateButton(_G.MiscTab, "Anti-AFK (Prevent Kick)", function()
-    plr.Idled:Connect(function()
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
-    end)
-    antiAfkBtn.Text = "Anti-AFK Activated!"
-    task.wait(2)
-    antiAfkBtn.Text = "Anti-AFK (Prevent Kick)"
 end)
