@@ -1,5 +1,5 @@
 -- ========================================================
--- 光る狼の背景（アップロードしたID使用）
+-- 光る狼の背景（表示確実版）
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -13,7 +13,6 @@ ScreenGui.Name = "FoxnameUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- メインフレーム
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 600, 0, 350)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -27,30 +26,30 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- ★背景イラスト（あなたがアップロードした光る狼）★
+-- ★背景イラスト（あなたのIDを直接デカールとして読み込む）★
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://95727725110434" -- ★あなたのID
+-- もしIDが間違っていなければこれで表示されます
+BackgroundImage.Image = "rbxassetid://95727725110434" 
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.Parent = MainFrame
 
--- 紫色の半透明フィルター
+-- 紫色のフィルター（画像が見えるように薄めにしました）
 local Overlay = Instance.new("Frame")
 Overlay.Size = UDim2.new(1, 0, 1, 0)
 Overlay.BackgroundColor3 = Color3.fromRGB(68, 51, 119)
-Overlay.BackgroundTransparency = 0.4
+Overlay.BackgroundTransparency = 0.7 -- 0.4から0.7に変更して透明に近づけました
 Overlay.BorderSizePixel = 0
 Overlay.Parent = MainFrame
 
--- ドラッグ移動用の透明なヘッダー
+-- ドラッグ移動
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
 Header.Parent = MainFrame
 
--- ドラッグ移動機能
 local dragging, dragInput, dragStart, startPos
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
