@@ -1,5 +1,5 @@
 -- ========================================================
--- 透過背景 + 女の子イラスト
+-- 背景イラスト + 半透明の紫板（完全版）
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -27,16 +27,17 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- ★背景イラスト★
+-- ★背景イラスト（画像の女の子）★
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://17384785064" -- アニメ調の女の子の画像
+-- 青色の髪の毛の女の子の画像ID
+BackgroundImage.Image = "rbxassetid://13288523209" 
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.Parent = MainFrame
 
--- 半透明の紫フィルター (文字や枠線は一切なし)
+-- 半透明の紫フィルター
 local Overlay = Instance.new("Frame")
 Overlay.Size = UDim2.new(1, 0, 1, 0)
 Overlay.BackgroundColor3 = Color3.fromRGB(68, 51, 119)
