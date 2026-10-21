@@ -1,227 +1,154 @@
--- ========================================================
--- void UI (Steal An Egg Clone / 背景画像対応版)
--- ========================================================
-
+-- 光る狼の背景 + void UI
 local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
+local old = CoreGui:FindFirstChild("VoidUI")
+if old then old:Destroy() end
 
-local oldUI = CoreGui:FindFirstChild("voidUI")
-if oldUI then oldUI:Destroy() end
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "voidUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
+local sg = Instance.new("ScreenGui")
+sg.Name = "VoidUI"
+sg.Parent = CoreGui
 
 -- メインフレーム
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 600, 0, 350)
-MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-MainFrame.BorderSizePixel = 0
-MainFrame.ClipsDescendants = true
-MainFrame.Parent = ScreenGui
+local main = Instance.new("Frame", sg)
+main.Size = UDim2.new(0, 550, 0, 320)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
+-- 光る狼の背景画像 (Roblox内の似た画像を指定)
+local bg = Instance.new("ImageLabel", main)
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundTransparency = 1
+bg.Image = "rbxassetid://10154837654" -- 光る狼/エフェクト系の画像ID
+bg.ScaleType = Enum.ScaleType.Crop
 
--- ★★★ 背景イラスト（画像IDを変更可能） ★★★
-local BackgroundImage = Instance.new("ImageLabel")
-BackgroundImage.Name = "BackgroundImage"
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://13185982376" -- アニメ風の仮画像
-BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.Parent = MainFrame
+-- 紫の半透明オーバーレイ
+local ov = Instance.new("Frame", main)
+ov.Size = UDim2.new(1, 0, 1, 0)
+ov.BackgroundColor3 = Color3.fromRGB(70, 40, 150)
+ov.BackgroundTransparency = 0.5
+ov.BorderSizePixel = 0
 
--- 紫のグラデーションオーバーレイ
-local Overlay = Instance.new("Frame")
-Overlay.Size = UDim2.new(1, 0, 1, 0)
-Overlay.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-Overlay.BackgroundTransparency = 0.4
-Overlay.BorderSizePixel = 0
-Overlay.Parent = MainFrame
+local grad = Instance.new("UIGradient", ov)
+grad.Color = ColorSequence.new(Color3.fromRGB(100, 50, 200), Color3.fromRGB(30, 10, 60))
+grad.Rotation = 45
 
-local UIGradient = Instance.new("UIGradient")
-UIGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 60, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 20, 80))
-}
-UIGradient.Transparency = NumberSequence.new{
-    NumberSequenceKeypoint.new(0, 0.2),
-    NumberSequenceKeypoint.new(1, 0.6)
-}
-UIGradient.Rotation = 45
-UIGradient.Parent = Overlay
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(200, 150, 255)
-UIStroke.Thickness = 2
-UIStroke.Transparency = 0.4
-UIStroke.Parent = MainFrame
+-- 枠線
+local stroke = Instance.new("UIStroke", main)
+stroke.Color = Color3.fromRGB(180, 130, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.3
 
 -- ヘッダー
-local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 50)
-Header.BackgroundTransparency = 1
-Header.Parent = MainFrame
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 50)
+header.BackgroundTransparency = 1
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(0, 250, 1, 0)
-Title.Position = UDim2.new(0, 70, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "void - Steal An Egg"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 18
-Title.Font = Enum.Font.GothamBold
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = Header
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(0, 250, 1, 0)
+title.Position = UDim2.new(0, 20, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "void - Steal An Egg"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(0, 200, 1, 0)
-SubTitle.Position = UDim2.new(0, 70, 0, 15)
-SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "void.top"
-SubTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
-SubTitle.TextSize = 12
-SubTitle.Font = Enum.Font.Gotham
-SubTitle.TextXAlignment = Enum.TextXAlignment.Left
-SubTitle.Parent = Header
+local keyless = Instance.new("TextLabel", header)
+keyless.Size = UDim2.new(0, 70, 0, 25)
+keyless.Position = UDim2.new(0, 230, 0, 12)
+keyless.BackgroundColor3 = Color3.fromRGB(60, 130, 255)
+keyless.Text = "Keyless"
+keyless.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyless.TextSize = 13
+keyless.Font = Enum.Font.GothamBold
+Instance.new("UICorner", keyless).CornerRadius = UDim.new(0, 5)
 
-local KeylessBadge = Instance.new("TextLabel")
-KeylessBadge.Size = UDim2.new(0, 80, 0, 25)
-KeylessBadge.Position = UDim2.new(0, 280, 0, 12)
-KeylessBadge.BackgroundColor3 = Color3.fromRGB(50, 120, 255)
-KeylessBadge.Text = "Keyless"
-KeylessBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeylessBadge.TextSize = 14
-KeylessBadge.Font = Enum.Font.GothamBold
-KeylessBadge.Parent = Header
-
-local BadgeCorner = Instance.new("UICorner")
-BadgeCorner.CornerRadius = UDim.new(0, 5)
-BadgeCorner.Parent = KeylessBadge
-
-local function createWindowButton(text, posX, color)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 30, 0, 30)
-    btn.Position = UDim2.new(1, posX, 0, 10)
-    btn.BackgroundTransparency = 1
-    btn.Text = text
-    btn.TextColor3 = color
-    btn.TextSize = 20
-    btn.Font = Enum.Font.GothamBold
-    btn.Parent = Header
-    btn.MouseButton1Click:Connect(function()
-        if text == "X" then ScreenGui:Destroy() end
-    end)
-end
-createWindowButton("-", -100, Color3.fromRGB(200, 200, 200))
-createWindowButton("[ ]", -60, Color3.fromRGB(200, 200, 200))
-createWindowButton("X", -20, Color3.fromRGB(255, 100, 100))
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -40, 0, 10)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+closeBtn.TextSize = 20
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
 -- サイドバー
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 150, 1, -50)
-Sidebar.Position = UDim2.new(0, 0, 0, 50)
-Sidebar.BackgroundTransparency = 1
-Sidebar.Parent = MainFrame
+local side = Instance.new("Frame", main)
+side.Size = UDim2.new(0, 140, 1, -50)
+side.Position = UDim2.new(0, 0, 0, 50)
+side.BackgroundTransparency = 1
 
-local menuItems = {"Home", "Discord", "New Update", "Donate", "Features", "Main", "Misc"}
-for i, itemName in ipairs(menuItems) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 35)
-    btn.Position = UDim2.new(0, 20, 0, i * 35)
+local items = {"Home", "Discord", "New Update", "Donate", "Features", "Main", "Misc"}
+for i, name in ipairs(items) do
+    local btn = Instance.new("TextButton", side)
+    btn.Size = UDim2.new(1, -20, 0, 30)
+    btn.Position = UDim2.new(0, 20, 0, i * 32)
     btn.BackgroundTransparency = 1
-    btn.Text = "  " .. itemName 
-    btn.TextColor3 = Color3.fromRGB(200, 200, 220)
-    btn.TextSize = 16
+    btn.Text = "  " .. name
+    btn.TextColor3 = Color3.fromRGB(210, 210, 230)
+    btn.TextSize = 15
     btn.Font = Enum.Font.Gotham
     btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Parent = Sidebar
-    
-    local icon = Instance.new("Frame")
-    icon.Size = UDim2.new(0, 15, 0, 15)
-    icon.Position = UDim2.new(0, 0, 0.5, -7.5)
-    icon.BackgroundColor3 = Color3.fromRGB(200, 150, 255)
-    icon.BackgroundTransparency = 0.5
-    icon.Parent = btn
-    local c = Instance.new("UICorner", icon)
-    c.CornerRadius = UDim.new(0, 3)
-
-    btn.MouseEnter:Connect(function() btn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
-    btn.MouseLeave:Connect(function() btn.TextColor3 = Color3.fromRGB(200, 200, 220) end)
 end
 
 -- 中央コンテンツ
-local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -170, 1, -60)
-Content.Position = UDim2.new(0, 160, 0, 50)
-Content.BackgroundTransparency = 1
-Content.Parent = MainFrame
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1, -160, 1, -60)
+content.Position = UDim2.new(0, 150, 0, 50)
+content.BackgroundTransparency = 1
 
-local DevTitle = Instance.new("TextLabel")
-DevTitle.Size = UDim2.new(1, 0, 0, 40)
-DevTitle.Position = UDim2.new(0, 0, 0, 10)
-DevTitle.BackgroundTransparency = 1
-DevTitle.Text = "Developer"
-DevTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-DevTitle.TextSize = 24
-DevTitle.Font = Enum.Font.GothamBold
-DevTitle.Parent = Content
+local devTitle = Instance.new("TextLabel", content)
+devTitle.Size = UDim2.new(1, 0, 0, 30)
+devTitle.Position = UDim2.new(0, 0, 0, 10)
+devTitle.BackgroundTransparency = 1
+devTitle.Text = "Developer"
+devTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+devTitle.TextSize = 22
+devTitle.Font = Enum.Font.GothamBold
+devTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local VoidFrame = Instance.new("Frame")
-VoidFrame.Size = UDim2.new(1, -20, 0, 60)
-VoidFrame.Position = UDim2.new(0, 10, 0, 60)
-VoidFrame.BackgroundTransparency = 1
-VoidFrame.Parent = Content
+local voidName = Instance.new("TextLabel", content)
+voidName.Size = UDim2.new(1, 0, 0, 20)
+voidName.Position = UDim2.new(0, 0, 0, 50)
+voidName.BackgroundTransparency = 1
+voidName.Text = "void"
+voidName.TextColor3 = Color3.fromRGB(255, 255, 255)
+voidName.TextSize = 18
+voidName.Font = Enum.Font.GothamBold
+voidName.TextXAlignment = Enum.TextXAlignment.Left
 
-local VoidTitle = Instance.new("TextLabel")
-VoidTitle.Size = UDim2.new(1, -50, 0, 20)
-VoidTitle.Position = UDim2.new(0, 0, 0, 5)
-VoidTitle.BackgroundTransparency = 1
-VoidTitle.Text = "void"
-VoidTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-VoidTitle.TextSize = 18
-VoidTitle.Font = Enum.Font.GothamBold
-VoidTitle.TextXAlignment = Enum.TextXAlignment.Left
-VoidTitle.Parent = VoidFrame
+local voidDesc = Instance.new("TextLabel", content)
+voidDesc.Size = UDim2.new(1, 0, 0, 20)
+voidDesc.Position = UDim2.new(0, 0, 0, 75)
+voidDesc.BackgroundTransparency = 1
+voidDesc.Text = "Script Developer & Owner"
+voidDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
+voidDesc.TextSize = 14
+voidDesc.Font = Enum.Font.Gotham
+voidDesc.TextXAlignment = Enum.TextXAlignment.Left
 
-local VoidDesc = Instance.new("TextLabel")
-VoidDesc.Size = UDim2.new(1, -50, 0, 20)
-VoidDesc.Position = UDim2.new(0, 0, 0, 30)
-VoidDesc.BackgroundTransparency = 1
-VoidDesc.Text = "Script Developer & Owner"
-VoidDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
-VoidDesc.TextSize = 14
-VoidDesc.Font = Enum.Font.Gotham
-VoidDesc.TextXAlignment = Enum.TextXAlignment.Left
-VoidDesc.Parent = VoidFrame
-
--- ドラッグ移動
+-- ドラッグ機能
 local dragging = false
-local dragInput, dragStart, startPos
-
-Header.InputBegan:Connect(function(input)
+local dragStart, startPos
+header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
-        startPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
+        startPos = main.Position
     end
 end)
-Header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
+header.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
     end
 end)
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement or dragging and input.UserInputType == Enum.UserInputType.Touch then
         local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
