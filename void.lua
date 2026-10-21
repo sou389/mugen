@@ -1,5 +1,5 @@
 -- ========================================================
--- 光る狼の背景（表示確実版）
+-- 光る狼の背景（新しく取得したID使用）
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -26,21 +26,20 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- ★背景イラスト（あなたのIDを直接デカールとして読み込む）★
+-- ★背景イラスト（新しく撮ったID）★
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
--- もしIDが間違っていなければこれで表示されます
-BackgroundImage.Image = "rbxassetid://95727725110434" 
+BackgroundImage.Image = "rbxassetid://139788179908291" -- ★新しいID
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.Parent = MainFrame
 
--- 紫色のフィルター（画像が見えるように薄めにしました）
+-- 紫色のフィルター（画像が見えるように透明に近くしました）
 local Overlay = Instance.new("Frame")
 Overlay.Size = UDim2.new(1, 0, 1, 0)
 Overlay.BackgroundColor3 = Color3.fromRGB(68, 51, 119)
-Overlay.BackgroundTransparency = 0.7 -- 0.4から0.7に変更して透明に近づけました
+Overlay.BackgroundTransparency = 0.8
 Overlay.BorderSizePixel = 0
 Overlay.Parent = MainFrame
 
