@@ -1,10 +1,9 @@
 -- ========================================================
--- Foxname UI (最小化・復元機能付き)
+-- Foxname UI (最小化ボタン名変更・文字維持版)
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
 local oldUI = CoreGui:FindFirstChild("FoxnameUI")
 if oldUI then oldUI:Destroy() end
@@ -14,9 +13,7 @@ ScreenGui.Name = "FoxnameUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- ==========================================
--- メインフレーム
--- ==========================================
+-- メインフレーム (UI全体)
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 600, 0, 350)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -65,9 +62,7 @@ UIStroke.Thickness = 2
 UIStroke.Transparency = 0.2
 UIStroke.Parent = MainFrame
 
--- ==========================================
 -- ヘッダー
--- ==========================================
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
@@ -114,19 +109,17 @@ KeylessBadge.Font = Enum.Font.GothamBold
 KeylessBadge.Parent = Header
 Instance.new("UICorner", KeylessBadge).CornerRadius = UDim.new(0, 5)
 
--- ==========================================
--- 画面を閉じる用の「void」ボタン（最初は非表示）
--- ==========================================
+-- 画面を閉じる用の「Viod」ボタン
 local VoidToggleButton = Instance.new("TextButton")
 VoidToggleButton.Size = UDim2.new(0, 80, 0, 30)
-VoidToggleButton.Position = UDim2.new(0.5, 0, 0, 10) -- 画面上部中央
+VoidToggleButton.Position = UDim2.new(0.5, 0, 0, 10) 
 VoidToggleButton.AnchorPoint = Vector2.new(0.5, 0)
 VoidToggleButton.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-VoidToggleButton.Text = "void"
+VoidToggleButton.Text = "Viod" -- 文字をViodに変更
 VoidToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 VoidToggleButton.Font = Enum.Font.GothamBold
 VoidToggleButton.TextSize = 16
-VoidToggleButton.Visible = false -- 最初は隠しておく
+VoidToggleButton.Visible = false
 VoidToggleButton.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
@@ -152,7 +145,6 @@ local function createWindowButton(text, posX, color)
     
     btn.MouseButton1Click:Connect(function()
         if text == "X" then
-            -- UIを隠して「void」ボタンを表示
             MainFrame.Visible = false
             VoidToggleButton.Visible = true
         end
@@ -162,15 +154,14 @@ createWindowButton("-", -100, Color3.fromRGB(200, 200, 200))
 createWindowButton("[ ]", -60, Color3.fromRGB(200, 200, 200))
 createWindowButton("X", -20, Color3.fromRGB(200, 100, 255))
 
--- 「void」ボタンを押した時の処理
+-- 「Viod」ボタンを押した時の処理（UIを戻す）
 VoidToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true -- UIを再表示
-    VoidToggleButton.Visible = false -- 「void」ボタンを隠す
+    MainFrame.Visible = true
+    VoidToggleButton.Visible = false
+    -- 文字はそのまま維持されるので、ここで何も変更する必要はありません
 end)
 
--- ==========================================
 -- サイドバー
--- ==========================================
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 150, 1, -50)
 Sidebar.Position = UDim2.new(0, 0, 0, 50)
@@ -202,9 +193,7 @@ for i, itemName in ipairs(menuItems) do
     btn.MouseLeave:Connect(function() btn.TextColor3 = Color3.fromRGB(200, 200, 220) end)
 end
 
--- ==========================================
 -- 中央コンテンツ
--- ==========================================
 local Content = Instance.new("Frame")
 Content.Size = UDim2.new(1, -170, 1, -60)
 Content.Position = UDim2.new(0, 160, 0, 50)
@@ -303,9 +292,7 @@ FooterDesc.TextXAlignment = Enum.TextXAlignment.Left
 FooterDesc.TextYAlignment = Enum.TextYAlignment.Top
 FooterDesc.Parent = Footer
 
--- ==========================================
 -- ドラッグ移動
--- ==========================================
 local dragging, dragInput, dragStart, startPos
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
