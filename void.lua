@@ -1,5 +1,5 @@
 -- ========================================================
--- void UI (枠 ＆ クリック反応 完全修正版)
+-- void UI (枠くっきり＆押せるボタン完全修正版)
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -25,14 +25,14 @@ main.BorderSizePixel = 0
 main.ClipsDescendants = true
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
--- 背景画像
+-- 背景画像（光る狼）
 local bg = Instance.new("ImageLabel", main)
 bg.Size = UDim2.new(1, 0, 1, 0)
 bg.BackgroundTransparency = 1
 bg.Image = "rbxassetid://10154837654" 
 bg.ScaleType = Enum.ScaleType.Crop
 
--- オーバーレイ
+-- 紫の半透明オーバーレイ
 local ov = Instance.new("Frame", main)
 ov.Size = UDim2.new(1, 0, 1, 0)
 ov.BackgroundColor3 = Color3.fromRGB(70, 40, 150)
@@ -84,7 +84,7 @@ closeBtn.Font = Enum.Font.GothamBold
 closeBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
 -- ========================================================
--- サイドバー（枠とボタン）
+-- サイドバー（押せるボタン・くっきりした枠）
 -- ========================================================
 local side = Instance.new("Frame", main)
 side.Size = UDim2.new(0, 140, 1, -50)
@@ -92,43 +92,47 @@ side.Position = UDim2.new(0, 0, 0, 50)
 side.BackgroundTransparency = 1
 
 local items = {"Home", "Player"}
+
 for i, name in ipairs(items) do
-    -- 押せるボタン
+    -- 押せるボタン本体（黒っぽい半透明）
     local btn = Instance.new("TextButton", side)
-    btn.Size = UDim2.new(1, -20, 0, 35)
-    btn.Position = UDim2.new(0, 10, 0, (i * 45) - 10) 
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- 白
-    btn.BackgroundTransparency = 0.85 -- かなり透明にする
+    btn.Size = UDim2.new(1, -20, 0, 40) -- 少し大きめに
+    btn.Position = UDim2.new(0, 10, 0, (i * 50) - 10) 
+    btn.BackgroundColor3 = Color3.fromRGB(20, 10, 40) -- 濃い紫/黒
+    btn.BackgroundTransparency = 0.3
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 16
     btn.Font = Enum.Font.GothamBold
-    btn.AutoButtonColor = false -- デフォルトの押し込みアニメをオフにして自作する
+    btn.AutoButtonColor = false -- デフォルトの押し込みをオフ
 
     -- 角を丸くする
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 6)
 
-    -- 見やすい白い枠線
+    -- くっきりした白い枠線
     local btnStroke = Instance.new("UIStroke", btn)
     btnStroke.Color = Color3.fromRGB(255, 255, 255)
-    btnStroke.Thickness = 1.5
-    btnStroke.Transparency = 0.2
+    btnStroke.Thickness = 2
+    btnStroke.Transparency = 0.1
 
     -- 押した時・ホバー時の処理
     btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.6}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
     end)
     btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.85}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play()
     end)
+    
+    -- クリック時の処理（一瞬赤くなる）
     btn.MouseButton1Click:Connect(function()
-        -- 押した時のアニメーション（一瞬白く光る）
-        TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundTransparency = 0.3}):Play()
-        task.wait(0.1)
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.6}):Play()
+        -- 赤色に変える
+        btn.BackgroundColor3 = Color3.fromRGB(150, 50, 50) 
+        task.wait(0.15)
+        -- 元の色に戻す
+        btn.BackgroundColor3 = Color3.fromRGB(20, 10, 40)
         
-        print(name .. " が押されました")
+        print(name .. " が押されました！")
     end)
 end
 
