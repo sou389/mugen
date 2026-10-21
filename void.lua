@@ -1,5 +1,5 @@
 -- ========================================================
--- 完全再現版 (画像の背景と枠を完全コピー)
+-- Foxname UI (UIパーツのみ完全再現・背景なし)
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -13,12 +13,13 @@ ScreenGui.Name = "FoxnameUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- メインフレーム
+-- メインフレーム (紫の半透明の板)
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 600, 0, 350)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.BackgroundColor3 = Color3.fromRGB(60, 40, 100) -- 紫色
+MainFrame.BackgroundTransparency = 0.4 -- 透け感
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
@@ -27,44 +28,26 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- 背景イラスト (★画像から抽出した背景を設定★)
-local BackgroundImage = Instance.new("ImageLabel")
-BackgroundImage.Name = "BackgroundImage"
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://17384785064" -- アニメ調の女の子の画像
-BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.Parent = MainFrame
-
--- 半透明の紫フィルター (画像と同じ暗さ)
-local Overlay = Instance.new("Frame")
-Overlay.Size = UDim2.new(1, 0, 1, 0)
-Overlay.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-Overlay.BackgroundTransparency = 0.3
-Overlay.BorderSizePixel = 0
-Overlay.Parent = MainFrame
-
--- 画像と同じ紫の枠線
+-- 紫の枠線
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Color = Color3.fromRGB(160, 100, 255)
-UIStroke.Thickness = 2
-UIStroke.Transparency = 0.3
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.2
 UIStroke.Parent = MainFrame
 
--- ヘッダー
+-- ヘッダー部分
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
 Header.Parent = MainFrame
 
--- 左上アイコン
-local TopIcon = Instance.new("ImageLabel")
+-- 左上アイコン(仮)
+local TopIcon = Instance.new("Frame")
 TopIcon.Size = UDim2.new(0, 35, 0, 35)
 TopIcon.Position = UDim2.new(0, 15, 0, 8)
-TopIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TopIcon.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 TopIcon.Parent = Header
 Instance.new("UICorner", TopIcon).CornerRadius = UDim.new(1, 0)
-TopIcon.Image = "rbxassetid://17384785064"
 
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(0, 250, 1, 0)
@@ -180,6 +163,7 @@ DevTitle.Text = "Developer"
 DevTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 DevTitle.TextSize = 24
 DevTitle.Font = Enum.Font.GothamBold
+DevTitle.TextXAlignment = Enum.TextXAlignment.Center
 DevTitle.Parent = Content
 
 local CaoModFrame = Instance.new("Frame")
@@ -188,13 +172,12 @@ CaoModFrame.Position = UDim2.new(0, 10, 0, 60)
 CaoModFrame.BackgroundTransparency = 1
 CaoModFrame.Parent = Content
 
-local CaoModIcon = Instance.new("ImageLabel")
+local CaoModIcon = Instance.new("Frame")
 CaoModIcon.Size = UDim2.new(0, 40, 0, 40)
 CaoModIcon.Position = UDim2.new(0, 0, 0.5, -20)
 CaoModIcon.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 CaoModIcon.Parent = CaoModFrame
 Instance.new("UICorner", CaoModIcon).CornerRadius = UDim.new(1, 0)
-CaoModIcon.Image = "rbxassetid://17384785064"
 
 local CaoModTitle = Instance.new("TextLabel")
 CaoModTitle.Size = UDim2.new(1, -50, 0, 20)
@@ -235,7 +218,6 @@ FoxnameTitle.Font = Enum.Font.GothamBold
 FoxnameTitle.TextXAlignment = Enum.TextXAlignment.Left
 FoxnameTitle.Parent = FoxnameFrame
 
--- フッター
 local Footer = Instance.new("Frame")
 Footer.Size = UDim2.new(1, -20, 0, 60)
 Footer.Position = UDim2.new(0, 10, 1, -80)
@@ -265,7 +247,7 @@ FooterDesc.TextXAlignment = Enum.TextXAlignment.Left
 FooterDesc.TextYAlignment = Enum.TextYAlignment.Top
 FooterDesc.Parent = Footer
 
--- ドラッグ
+-- ドラッグ移動
 local dragging, dragInput, dragStart, startPos
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
