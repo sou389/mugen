@@ -1,5 +1,5 @@
 -- ========================================================
--- 光る狼の背景 + 半透明の紫板
+-- 光る狼の背景（アップロードしたID使用）
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -18,7 +18,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 600, 0, 350)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
@@ -27,13 +27,12 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- ★背景イラスト（光る狼）★
+-- ★背景イラスト（あなたがアップロードした光る狼）★
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
--- 光る狼・ネオン系の背景画像ID
-BackgroundImage.Image = "rbxassetid://15519020860" 
+BackgroundImage.Image = "rbxassetid://95727725110434" -- ★あなたのID
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.Parent = MainFrame
 
