@@ -1,5 +1,5 @@
 -- ========================================================
--- void UI (文字・色・枠 完全修正版)
+-- void UI (完全版: 枠線・文字クリーン・押下エフェクト修正)
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -25,7 +25,7 @@ main.BorderSizePixel = 0
 main.ClipsDescendants = true
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
--- 背景画像
+-- 背景画像（光る狼）
 local bg = Instance.new("ImageLabel", main)
 bg.Size = UDim2.new(1, 0, 1, 0)
 bg.BackgroundTransparency = 1
@@ -62,6 +62,7 @@ title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 20
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextStrokeTransparency = 1 -- 影を完全に消す
 
 local keyless = Instance.new("TextLabel", header)
 keyless.Size = UDim2.new(0, 70, 0, 25)
@@ -71,6 +72,7 @@ keyless.Text = "Keyless"
 keyless.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyless.TextSize = 13
 keyless.Font = Enum.Font.GothamBold
+keyless.TextStrokeTransparency = 1
 Instance.new("UICorner", keyless).CornerRadius = UDim.new(0, 5)
 
 local closeBtn = Instance.new("TextButton", header)
@@ -81,10 +83,11 @@ closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 closeBtn.TextSize = 20
 closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextStrokeTransparency = 1
 closeBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
 -- ========================================================
--- サイドバー（文字の違和感をなくし、枠をハッキリさせる）
+-- サイドバー（白枠・黒文字影なし・押下時は白く光る）
 -- ========================================================
 local side = Instance.new("Frame", main)
 side.Size = UDim2.new(0, 140, 1, -50)
@@ -97,27 +100,23 @@ for i, name in ipairs(items) do
     local btn = Instance.new("TextButton", side)
     btn.Size = UDim2.new(1, -20, 0, 40) 
     btn.Position = UDim2.new(0, 10, 0, (i * 50) - 10) 
-    
-    -- さっきの綺麗な半透明の色に戻す（少し明るめの紫）
-    btn.BackgroundColor3 = Color3.fromRGB(80, 50, 140) 
+    btn.BackgroundColor3 = Color3.fromRGB(80, 50, 140) -- 綺麗な紫
     btn.BackgroundTransparency = 0.3
-    
     btn.Text = name
-    -- 文字の影（縁取り）を完全にオフにしてスッキリさせる
-    btn.TextStrokeTransparency = 1 
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 16
     btn.Font = Enum.Font.GothamBold
+    btn.TextStrokeTransparency = 1 -- 文字の黒い影を完全に消す
     btn.AutoButtonColor = false 
 
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 6)
 
-    -- 白い枠線をハッキリと太めにつける
+    -- 白い枠線をハッキリつける
     local btnStroke = Instance.new("UIStroke", btn)
     btnStroke.Color = Color3.fromRGB(255, 255, 255)
     btnStroke.Thickness = 2
-    btnStroke.Transparency = 0 -- 完全に不透明にする
+    btnStroke.Transparency = 0 
 
     -- ホバー・クリックエフェクト
     btn.MouseEnter:Connect(function()
@@ -126,11 +125,21 @@ for i, name in ipairs(items) do
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play()
     end)
+    
+    -- 押した時の処理（赤ではなく、一瞬白っぽく光る）
     btn.MouseButton1Click:Connect(function()
-        -- 押した時のアニメーション（一瞬明るくする）
-        btn.BackgroundColor3 = Color3.fromRGB(150, 100, 220)
+        local originalColor = btn.BackgroundColor3
+        local originalTrans = btn.BackgroundTransparency
+        
+        -- 押した瞬間の色（白っぽい紫）
+        btn.BackgroundColor3 = Color3.fromRGB(180, 150, 230)
+        btn.BackgroundTransparency = 0.1
+        
         task.wait(0.1)
-        btn.BackgroundColor3 = Color3.fromRGB(80, 50, 140)
+        
+        -- 元に戻す
+        btn.BackgroundColor3 = originalColor
+        btn.BackgroundTransparency = originalTrans
         
         print(name .. " が押されました")
     end)
@@ -151,6 +160,7 @@ devTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 devTitle.TextSize = 22
 devTitle.Font = Enum.Font.GothamBold
 devTitle.TextXAlignment = Enum.TextXAlignment.Left
+devTitle.TextStrokeTransparency = 1
 
 local voidName = Instance.new("TextLabel", content)
 voidName.Size = UDim2.new(1, 0, 0, 20)
@@ -161,6 +171,7 @@ voidName.TextColor3 = Color3.fromRGB(255, 255, 255)
 voidName.TextSize = 18
 voidName.Font = Enum.Font.GothamBold
 voidName.TextXAlignment = Enum.TextXAlignment.Left
+voidName.TextStrokeTransparency = 1
 
 local voidDesc = Instance.new("TextLabel", content)
 voidDesc.Size = UDim2.new(1, 0, 0, 20)
@@ -171,6 +182,7 @@ voidDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
 voidDesc.TextSize = 14
 voidDesc.Font = Enum.Font.Gotham
 voidDesc.TextXAlignment = Enum.TextXAlignment.Left
+voidDesc.TextStrokeTransparency = 1
 
 -- 左下の自分のアイコン
 local player = Players.LocalPlayer
