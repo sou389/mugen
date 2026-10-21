@@ -1,5 +1,5 @@
 -- ========================================================
--- void UI (カスタムメニュー & プロフィールアイコン追加版)
+-- void UI (押せるボタン化 ＆ 枠追加版)
 -- ========================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -88,21 +88,50 @@ side.Size = UDim2.new(0, 140, 1, -50)
 side.Position = UDim2.new(0, 0, 0, 50)
 side.BackgroundTransparency = 1
 
--- メニュー項目（HomeとPlayerのみ）
+-- メニュー項目（枠付きボタン化）
 local items = {"Home", "Player"}
 for i, name in ipairs(items) do
-    local btn = Instance.new("TextButton", side)
-    btn.Size = UDim2.new(1, -20, 0, 30)
-    btn.Position = UDim2.new(0, 20, 0, i * 35)
+    -- 枠（背景）となるフレーム
+    local btnBg = Instance.new("Frame", side)
+    btnBg.Size = UDim2.new(1, -20, 0, 35)
+    btnBg.Position = UDim2.new(0, 10, 0, i * 45) -- 間隔を少し広げる
+    btnBg.BackgroundColor3 = Color3.fromRGB(40, 25, 80) -- 濃い紫
+    btnBg.BackgroundTransparency = 0.4
+    
+    local bgCorner = Instance.new("UICorner", btnBg)
+    bgCorner.CornerRadius = UDim.new(0, 5)
+    
+    local bgStroke = Instance.new("UIStroke", btnBg)
+    bgStroke.Color = Color3.fromRGB(150, 100, 255)
+    bgStroke.Thickness = 1.5
+    bgStroke.Transparency = 0.3
+
+    -- 実際に押せるボタン
+    local btn = Instance.new("TextButton", btnBg)
+    btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundTransparency = 1
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 16
-    btn.Font = Enum.Font.Gotham
-    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Font = Enum.Font.GothamBold
+    btn.TextXAlignment = Enum.TextXAlignment.Center
     
-    btn.MouseEnter:Connect(function() btn.TextColor3 = Color3.new(1,1,1) end)
-    btn.MouseLeave:Connect(function() btn.TextColor3 = Color3.fromRGB(230, 230, 230) end)
+    -- ホバー・クリックエフェクト
+    btn.MouseEnter:Connect(function()
+        btnBg.BackgroundTransparency = 0.2
+    end)
+    btn.MouseLeave:Connect(function()
+        btnBg.BackgroundTransparency = 0.4
+    end)
+    btn.MouseButton1Click:Connect(function()
+        -- 押した時の処理（とりあえずコンソールに出力）
+        print(name .. " タブが押されました")
+        
+        -- 押した時のアニメーション（一瞬明るくする）
+        btnBg.BackgroundColor3 = Color3.fromRGB(100, 60, 200)
+        task.wait(0.1)
+        btnBg.BackgroundColor3 = Color3.fromRGB(40, 25, 80)
+    end)
 end
 
 -- 中央コンテンツ
@@ -141,49 +170,30 @@ voidDesc.TextSize = 14
 voidDesc.Font = Enum.Font.Gotham
 voidDesc.TextXAlignment = Enum.TextXAlignment.Left
 
--- ========================================================
--- 左下の自分のアイコン追加
--- ========================================================
+-- 左下の自分のアイコン
 local player = Players.LocalPlayer
-
 local profileIcon = Instance.new("ImageLabel", main)
-profileIcon.Name = "ProfileIcon"
 profileIcon.Size = UDim2.new(0, 50, 0, 50)
-profileIcon.Position = UDim2.new(0, 15, 1, -65) -- 左下に配置
+profileIcon.Position = UDim2.new(0, 15, 1, -65) 
 profileIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 profileIcon.BorderSizePixel = 0
 
--- アイコンを丸くする
 local iconCorner = Instance.new("UICorner", profileIcon)
 iconCorner.CornerRadius = UDim.new(1, 0)
 
--- 白い枠線をつける
 local iconStroke = Instance.new("UIStroke", profileIcon)
 iconStroke.Color = Color3.fromRGB(200, 150, 255)
 iconStroke.Thickness = 2
 iconStroke.Transparency = 0.2
 
--- プレイヤーの画像を取得して表示
 local function updateIcon()
     if player then
-        local userId = player.UserId
-        local thumbType = Enum.ThumbnailType.HeadShot
-        local thumbSize = Enum.ThumbnailSize.Size150x150
-        local content, isReady = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
-        if content then
-            profileIcon.Image = content
-        end
+        local content, isReady = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+        if content then profileIcon.Image = content end
     end
 end
-
--- 自分のアイコンをセット
 updateIcon()
-
--- (もし途中でアイコンが変わった場合の対応)
-player.CharacterAdded:Connect(function()
-    task.wait(1)
-    updateIcon()
-end)
+player.CharacterAdded:Connect(function() task.wait(1) updateIcon() end)
 
 -- ドラッグ機能
 local dragging = false
