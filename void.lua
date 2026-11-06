@@ -1,4 +1,4 @@
--- ===== Viod Menu Part 1/6 =====
+-- ===== Viod Menu Part 1/7 =====
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -9,21 +9,25 @@ local LANG = {
     ja = { title="Viod", player="プレイヤー", tools="ツール", settings="設定",
            speed="スピード:", jump="ジャンプ力:", wall="壁歩き:", noclip="貫通:",
            respawn="即リスポーン", on="ON", off="OFF",
+           fly="飛ぶ:", flySpeed="Fly速度:",
            tp="テレポート", invis="透明化", rot="回転スピード:",
+           emote="エモート:", dance="ダンス", wave="ウェーブ", point="ポイント", laugh="笑う",
            fontSize="文字サイズ:", bg="背景色:", save="保存", tpsave="テレポート保存",
            pose="ポーズ歩き:", poseNormal="通常", poseRagdoll="ラグドール",
            poseT="Tポーズ", poseSit="座り",
-           saveName="名前を入力", saveBtn="保存", del="削除",
+           saveBtn="保存",
            small="小", medium="中", large="大",
            blue="青", yellow="黄", red="赤", rainbow="虹", black="黒", white="白" },
     en = { title="Viod", player="Player", tools="Tools", settings="Settings",
            speed="Speed:", jump="Jump:", wall="Wall Walk:", noclip="Noclip:",
            respawn="Respawn", on="ON", off="OFF",
+           fly="Fly:", flySpeed="Fly Speed:",
            tp="Teleport", invis="Invisible", rot="Rot Speed:",
+           emote="Emote:", dance="Dance", wave="Wave", point="Point", laugh="Laugh",
            fontSize="Font Size:", bg="Background:", save="Save", tpsave="Save TP",
            pose="Pose Walk:", poseNormal="Normal", poseRagdoll="Ragdoll",
            poseT="T-Pose", poseSit="Sit",
-           saveName="Enter name", saveBtn="Save", del="Delete",
+           saveBtn="Save",
            small="S", medium="M", large="L",
            blue="Blue", yellow="Yellow", red="Red", rainbow="Rainbow", black="Black", white="White" },
 }
@@ -32,11 +36,11 @@ local state = {
     speed=16, jumpPower=50, wallWalk=false, noclip=false,
     speedEnabled=false, jumpEnabled=false, lang="en",
     tpEnabled=false, invisEnabled=false, rotEnabled=false, rotSpeed=180,
+    flyEnabled=false, flySpeed=50,
     fontSize="medium", bgColor="black", pose="normal",
     savedTPs = {},
 }
 local originalCollide = {}
-local originalTransparency = {}
 
 local function getHum()
     local c = player.Character; if not c then return nil end
@@ -54,11 +58,12 @@ screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999
 screenGui.Parent = playerGui
 
+-- ===== メインウィンドウ（縮小: 560x360） =====
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 650, 0, 420)
-mainFrame.Position = UDim2.new(0.5, -325, 0.5, -210)
+mainFrame.Size = UDim2.new(0, 560, 0, 360)
+mainFrame.Position = UDim2.new(0.5, -280, 0.5, -180)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-mainFrame.BackgroundTransparency = 0
+mainFrame.BackgroundTransparency = 0.55
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Parent = screenGui
@@ -80,12 +85,12 @@ task.spawn(function()
     end
 end)
 
--- ドラッグ
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.Size = UDim2.new(1, 0, 0, 36)
 titleBar.BackgroundTransparency = 1
 titleBar.Active = true
 titleBar.Parent = mainFrame
+
 local dragging, dragStart, startPos = false, nil, nil
 titleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -107,70 +112,70 @@ UIS.InputEnded:Connect(function(input)
 end)
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0, 200, 1, 0)
-title.Position = UDim2.new(0, 15, 0, 0)
+title.Size = UDim2.new(0, 180, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 18
+title.TextSize = 16
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = titleBar
 
 local langBtn = Instance.new("TextButton")
-langBtn.Size = UDim2.new(0, 110, 0, 28)
-langBtn.Position = UDim2.new(1, -200, 0, 6)
+langBtn.Size = UDim2.new(0, 105, 0, 26)
+langBtn.Position = UDim2.new(1, -192, 0, 5)
 langBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
 langBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-langBtn.TextSize = 13
+langBtn.TextSize = 12
 langBtn.Font = Enum.Font.GothamBold
 langBtn.Text = "English 🇺🇸"
 langBtn.Parent = titleBar
 local lc = Instance.new("UICorner"); lc.CornerRadius = UDim.new(0, 6); lc.Parent = langBtn
 
 local minBtn = Instance.new("TextButton")
-minBtn.Size = UDim2.new(0, 28, 0, 28)
-minBtn.Position = UDim2.new(1, -85, 0, 6)
+minBtn.Size = UDim2.new(0, 26, 0, 26)
+minBtn.Position = UDim2.new(1, -82, 0, 5)
 minBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 110)
 minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-minBtn.TextSize = 18
+minBtn.TextSize = 17
 minBtn.Font = Enum.Font.GothamBold
 minBtn.Text = "−"
 minBtn.Parent = titleBar
 local mc = Instance.new("UICorner"); mc.CornerRadius = UDim.new(0, 6); mc.Parent = minBtn
 
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 28, 0, 28)
-closeBtn.Position = UDim2.new(1, -52, 0, 6)
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -52, 0, 5)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 16
+closeBtn.TextSize = 15
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.Text = "✖"
 closeBtn.Parent = titleBar
 local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 6); cc.Parent = closeBtn
 
--- 本体
 local body = Instance.new("Frame")
-body.Size = UDim2.new(1, -20, 1, -50)
-body.Position = UDim2.new(0, 10, 0, 45)
+body.Size = UDim2.new(1, -16, 1, -44)
+body.Position = UDim2.new(0, 8, 0, 40)
 body.BackgroundTransparency = 1
 body.Parent = mainFrame
 
 -- 左タブ
 local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0, 130, 1, -60)
+leftPanel.Size = UDim2.new(0, 110, 1, 0)
 leftPanel.BackgroundTransparency = 1
 leftPanel.Parent = body
 local leftLayout = Instance.new("UIListLayout")
-leftLayout.Padding = UDim.new(0, 8)
+leftLayout.Padding = UDim.new(0, 6)
 leftLayout.Parent = leftPanel
 
 local function makeTab(text, order)
     local b = Instance.new("TextButton")
-    b.Size = UDim2.new(1, 0, 0, 46)
+    b.Size = UDim2.new(1, 0, 0, 40)
     b.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
+    b.BackgroundTransparency = 0.3
     b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.TextSize = 16
+    b.TextSize = 14
     b.Font = Enum.Font.GothamBold
     b.Text = text
     b.LayoutOrder = order
@@ -183,20 +188,23 @@ local toolsTab = makeTab("Tools", 2)
 local settingsTab = makeTab("Settings", 3)
 
 local content = Instance.new("Frame")
-content.Size = UDim2.new(1, -140, 1, 0)
-content.Position = UDim2.new(0, 140, 0, 0)
+content.Size = UDim2.new(1, -120, 1, 0)
+content.Position = UDim2.new(0, 120, 0, 0)
 content.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+content.BackgroundTransparency = 0.45
 content.BorderSizePixel = 0
 content.Parent = body
 local cC = Instance.new("UICorner"); cC.CornerRadius = UDim.new(0, 8); cC.Parent = content
 
--- 左下 プレイヤーカード
+-- ===== 左下 プレイヤーカード（screenGui直下に固定） =====
 local playerCard = Instance.new("Frame")
-playerCard.Size = UDim2.new(0, 130, 0, 52)
-playerCard.Position = UDim2.new(0, 0, 1, 8)
+playerCard.Size = UDim2.new(0, 160, 0, 52)
+playerCard.Position = UDim2.new(0, 10, 1, -62)
 playerCard.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+playerCard.BackgroundTransparency = 0.25
 playerCard.BorderSizePixel = 0
-playerCard.Parent = leftPanel.Parent.Parent -- body
+playerCard.ZIndex = 50
+playerCard.Parent = screenGui
 local pcC = Instance.new("UICorner"); pcC.CornerRadius = UDim.new(0, 8); pcC.Parent = playerCard
 
 local avatarImg = Instance.new("ImageLabel")
@@ -204,12 +212,12 @@ avatarImg.Size = UDim2.new(0, 40, 0, 40)
 avatarImg.Position = UDim2.new(0, 6, 0, 6)
 avatarImg.BackgroundColor3 = Color3.fromRGB(255,255,255)
 avatarImg.BackgroundTransparency = 0.2
-avatarImg.Image = ""
+avatarImg.ZIndex = 51
 avatarImg.Parent = playerCard
 local avC = Instance.new("UICorner"); avC.CornerRadius = UDim.new(1, 0); avC.Parent = avatarImg
 
 local nameLabel = Instance.new("TextLabel")
-nameLabel.Size = UDim2.new(0, 74, 0, 40)
+nameLabel.Size = UDim2.new(0, 104, 0, 40)
 nameLabel.Position = UDim2.new(0, 50, 0, 6)
 nameLabel.BackgroundTransparency = 1
 nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -217,13 +225,12 @@ nameLabel.TextSize = 12
 nameLabel.Font = Enum.Font.GothamBold
 nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+nameLabel.ZIndex = 51
 nameLabel.Parent = playerCard
 
--- アイコンと名前取得
 task.spawn(function()
-    local userId = player.UserId
     local ok, thumb = pcall(function()
-        return Players:GetUserThumbnailAsync(userId,
+        return Players:GetUserThumbnailAsync(player.UserId,
             Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
     end)
     if ok and thumb then avatarImg.Image = thumb end
@@ -239,9 +246,8 @@ _G.ViodMenu.p1 = { screenGui=screenGui, mainFrame=mainFrame, body=body,
     titleBar=titleBar, title=title, langBtn=langBtn, minBtn=minBtn, closeBtn=closeBtn,
     playerTab=playerTab, toolsTab=toolsTab, settingsTab=settingsTab,
     content=content, state=state, LANG=LANG, getHum=getHum, getHRP=getHRP,
-    originalCollide=originalCollide, originalTransparency=originalTransparency,
-    avatarImg=avatarImg, nameLabel=nameLabel }
--- ===== Viod Menu Part 2/6 =====
+    originalCollide=originalCollide }
+-- ===== Viod Menu Part 2/7 =====
 local V = _G.ViodMenu.p1
 local LANG = V.LANG
 local state = V.state
@@ -252,17 +258,17 @@ pagePlayer.Size = UDim2.new(1, 0, 1, 0)
 pagePlayer.BackgroundTransparency = 1
 pagePlayer.Parent = content
 local ppPad = Instance.new("UIPadding")
-ppPad.PaddingTop = UDim.new(0, 8)
-ppPad.PaddingLeft = UDim.new(0, 10)
-ppPad.PaddingRight = UDim.new(0, 10)
+ppPad.PaddingTop = UDim.new(0, 6)
+ppPad.PaddingLeft = UDim.new(0, 8)
+ppPad.PaddingRight = UDim.new(0, 8)
 ppPad.Parent = pagePlayer
 local ppL = Instance.new("UIListLayout")
-ppL.Padding = UDim.new(0, 8)
+ppL.Padding = UDim.new(0, 6)
 ppL.Parent = pagePlayer
 
 local function row(parent, order)
     local r = Instance.new("Frame")
-    r.Size = UDim2.new(1, 0, 0, 38)
+    r.Size = UDim2.new(1, 0, 0, 34)
     r.BackgroundTransparency = 1
     r.LayoutOrder = order
     r.Parent = parent
@@ -274,7 +280,7 @@ local function label(parent, x, w)
     l.Position = UDim2.new(0, x, 0, 0)
     l.BackgroundTransparency = 1
     l.TextColor3 = Color3.fromRGB(255, 255, 255)
-    l.TextSize = 14
+    l.TextSize = 13
     l.Font = Enum.Font.Gotham
     l.TextXAlignment = Enum.TextXAlignment.Left
     l.Parent = parent
@@ -285,8 +291,9 @@ local function makeBox(parent, x, w, default)
     b.Size = UDim2.new(0, w, 1, 0)
     b.Position = UDim2.new(0, x, 0, 0)
     b.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+    b.BackgroundTransparency = 0.3
     b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.TextSize = 14
+    b.TextSize = 13
     b.Text = default
     b.ClearTextOnFocus = false
     b.Font = Enum.Font.Gotham
@@ -299,8 +306,9 @@ local function makeBtn(parent, x, w, text, color)
     b.Size = UDim2.new(0, w, 1, 0)
     b.Position = UDim2.new(0, x, 0, 0)
     b.BackgroundColor3 = color or Color3.fromRGB(70,70,90)
+    b.BackgroundTransparency = 0.2
     b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.TextSize = 14
+    b.TextSize = 13
     b.Font = Enum.Font.GothamBold
     b.Text = text
     b.Parent = parent
@@ -308,31 +316,36 @@ local function makeBtn(parent, x, w, text, color)
     return b
 end
 
--- スピード（数値 + ON/OFF のみ）
+-- スピード
 local speedRow = row(pagePlayer, 1)
-local speedLabel = label(speedRow, 0, 95)
-local speedBox = makeBox(speedRow, 100, 80, "100")
-local speedToggle = makeBtn(speedRow, 185, 90, "OFF", Color3.fromRGB(70,70,90))
+local speedLabel = label(speedRow, 0, 85)
+local speedBox = makeBox(speedRow, 90, 70, "100")
+local speedToggle = makeBtn(speedRow, 165, 80, "OFF")
 
--- ジャンプ（数値 + ON/OFF のみ）
+-- ジャンプ
 local jumpRow = row(pagePlayer, 2)
-local jumpLabel = label(jumpRow, 0, 95)
-local jumpBox = makeBox(jumpRow, 100, 80, "120")
-local jumpToggle = makeBtn(jumpRow, 185, 90, "OFF", Color3.fromRGB(70,70,90))
+local jumpLabel = label(jumpRow, 0, 85)
+local jumpBox = makeBox(jumpRow, 90, 70, "120")
+local jumpToggle = makeBtn(jumpRow, 165, 80, "OFF")
 
 -- 壁歩き
 local wallRow = row(pagePlayer, 3)
-local wallLabel = label(wallRow, 0, 95)
-local wallToggle = makeBtn(wallRow, 100, 175, "OFF")
+local wallLabel = label(wallRow, 0, 85)
+local wallToggle = makeBtn(wallRow, 90, 155, "OFF")
 
 -- 貫通
 local noclipRow = row(pagePlayer, 4)
-local noclipLabel = label(noclipRow, 0, 95)
-local noclipToggle = makeBtn(noclipRow, 100, 175, "OFF")
+local noclipLabel = label(noclipRow, 0, 85)
+local noclipToggle = makeBtn(noclipRow, 90, 155, "OFF")
+
+-- 飛ぶ
+local flyRow = row(pagePlayer, 5)
+local flyLabel = label(flyRow, 0, 85)
+local flyToggle = makeBtn(flyRow, 90, 155, "OFF")
 
 -- リスポーン
-local respawnRow = row(pagePlayer, 5)
-local respawnBtn = makeBtn(respawnRow, 0, 275, "Respawn", Color3.fromRGB(200,70,70))
+local respawnRow = row(pagePlayer, 6)
+local respawnBtn = makeBtn(respawnRow, 0, 245, "Respawn", Color3.fromRGB(200,70,70))
 
 -- ツール画面
 local pageTools = Instance.new("Frame")
@@ -341,31 +354,32 @@ pageTools.BackgroundTransparency = 1
 pageTools.Visible = false
 pageTools.Parent = content
 local ptPad = Instance.new("UIPadding")
-ptPad.PaddingTop = UDim.new(0, 8)
-ptPad.PaddingLeft = UDim.new(0, 10)
-ptPad.PaddingRight = UDim.new(0, 10)
+ptPad.PaddingTop = UDim.new(0, 6)
+ptPad.PaddingLeft = UDim.new(0, 8)
+ptPad.PaddingRight = UDim.new(0, 8)
 ptPad.Parent = pageTools
 local ptL = Instance.new("UIListLayout")
-ptL.Padding = UDim.new(0, 8)
+ptL.Padding = UDim.new(0, 6)
 ptL.Parent = pageTools
 
 -- テレポート（クリック移動）
 local tpRow = row(pageTools, 1)
-local tpLabel = label(tpRow, 0, 95)
-local tpToggle = makeBtn(tpRow, 100, 175, "OFF")
+local tpLabel = label(tpRow, 0, 85)
+local tpToggle = makeBtn(tpRow, 90, 155, "OFF")
 
 -- テレポート保存
 local tpSaveRow = row(pageTools, 2)
-local tpSaveLabel = label(tpSaveRow, 0, 95)
-local tpSaveBox = makeBox(tpSaveRow, 100, 110, "")
-local tpSaveBtn = makeBtn(tpSaveRow, 215, 60, "Save")
+local tpSaveLabel = label(tpSaveRow, 0, 85)
+local tpSaveBox = makeBox(tpSaveRow, 90, 100, "")
+local tpSaveBtn = makeBtn(tpSaveRow, 195, 50, "Save")
 
 -- 保存リスト
 local tpListRow = row(pageTools, 3)
-tpListRow.Size = UDim2.new(1, 0, 0, 110)
+tpListRow.Size = UDim2.new(1, 0, 0, 80)
 local tpListFrame = Instance.new("ScrollingFrame")
 tpListFrame.Size = UDim2.new(1, 0, 1, 0)
 tpListFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+tpListFrame.BackgroundTransparency = 0.4
 tpListFrame.BorderSizePixel = 0
 tpListFrame.ScrollBarThickness = 4
 tpListFrame.Parent = tpListRow
@@ -376,22 +390,32 @@ tlLayout.Parent = tpListFrame
 
 -- 透明化
 local invisRow = row(pageTools, 4)
-local invisLabel = label(invisRow, 0, 95)
-local invisToggle = makeBtn(invisRow, 100, 175, "OFF")
+local invisLabel = label(invisRow, 0, 85)
+local invisToggle = makeBtn(invisRow, 90, 155, "OFF")
 
--- 回転（数値 + ON/OFF）
+-- 回転
 local rotRow = row(pageTools, 5)
-local rotLabel = label(rotRow, 0, 95)
-local rotBox = makeBox(rotRow, 100, 80, "180")
-local rotToggle = makeBtn(rotRow, 185, 90, "OFF")
+local rotLabel = label(rotRow, 0, 85)
+local rotBox = makeBox(rotRow, 90, 70, "180")
+local rotToggle = makeBtn(rotRow, 165, 80, "OFF")
 
 -- ポーズ歩き
 local poseRow = row(pageTools, 6)
-local poseLabel = label(poseRow, 0, 95)
-local poseNormal = makeBtn(poseRow, 100, 60, "Normal", Color3.fromRGB(0,150,200))
-local poseRagdoll = makeBtn(poseRow, 165, 55, "Ragdoll")
-local poseT = makeBtn(poseRow, 225, 55, "T-Pose")
-local poseSit = makeBtn(poseRow, 285, 55, "Sit")
+local poseLabel = label(poseRow, 0, 85)
+local poseNormal = makeBtn(poseRow, 90, 50, "Normal", Color3.fromRGB(0,150,200))
+local poseRagdoll = makeBtn(poseRow, 145, 50, "Rag")
+local poseT = makeBtn(poseRow, 200, 45, "T")
+
+-- 座りは次行
+local poseRow2 = row(pageTools, 7)
+local poseSit = makeBtn(poseRow2, 0, 60, "Sit")
+local emoteLabel = label(poseRow2, 65, 50)
+local emoteDance = makeBtn(poseRow2, 115, 40, "D", Color3.fromRGB(120,50,200))
+local emoteWave = makeBtn(poseRow2, 158, 40, "W", Color3.fromRGB(120,50,200))
+local emotePoint = makeBtn(poseRow2, 201, 40, "P", Color3.fromRGB(120,50,200))
+
+local poseRow3 = row(pageTools, 8)
+local emoteLaugh = makeBtn(poseRow3, 0, 40, "L", Color3.fromRGB(120,50,200))
 
 -- 設定画面
 local pageSettings = Instance.new("Frame")
@@ -400,30 +424,30 @@ pageSettings.BackgroundTransparency = 1
 pageSettings.Visible = false
 pageSettings.Parent = content
 local psPad = Instance.new("UIPadding")
-psPad.PaddingTop = UDim.new(0, 8)
-psPad.PaddingLeft = UDim.new(0, 10)
-psPad.PaddingRight = UDim.new(0, 10)
+psPad.PaddingTop = UDim.new(0, 6)
+psPad.PaddingLeft = UDim.new(0, 8)
+psPad.PaddingRight = UDim.new(0, 8)
 psPad.Parent = pageSettings
 local psL = Instance.new("UIListLayout")
-psL.Padding = UDim.new(0, 8)
+psL.Padding = UDim.new(0, 6)
 psL.Parent = pageSettings
 
 local fontRow = row(pageSettings, 1)
-local fontLabel = label(fontRow, 0, 95)
-local fontSmall = makeBtn(fontRow, 100, 60, "S")
-local fontMedium = makeBtn(fontRow, 165, 60, "M", Color3.fromRGB(0,150,200))
-local fontLarge = makeBtn(fontRow, 230, 60, "L")
+local fontLabel = label(fontRow, 0, 85)
+local fontSmall = makeBtn(fontRow, 90, 50, "S")
+local fontMedium = makeBtn(fontRow, 145, 50, "M", Color3.fromRGB(0,150,200))
+local fontLarge = makeBtn(fontRow, 200, 50, "L")
 
 local bgRow = row(pageSettings, 2)
-local bgLabel = label(bgRow, 0, 95)
-local bgBlue = makeBtn(bgRow, 100, 55, "Blue", Color3.fromRGB(40,80,200))
-local bgYellow = makeBtn(bgRow, 160, 60, "Yellow", Color3.fromRGB(200,180,0))
-local bgRed = makeBtn(bgRow, 225, 55, "Red", Color3.fromRGB(200,50,50))
+local bgLabel = label(bgRow, 0, 85)
+local bgBlue = makeBtn(bgRow, 90, 55, "Blue", Color3.fromRGB(40,80,200))
+local bgYellow = makeBtn(bgRow, 150, 60, "Yellow", Color3.fromRGB(200,180,0))
+local bgRed = makeBtn(bgRow, 215, 40, "Red", Color3.fromRGB(200,50,50))
 
 local bgRow2 = row(pageSettings, 3)
-local bgRainbow = makeBtn(bgRow2, 0, 70, "Rainbow", Color3.fromRGB(120,50,200))
-local bgBlack = makeBtn(bgRow2, 75, 70, "Black", Color3.fromRGB(20,20,30))
-local bgWhite = makeBtn(bgRow2, 150, 70, "White", Color3.fromRGB(230,230,230))
+local bgRainbow = makeBtn(bgRow2, 0, 65, "Rainbow", Color3.fromRGB(120,50,200))
+local bgBlack = makeBtn(bgRow2, 70, 60, "Black", Color3.fromRGB(20,20,30))
+local bgWhite = makeBtn(bgRow2, 135, 60, "White", Color3.fromRGB(230,230,230))
 
 local function showPage(which)
     pagePlayer.Visible = (which == "player")
@@ -443,6 +467,7 @@ _G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools, pageSettings=page
     jumpLabel=jumpLabel, jumpBox=jumpBox, jumpToggle=jumpToggle,
     wallLabel=wallLabel, wallToggle=wallToggle,
     noclipLabel=noclipLabel, noclipToggle=noclipToggle,
+    flyLabel=flyLabel, flyToggle=flyToggle,
     respawnBtn=respawnBtn,
     tpLabel=tpLabel, tpToggle=tpToggle,
     tpSaveLabel=tpSaveLabel, tpSaveBox=tpSaveBox, tpSaveBtn=tpSaveBtn, tpListFrame=tpListFrame,
@@ -450,11 +475,13 @@ _G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools, pageSettings=page
     rotLabel=rotLabel, rotBox=rotBox, rotToggle=rotToggle,
     poseLabel=poseLabel, poseNormal=poseNormal, poseRagdoll=poseRagdoll,
     poseT=poseT, poseSit=poseSit,
+    emoteLabel=emoteLabel, emoteDance=emoteDance, emoteWave=emoteWave,
+    emotePoint=emotePoint, emoteLaugh=emoteLaugh,
     fontLabel=fontLabel, fontSmall=fontSmall, fontMedium=fontMedium, fontLarge=fontLarge,
     bgLabel=bgLabel, bgBlue=bgBlue, bgYellow=bgYellow, bgRed=bgRed,
     bgRainbow=bgRainbow, bgBlack=bgBlack, bgWhite=bgWhite,
     showPage=showPage }
--- ===== Viod Menu Part 3/6 =====
+-- ===== Viod Menu Part 3/7 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
@@ -463,19 +490,18 @@ local getHum = V1.getHum
 local getHRP = V1.getHRP
 local originalCollide = V1.originalCollide
 local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 
 local baseSpeed = 16
 local baseJump = 50
 
--- スピード: 数値変更だけで反映（ON中）
+-- スピード
 V2.speedBox.FocusLost:Connect(function()
     local v = tonumber(V2.speedBox.Text)
     if not v or v <= 0 then V2.speedBox.Text = tostring(state.speed); return end
     state.speed = v
-    if state.speedEnabled then
-        local h = getHum(); if h then h.WalkSpeed = v end
-    end
+    if state.speedEnabled then local h=getHum(); if h then h.WalkSpeed=v end end
 end)
 V2.speedToggle.MouseButton1Click:Connect(function()
     state.speedEnabled = not state.speedEnabled
@@ -484,9 +510,7 @@ V2.speedToggle.MouseButton1Click:Connect(function()
     V2.speedToggle.Text = state.speedEnabled and LANG[state.lang].on or LANG[state.lang].off
     local h = getHum()
     if h then
-        if state.speedEnabled then
-            baseSpeed = h.WalkSpeed
-            h.WalkSpeed = state.speed
+        if state.speedEnabled then baseSpeed = h.WalkSpeed; h.WalkSpeed = state.speed
         else h.WalkSpeed = baseSpeed end
     end
 end)
@@ -496,9 +520,7 @@ V2.jumpBox.FocusLost:Connect(function()
     local v = tonumber(V2.jumpBox.Text)
     if not v or v <= 0 then V2.jumpBox.Text = tostring(state.jumpPower); return end
     state.jumpPower = v
-    if state.jumpEnabled then
-        local h = getHum(); if h then h.UseJumpPower=true; h.JumpPower = v end
-    end
+    if state.jumpEnabled then local h=getHum(); if h then h.UseJumpPower=true; h.JumpPower=v end end
 end)
 V2.jumpToggle.MouseButton1Click:Connect(function()
     state.jumpEnabled = not state.jumpEnabled
@@ -507,10 +529,7 @@ V2.jumpToggle.MouseButton1Click:Connect(function()
     V2.jumpToggle.Text = state.jumpEnabled and LANG[state.lang].on or LANG[state.lang].off
     local h = getHum()
     if h then
-        if state.jumpEnabled then
-            baseJump = h.JumpPower
-            h.UseJumpPower = true
-            h.JumpPower = state.jumpPower
+        if state.jumpEnabled then baseJump = h.JumpPower; h.UseJumpPower=true; h.JumpPower = state.jumpPower
         else h.JumpPower = baseJump end
     end
 end)
@@ -525,12 +544,11 @@ V2.wallToggle.MouseButton1Click:Connect(function()
     if state.wallWalk then
         if not hrp:FindFirstChild("WallWalkForce") then
             local bv = Instance.new("BodyVelocity")
-            bv.Name = "WallWalkForce"; bv.MaxForce = Vector3.zero
-            bv.Velocity = Vector3.zero; bv.Parent = hrp
+            bv.Name="WallWalkForce"; bv.MaxForce=Vector3.zero; bv.Velocity=Vector3.zero; bv.Parent=hrp
         end
         if not hrp:FindFirstChild("WallWalkGyro") then
             local bg = Instance.new("BodyGyro")
-            bg.Name = "WallWalkGyro"; bg.MaxTorque = Vector3.zero; bg.Parent = hrp
+            bg.Name="WallWalkGyro"; bg.MaxTorque=Vector3.zero; bg.Parent=hrp
         end
     else
         local bv = hrp:FindFirstChild("WallWalkForce"); if bv then bv:Destroy() end
@@ -559,8 +577,7 @@ RunService.Heartbeat:Connect(function()
         bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
         bg.CFrame = CFrame.new(hrp.Position, hrp.Position - n)
     else
-        bv.MaxForce = Vector3.zero
-        bg.MaxTorque = Vector3.zero
+        bv.MaxForce = Vector3.zero; bg.MaxTorque = Vector3.zero
     end
 end)
 
@@ -587,6 +604,72 @@ RunService.Stepped:Connect(function()
     end
 end)
 
+-- ===== 飛ぶ =====
+local flyBV, flyBG = nil, nil
+local function updateFly()
+    local char = player.Character; if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+    if state.flyEnabled then
+        if not flyBV then
+            flyBV = Instance.new("BodyVelocity")
+            flyBV.Name = "FlyBV"
+            flyBV.MaxForce = Vector3.new(1e5,1e5,1e5)
+            flyBV.Parent = hrp
+        end
+        if not flyBG then
+            flyBG = Instance.new("BodyGyro")
+            flyBG.Name = "FlyBG"
+            flyBG.MaxTorque = Vector3.new(1e5,1e5,1e5)
+            flyBG.P = 1000
+            flyBG.Parent = hrp
+        end
+    else
+        if flyBV then flyBV:Destroy(); flyBV=nil end
+        if flyBG then flyBG:Destroy(); flyBG=nil end
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if not state.flyEnabled then return end
+    local char = player.Character; if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+    if not flyBV or not flyBG then updateFly(); return end
+
+    local cam = workspace.CurrentCamera
+    local moveDir = Vector3.zero
+    local forward = cam.CFrame.LookVector
+    local right = cam.CFrame.RightVector
+
+    if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + forward end
+    if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - forward end
+    if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + right end
+    if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - right end
+    if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
+    if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0,1,0) end
+
+    if moveDir.Magnitude > 0 then
+        flyBV.Velocity = moveDir.Unit * state.flySpeed
+    else
+        flyBV.Velocity = Vector3.zero
+    end
+    flyBG.CFrame = cam.CFrame
+    hum.PlatformStand = true
+end)
+
+V2.flyToggle.MouseButton1Click:Connect(function()
+    state.flyEnabled = not state.flyEnabled
+    V2.flyToggle.BackgroundColor3 = state.flyEnabled
+        and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+    V2.flyToggle.Text = state.flyEnabled and LANG[state.lang].on or LANG[state.lang].off
+    local hum = getHum()
+    if hum and not state.flyEnabled then hum.PlatformStand = false end
+    updateFly()
+end)
+
 -- リスポーン
 V2.respawnBtn.MouseButton1Click:Connect(function()
     local h = getHum()
@@ -601,40 +684,25 @@ V2.invisToggle.MouseButton1Click:Connect(function()
         and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
     V2.invisToggle.Text = state.invisEnabled and LANG[state.lang].on or LANG[state.lang].off
     local char = player.Character; if not char then return end
-    if state.invisEnabled then
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") then
-                p.Transparency = 0.95
-            end
-        end
-    else
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") then
-                p.Transparency = 0
-            end
+    for _, p in ipairs(char:GetDescendants()) do
+        if p:IsA("BasePart") then
+            p.Transparency = state.invisEnabled and 0.95 or 0
         end
     end
 end)
 
--- 回転（数値 + ON/OFF）
+-- 回転
 local function applyRot()
     local char = player.Character; if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
     local av = hrp:FindFirstChild("RotVelocity")
-    if not state.rotEnabled then
-        if av then av:Destroy() end
-        return
-    end
+    if not state.rotEnabled then if av then av:Destroy() end return end
     if not av then
         av = Instance.new("AngularVelocity")
-        av.Name = "RotVelocity"
-        av.AffectsGroundOnly = false
-        av.AffectsTorque = true
-        av.RelativeTo = Enum.ActuatorRelativeTo.World
-        av.Parent = hrp
+        av.Name="RotVelocity"; av.AffectsGroundOnly=false; av.AffectsTorque=true
+        av.RelativeTo=Enum.ActuatorRelativeTo.World; av.Parent=hrp
     end
-    av.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+    av.MaxTorque = Vector3.new(1e5,1e5,1e5)
     av.AngularVelocity = Vector3.new(0, state.rotSpeed, 0)
 end
 V2.rotBox.FocusLost:Connect(function()
@@ -651,7 +719,7 @@ V2.rotToggle.MouseButton1Click:Connect(function()
     applyRot()
 end)
 
--- 定期再適用（スピード・ジャンプ）
+-- 定期再適用
 task.spawn(function()
     while V1.screenGui.Parent do
         local h = getHum()
@@ -665,7 +733,7 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
--- ===== Viod Menu Part 4/6 =====
+-- ===== Viod Menu Part 4/7 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
@@ -674,11 +742,8 @@ local getHRP = V1.getHRP
 local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 
--- ===== 画面下のテレポートボタン（ON/OFF付き） =====
+-- ===== テレポート小UI =====
 local tpGui = nil
-local tpButton = nil
-local tpToggleBtn = nil
-
 local function createTpUI()
     if tpGui then tpGui:Destroy() end
     tpGui = Instance.new("ScreenGui")
@@ -689,88 +754,69 @@ local function createTpUI()
     tpGui.Parent = player:WaitForChild("PlayerGui")
 
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 170, 0, 32)
-    frame.Position = UDim2.new(0.5, -85, 1, -60)
+    frame.Size = UDim2.new(0, 150, 0, 30)
+    frame.Position = UDim2.new(0.5, -75, 1, -100)
     frame.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
     frame.BackgroundTransparency = 0.2
     frame.BorderSizePixel = 0
     frame.Parent = tpGui
     local fC = Instance.new("UICorner"); fC.CornerRadius = UDim.new(0, 8); fC.Parent = frame
 
-    tpButton = Instance.new("TextButton")
-    tpButton.Size = UDim2.new(0, 130, 1, 0)
-    tpButton.Position = UDim2.new(0, 0, 0, 0)
-    tpButton.BackgroundTransparency = 1
-    tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tpButton.TextSize = 10
-    tpButton.Font = Enum.Font.GothamBold
-    tpButton.Text = "Teleport"
-    tpButton.Parent = frame
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, 110, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(255,255,255)
+    lbl.TextSize = 10
+    lbl.Font = Enum.Font.GothamBold
+    lbl.Text = "Teleport"
+    lbl.Parent = frame
 
-    tpToggleBtn = Instance.new("TextButton")
-    tpToggleBtn.Size = UDim2.new(0, 36, 1, 0)
-    tpToggleBtn.Position = UDim2.new(1, -36, 0, 0)
-    tpToggleBtn.BackgroundColor3 = Color3.fromRGB(70,70,90)
-    tpToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tpToggleBtn.TextSize = 9
-    tpToggleBtn.Font = Enum.Font.GothamBold
-    tpToggleBtn.Text = "OFF"
-    tpToggleBtn.Parent = frame
-    local tC = Instance.new("UICorner"); tC.CornerRadius = UDim.new(0, 8); tC.Parent = tpToggleBtn
-
-    -- 小さなテレポートのON/OFF（独立トグル）
-    tpToggleBtn.MouseButton1Click:Connect(function()
+    local tg = Instance.new("TextButton")
+    tg.Size = UDim2.new(0, 34, 1, 0)
+    tg.Position = UDim2.new(1, -34, 0, 0)
+    tg.BackgroundColor3 = state.tpEnabled and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
+    tg.TextColor3 = Color3.fromRGB(255,255,255)
+    tg.TextSize = 9
+    tg.Font = Enum.Font.GothamBold
+    tg.Text = state.tpEnabled and "ON" or "OFF"
+    tg.Parent = frame
+    local tC = Instance.new("UICorner"); tC.CornerRadius = UDim.new(0, 8); tC.Parent = tg
+    tg.MouseButton1Click:Connect(function()
         state.tpEnabled = not state.tpEnabled
-        tpToggleBtn.Text = state.tpEnabled and "ON" or "OFF"
-        tpToggleBtn.BackgroundColor3 = state.tpEnabled
-            and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+        tg.Text = state.tpEnabled and "ON" or "OFF"
+        tg.BackgroundColor3 = state.tpEnabled and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
         V2.tpToggle.Text = state.tpEnabled and LANG[state.lang].on or LANG[state.lang].off
-        V2.tpToggle.BackgroundColor3 = state.tpEnabled
-            and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+        V2.tpToggle.BackgroundColor3 = state.tpEnabled and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
     end)
 end
 
--- タップで移動（視点操作中は無効化）
-local lastCamUpdate = 0
-local camTouchStart = nil
-local function shouldIgnore(input)
-    -- カメラ操作（右側/ドラッグ）を検出したら無視
-    if input.UserInputType == Enum.UserInputType.Touch then
-        local pos = input.Position
-        local viewport = workspace.CurrentCamera.ViewportSize
-        -- 右半分のドラッグはカメラ操作とみなす
-        if pos.X > viewport.X * 0.5 then return true end
-    end
-    return false
-end
-
+-- タップで移動（快適版: カメラドラッグ無視）
+local touchStart = nil
 UIS.InputBegan:Connect(function(input, processed)
-    if not state.tpEnabled then return end
     if processed then return end
     if input.UserInputType ~= Enum.UserInputType.Touch
         and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-    if shouldIgnore(input) then return end
-    -- わずかな移動（ドラッグ）は無視
-    camTouchStart = { pos = input.Position, time = tick() }
+    local pos = input.Position
+    local vp = workspace.CurrentCamera.ViewportSize
+    -- 右半分はカメラ操作とみなす
+    if pos.X > vp.X * 0.5 then return end
+    touchStart = { pos = pos, time = tick() }
 end)
-
 UIS.InputEnded:Connect(function(input, processed)
-    if not state.tpEnabled then return end
     if processed then return end
-    if not camTouchStart then return end
+    if not state.tpEnabled then touchStart=nil; return end
+    if not touchStart then return end
     if input.UserInputType ~= Enum.UserInputType.Touch
         and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-    -- タップ判定: 0.3秒以内 & 20px以内の移動
-    local duration = tick() - camTouchStart.time
-    local dist = (input.Position - camTouchStart.pos).Magnitude
-    camTouchStart = nil
-    if duration > 0.3 or dist > 20 then return end
-    -- UI上のタップは除外
+    local dur = tick() - touchStart.time
+    local dist = (input.Position - touchStart.pos).Magnitude
+    touchStart = nil
+    if dur > 0.3 or dist > 20 then return end
     local guis = player.PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
     for _, g in ipairs(guis) do
-        if g:IsDescendantOf(tpGui) or g:IsDescendantOf(V1.screenGui) then return end
+        if g:IsDescendantOf(tpGui) or g:IsDescendantOf(V1.screenGui)
+            or (g:IsDescendantOf(player.PlayerGui) and g.Name:match("^Viod")) then return end
     end
-    -- レイを飛ばして移動
     local cam = workspace.CurrentCamera
     local ray = cam:ScreenPointToRay(input.Position.X, input.Position.Y)
     local params = RaycastParams.new()
@@ -779,40 +825,39 @@ UIS.InputEnded:Connect(function(input, processed)
     local result = workspace:Raycast(ray.Origin, ray.Direction * 2000, params)
     if result then
         local hrp = getHRP()
-        if hrp then hrp.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0)) end
+        if hrp then hrp.CFrame = CFrame.new(result.Position + Vector3.new(0,3,0)) end
     end
 end)
 
--- メニュー側のテレポートトグル
 V2.tpToggle.MouseButton1Click:Connect(function()
     state.tpEnabled = not state.tpEnabled
     V2.tpToggle.BackgroundColor3 = state.tpEnabled
-        and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+        and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
     V2.tpToggle.Text = state.tpEnabled and LANG[state.lang].on or LANG[state.lang].off
     if state.tpEnabled then createTpUI() else if tpGui then tpGui:Destroy(); tpGui=nil end end
 end)
 
 -- ===== テレポート保存 =====
 local function refreshTpList()
-    -- クリア
     for _, c in ipairs(V2.tpListFrame:GetChildren()) do
         if c:IsA("TextButton") or c:IsA("Frame") then c:Destroy() end
     end
     local y = 0
     for i, entry in ipairs(state.savedTPs) do
         local item = Instance.new("Frame")
-        item.Size = UDim2.new(1, -8, 0, 28)
-        item.Position = UDim2.new(0, 4, 0, y)
+        item.Size = UDim2.new(1, -6, 0, 24)
+        item.Position = UDim2.new(0, 3, 0, y)
         item.BackgroundColor3 = Color3.fromRGB(55, 55, 80)
+        item.BackgroundTransparency = 0.3
         item.BorderSizePixel = 0
         item.Parent = V2.tpListFrame
         local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(0, 4); ic.Parent = item
 
         local goBtn = Instance.new("TextButton")
-        goBtn.Size = UDim2.new(1, -40, 1, 0)
+        goBtn.Size = UDim2.new(1, -30, 1, 0)
         goBtn.BackgroundTransparency = 1
         goBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        goBtn.TextSize = 12
+        goBtn.TextSize = 11
         goBtn.Font = Enum.Font.Gotham
         goBtn.TextXAlignment = Enum.TextXAlignment.Left
         goBtn.Text = " " .. entry.name
@@ -823,11 +868,11 @@ local function refreshTpList()
         end)
 
         local delBtn = Instance.new("TextButton")
-        delBtn.Size = UDim2.new(0, 32, 1, 0)
-        delBtn.Position = UDim2.new(1, -36, 0, 0)
+        delBtn.Size = UDim2.new(0, 24, 1, 0)
+        delBtn.Position = UDim2.new(1, -28, 0, 0)
         delBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
         delBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        delBtn.TextSize = 11
+        delBtn.TextSize = 10
         delBtn.Font = Enum.Font.GothamBold
         delBtn.Text = "×"
         delBtn.Parent = item
@@ -836,7 +881,7 @@ local function refreshTpList()
             table.remove(state.savedTPs, i)
             refreshTpList()
         end)
-        y = y + 32
+        y = y + 27
     end
     V2.tpListFrame.CanvasSize = UDim2.new(0, 0, 0, y)
 end
@@ -850,26 +895,91 @@ V2.tpSaveBtn.MouseButton1Click:Connect(function()
     refreshTpList()
 end)
 
-_G.ViodMenu.p4 = { createTpUI=createTpUI, refreshTpList=refreshTpList }
--- ===== Viod Menu Part 5/6 =====
+-- ===== フライ小UI =====
+local flyGui = nil
+local function createFlyUI()
+    if flyGui then flyGui:Destroy() end
+    flyGui = Instance.new("ScreenGui")
+    flyGui.Name = "ViodFly"
+    flyGui.ResetOnSpawn = false
+    flyGui.IgnoreGuiInset = true
+    flyGui.DisplayOrder = 1000
+    flyGui.Parent = player:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 220, 0, 30)
+    frame.Position = UDim2.new(0.5, -110, 1, -135)
+    frame.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+    frame.BackgroundTransparency = 0.2
+    frame.BorderSizePixel = 0
+    frame.Parent = flyGui
+    local fC = Instance.new("UICorner"); fC.CornerRadius = UDim.new(0, 8); fC.Parent = frame
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, 40, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(255,255,255)
+    lbl.TextSize = 10
+    lbl.Font = Enum.Font.GothamBold
+    lbl.Text = "Fly"
+    lbl.Parent = frame
+
+    local spdBox = Instance.new("TextBox")
+    spdBox.Size = UDim2.new(0, 50, 0, 22)
+    spdBox.Position = UDim2.new(0, 45, 0, 4)
+    spdBox.BackgroundColor3 = Color3.fromRGB(50,50,70)
+    spdBox.BackgroundTransparency = 0.3
+    spdBox.TextColor3 = Color3.fromRGB(255,255,255)
+    spdBox.TextSize = 11
+    spdBox.Font = Enum.Font.Gotham
+    spdBox.Text = tostring(state.flySpeed)
+    spdBox.ClearTextOnFocus = false
+    spdBox.Parent = frame
+    local sc = Instance.new("UICorner"); sc.CornerRadius = UDim.new(0, 4); sc.Parent = spdBox
+    spdBox.FocusLost:Connect(function()
+        local v = tonumber(spdBox.Text)
+        if v and v > 0 then state.flySpeed = v
+        else spdBox.Text = tostring(state.flySpeed) end
+    end)
+
+    local tg = Instance.new("TextButton")
+    tg.Size = UDim2.new(0, 40, 1, 0)
+    tg.Position = UDim2.new(1, -40, 0, 0)
+    tg.BackgroundColor3 = state.flyEnabled and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
+    tg.TextColor3 = Color3.fromRGB(255,255,255)
+    tg.TextSize = 9
+    tg.Font = Enum.Font.GothamBold
+    tg.Text = state.flyEnabled and "ON" or "OFF"
+    tg.Parent = frame
+    local tC = Instance.new("UICorner"); tC.CornerRadius = UDim.new(0, 8); tC.Parent = tg
+    tg.MouseButton1Click:Connect(function()
+        state.flyEnabled = not state.flyEnabled
+        tg.Text = state.flyEnabled and "ON" or "OFF"
+        tg.BackgroundColor3 = state.flyEnabled and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
+        V2.flyToggle.Text = state.flyEnabled and LANG[state.lang].on or LANG[state.lang].off
+        V2.flyToggle.BackgroundColor3 = state.flyEnabled and Color3.fromRGB(0,170,110) or Color3.fromRGB(70,70,90)
+        local hum = V1.getHum()
+        if hum and not state.flyEnabled then hum.PlatformStand = false end
+    end)
+end
+
+_G.ViodMenu.p4 = { createTpUI=createTpUI, refreshTpList=refreshTpList, createFlyUI=createFlyUI }
+-- ===== Viod Menu Part 5/7 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
 local state = V1.state
 local player = game.Players.LocalPlayer
-local RunService = game:GetService("RunService")
 
--- ===== ポーズ歩き =====
+-- ===== ポーズ =====
 local function setPose(pose)
     state.pose = pose
-    -- ボタン色更新
     V2.poseNormal.BackgroundColor3 = (pose=="normal") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
     V2.poseRagdoll.BackgroundColor3 = (pose=="ragdoll") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
     V2.poseT.BackgroundColor3 = (pose=="tpose") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
     V2.poseSit.BackgroundColor3 = (pose=="sit") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
     local char = player.Character; if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
+    local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
     if pose == "normal" then
         hum.PlatformStand = false
         for _, m in ipairs(char:GetDescendants()) do
@@ -890,14 +1000,49 @@ local function setPose(pose)
         hum.Sit = true
     end
 end
-
 V2.poseNormal.MouseButton1Click:Connect(function() setPose("normal") end)
 V2.poseRagdoll.MouseButton1Click:Connect(function() setPose("ragdoll") end)
 V2.poseT.MouseButton1Click:Connect(function() setPose("tpose") end)
 V2.poseSit.MouseButton1Click:Connect(function() setPose("sit") end)
 
--- ===== 文字サイズ =====
-local fontScale = { small=0.75, medium=1.0, large=1.3 }
+-- ===== エモート =====
+local function playEmote(name)
+    local char = player.Character; if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+    local ok, err = pcall(function()
+        local anim = Instance.new("Animation")
+        anim.AnimationId = name
+        local track = hum:LoadAnimation(anim)
+        track:Play()
+    end)
+    if not ok then
+        warn("[Viod] Emote failed:", err)
+    end
+end
+
+-- Roblox公式エモートAnimationID
+local EMOTES = {
+    dance = "rbxassetid://507771019",
+    wave = "rbxassetid://507770239",
+    point = "rbxassetid://507770453",
+    laugh = "rbxassetid://507770818",
+}
+
+V2.emoteDance.MouseButton1Click:Connect(function() playEmote(EMOTES.dance) end)
+V2.emoteWave.MouseButton1Click:Connect(function() playEmote(EMOTES.wave) end)
+V2.emotePoint.MouseButton1Click:Connect(function() playEmote(EMOTES.point) end)
+V2.emoteLaugh.MouseButton1Click:Connect(function() playEmote(EMOTES.laugh) end)
+
+_G.ViodMenu.p5 = { setPose=setPose }
+-- ===== Viod Menu Part 6/7 =====
+local V1 = _G.ViodMenu.p1
+local V2 = _G.ViodMenu.p2
+local LANG = V1.LANG
+local state = V1.state
+local RunService = game:GetService("RunService")
+
+-- 文字サイズ
+local fontScale = { small=0.8, medium=1.0, large=1.25 }
 local function applyFontSize()
     local s = fontScale[state.fontSize] or 1.0
     for _, obj in ipairs(V1.mainFrame:GetDescendants()) do
@@ -909,20 +1054,19 @@ local function applyFontSize()
             obj.TextSize = math.floor(base * s)
         end
     end
-    V2.fontSmall.BackgroundColor3 = (state.fontSize=="small")
-        and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
-    V2.fontMedium.BackgroundColor3 = (state.fontSize=="medium")
-        and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
-    V2.fontLarge.BackgroundColor3 = (state.fontSize=="large")
-        and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    V2.fontSmall.BackgroundColor3 = (state.fontSize=="small") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    V2.fontMedium.BackgroundColor3 = (state.fontSize=="medium") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    V2.fontLarge.BackgroundColor3 = (state.fontSize=="large") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
 end
 V2.fontSmall.MouseButton1Click:Connect(function() state.fontSize="small"; applyFontSize() end)
 V2.fontMedium.MouseButton1Click:Connect(function() state.fontSize="medium"; applyFontSize() end)
 V2.fontLarge.MouseButton1Click:Connect(function() state.fontSize="large"; applyFontSize() end)
 
--- ===== 背景色（完全切替・黒が残らない） =====
+-- 背景色（透明維持・完全切替）
 local rainbowActive = false
 local rainbowConn = nil
+local BG_TRANSPARENCY = 0.55
+local CONTENT_TRANSPARENCY = 0.45
 
 local function stopRainbow()
     rainbowActive = false
@@ -932,19 +1076,16 @@ end
 local function setBg(color)
     stopRainbow()
     V1.mainFrame.BackgroundColor3 = color
-    -- contentも連動
+    V1.mainFrame.BackgroundTransparency = BG_TRANSPARENCY
     V1.content.BackgroundColor3 = Color3.new(
         math.clamp(color.R*0.6, 0, 1),
         math.clamp(color.G*0.6, 0, 1),
         math.clamp(color.B*0.6, 0, 1))
-    -- ボタン状態更新
+    V1.content.BackgroundTransparency = CONTENT_TRANSPARENCY
     local colors = {
-        blue=Color3.fromRGB(20,50,120),
-        yellow=Color3.fromRGB(120,110,0),
-        red=Color3.fromRGB(120,30,30),
-        black=Color3.fromRGB(20,20,30),
-        white=Color3.fromRGB(230,230,230),
-        rainbow=Color3.fromRGB(120,50,200),
+        blue=Color3.fromRGB(20,50,120), yellow=Color3.fromRGB(120,110,0),
+        red=Color3.fromRGB(120,30,30), black=Color3.fromRGB(20,20,30),
+        white=Color3.fromRGB(230,230,230), rainbow=Color3.fromRGB(120,50,200),
     }
     for k, btn in pairs({blue=V2.bgBlue, yellow=V2.bgYellow, red=V2.bgRed,
         black=V2.bgBlack, white=V2.bgWhite, rainbow=V2.bgRainbow}) do
@@ -963,15 +1104,14 @@ V2.bgRainbow.MouseButton1Click:Connect(function()
     stopRainbow()
     rainbowActive = true
     local hue = 0
-    -- RunServiceで毎フレーム更新（他の色に切り替えたら停止）
     rainbowConn = RunService.RenderStepped:Connect(function()
         if not rainbowActive then return end
         hue = (hue + 0.008) % 1
-        local c = Color3.fromHSV(hue, 0.9, 0.6)
-        V1.mainFrame.BackgroundColor3 = c
+        V1.mainFrame.BackgroundColor3 = Color3.fromHSV(hue, 0.9, 0.6)
+        V1.mainFrame.BackgroundTransparency = BG_TRANSPARENCY
         V1.content.BackgroundColor3 = Color3.fromHSV(hue, 0.9, 0.35)
+        V1.content.BackgroundTransparency = CONTENT_TRANSPARENCY
     end)
-    -- ボタン状態
     for k, btn in pairs({blue=V2.bgBlue, yellow=V2.bgYellow, red=V2.bgRed,
         black=V2.bgBlack, white=V2.bgWhite}) do
         btn.BackgroundColor3 = Color3.fromRGB(70,70,90)
@@ -979,13 +1119,14 @@ V2.bgRainbow.MouseButton1Click:Connect(function()
     V2.bgRainbow.BackgroundColor3 = Color3.fromRGB(120,50,200)
 end)
 
-_G.ViodMenu.p5 = { applyFontSize=applyFontSize, setBg=setBg, setPose=setPose }
--- ===== Viod Menu Part 6/6 =====
+_G.ViodMenu.p6 = { applyFontSize=applyFontSize, setBg=setBg }
+-- ===== Viod Menu Part 7/7 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
 local state = V1.state
-local getHum = V1.getHum
+local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
 
 local function applyLang()
     local t = LANG[state.lang]
@@ -998,11 +1139,13 @@ local function applyLang()
     V2.jumpLabel.Text = t.jump
     V2.wallLabel.Text = t.wall
     V2.noclipLabel.Text = t.noclip
+    V2.flyLabel.Text = t.fly
     V2.respawnBtn.Text = t.respawn
     V2.speedToggle.Text = state.speedEnabled and t.on or t.off
     V2.jumpToggle.Text = state.jumpEnabled and t.on or t.off
     V2.wallToggle.Text = state.wallWalk and t.on or t.off
     V2.noclipToggle.Text = state.noclip and t.on or t.off
+    V2.flyToggle.Text = state.flyEnabled and t.on or t.off
     V2.tpLabel.Text = t.tp
     V2.tpSaveLabel.Text = t.tpsave
     V2.tpSaveBtn.Text = t.saveBtn
@@ -1016,6 +1159,7 @@ local function applyLang()
     V2.poseRagdoll.Text = t.poseRagdoll
     V2.poseT.Text = t.poseT
     V2.poseSit.Text = t.poseSit
+    V2.emoteLabel.Text = t.emote
     V2.fontLabel.Text = t.fontSize
     V2.fontSmall.Text = t.small
     V2.fontMedium.Text = t.medium
@@ -1034,7 +1178,7 @@ V1.langBtn.MouseButton1Click:Connect(function()
     applyLang()
 end)
 
--- ✖ : 右上に V
+-- ===== ✖ : 右上にV（長押しでドラッグ可能） =====
 V1.closeBtn.MouseButton1Click:Connect(function()
     V1.mainFrame.Visible = false
     local old = V1.screenGui:FindFirstChild("VOnlyButton")
@@ -1062,13 +1206,62 @@ V1.closeBtn.MouseButton1Click:Connect(function()
             task.wait(0.03)
         end
     end)
-    vBtn.MouseButton1Click:Connect(function()
-        V1.mainFrame.Visible = true
-        vBtn:Destroy()
+
+    -- 長押しドラッグ + タップで復元
+    local vDragging, vDragStart, vStartPos = false, nil, nil
+    local vLongPress = false
+    local vHoldTimer = nil
+    local vMoved = false
+
+    vBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            vDragStart = input.Position
+            vStartPos = vBtn.Position
+            vMoved = false
+            -- 0.25秒長押しでドラッグ開始
+            vHoldTimer = task.delay(0.25, function()
+                if not vMoved then
+                    vDragging = true
+                    vBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
+                end
+            end)
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if not vDragStart then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+            local d = input.Position - vDragStart
+            if d.Magnitude > 8 then vMoved = true end
+            if vDragging then
+                vBtn.Position = UDim2.new(
+                    vStartPos.X.Scale, vStartPos.X.Offset + d.X,
+                    vStartPos.Y.Scale, vStartPos.Y.Offset + d.Y)
+            end
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if not vDragStart then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1
+            and input.UserInputType ~= Enum.UserInputType.Touch then return end
+        if vHoldTimer then task.cancel(vHoldTimer); vHoldTimer = nil end
+        local wasDrag = vDragging
+        local wasMoved = vMoved
+        vDragging = false
+        vDragStart = nil
+        vBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
+        -- ドラッグしていない&動いていない → タップとして復元
+        if not wasDrag and not wasMoved then
+            V1.mainFrame.Visible = true
+            vBtn:Destroy()
+        end
     end)
 end)
 
--- − : Vに変化
+-- ===== − : Vに変化 =====
 local minimized = false
 V1.minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -1076,17 +1269,16 @@ V1.minBtn.MouseButton1Click:Connect(function()
         V1.body.Visible = false
         V1.minBtn.Text = "V"
         V1.minBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
-        V1.mainFrame.Size = UDim2.new(0, 650, 0, 40)
+        V1.mainFrame.Size = UDim2.new(0, 560, 0, 36)
     else
         V1.body.Visible = true
         V1.minBtn.Text = "−"
         V1.minBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 110)
-        V1.mainFrame.Size = UDim2.new(0, 650, 0, 420)
+        V1.mainFrame.Size = UDim2.new(0, 560, 0, 360)
     end
 end)
 
 -- キャラ再生成時
-player = game.Players.LocalPlayer
 player.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid", 5)
     task.wait(0.3)
@@ -1099,6 +1291,9 @@ end)
 
 -- 初期反映
 applyLang()
-if _G.ViodMenu.p5 then _G.ViodMenu.p5.applyFontSize() end
-if _G.ViodMenu.p4 then _G.ViodMenu.p4.refreshTpList() end
+if _G.ViodMenu.p6 then _G.ViodMenu.p6.applyFontSize() end
+if _G.ViodMenu.p4 then
+    _G.ViodMenu.p4.refreshTpList()
+    _G.ViodMenu.p4.createFlyUI()
+end
 print("[Viod Menu] Loaded / 読み込み完了")
