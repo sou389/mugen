@@ -1,177 +1,132 @@
--- ========================================================
--- 文字なしUI + Viod最小化ボタン
--- ========================================================
+-- Delta Executor 用 拡大UI & スピードチェンジャー
+-- 特徴: 大きなUI、ドラッグ移動可能、4段階のスピード調整
 
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
-local oldUI = CoreGui:FindFirstChild("FoxnameUI")
-if oldUI then oldUI:Destroy() end
+-- スピードの段階設定 (通常, 2倍, 4倍, 8倍)
+local speedStages = {16, 32, 64, 128}
+local currentSpeedIndex = 1
+local speedNames = {"通常", "2倍", "4倍", "8倍"}
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FoxnameUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
+-- UIの作成
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DeltaSpeedUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- ==========================================
--- メインUI (文字をすべて消した状態)
--- ==========================================
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 600, 0, 350)
-MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(68, 51, 119) -- 画像の紫色
-MainFrame.BackgroundTransparency = 0.4
-MainFrame.BorderSizePixel = 0
-MainFrame.ClipsDescendants = true
-MainFrame.Parent = ScreenGui
+-- メインフレーム (大きく設定)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 420, 0, 380) -- 大きくしました
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -190)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true -- ドラッグで移動可能
+mainFrame.Parent = screenGui
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
+-- 角を丸くする
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 12)
+uiCorner.Parent = mainFrame
 
--- 背景イラスト
-local BackgroundImage = Instance.new("ImageLabel")
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.BackgroundTransparency = 1
-BackgroundImage.Image = "rbxassetid://17384785064" 
-BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.Parent = MainFrame
+-- タイトル
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.BackgroundTransparency = 1
+title.Text = "スピードチェンジャー"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = mainFrame
 
--- 半透明のオーバーレイ
-local Overlay = Instance.new("Frame")
-Overlay.Size = UDim2.new(1, 0, 1, 0)
-Overlay.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-Overlay.BackgroundTransparency = 0.3
-Overlay.Parent = MainFrame
+-- 現在の速度表示
+local speedDisplay = Instance.new("TextLabel")
+speedDisplay.Size = UDim2.new(0.8, 0, 0, 80)
+speedDisplay.Position = UDim2.new(0.1, 0, 0, 70)
+speedDisplay.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+speedDisplay.TextColor3 = Color3.fromRGB(0, 255, 150)
+speedDisplay.TextScaled = true
+speedDisplay.Font = Enum.Font.GothamBold
+speedDisplay.Text = "現在: 通常 (16)"
+speedDisplay.Parent = mainFrame
 
--- ヘッダー（中身は空っぽ）
-local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 50)
-Header.BackgroundTransparency = 1
-Header.Parent = MainFrame
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 8)
+speedCorner.Parent = speedDisplay
 
--- アイコン（文字はなし）
-local TopIcon = Instance.new("Frame")
-TopIcon.Size = UDim2.new(0, 30, 0, 30)
-TopIcon.Position = UDim2.new(0, 15, 0, 10)
-TopIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TopIcon.BackgroundTransparency = 0.5
-TopIcon.Parent = Header
-Instance.new("UICorner", TopIcon).CornerRadius = UDim.new(1, 0)
+-- プラスボタン (速度アップ)
+local increaseBtn = Instance.new("TextButton")
+increaseBtn.Size = UDim2.new(0.35, 0, 0, 80)
+increaseBtn.Position = UDim2.new(0.1, 0, 0, 180)
+increaseBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+increaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+increaseBtn.TextScaled = true
+increaseBtn.Font = Enum.Font.GothamBold
+increaseBtn.Text = "+ 速度アップ"
+increaseBtn.Parent = mainFrame
 
--- Keylessバッジ（文字はなし）
-local KeylessBadge = Instance.new("Frame")
-KeylessBadge.Size = UDim2.new(0, 70, 0, 25)
-KeylessBadge.Position = UDim2.new(0, 55, 0, 12)
-KeylessBadge.BackgroundColor3 = Color3.fromRGB(50, 120, 255)
-KeylessBadge.BackgroundTransparency = 0.2
-KeylessBadge.Parent = Header
-Instance.new("UICorner", KeylessBadge).CornerRadius = UDim.new(0, 5)
+local incCorner = Instance.new("UICorner")
+incCorner.CornerRadius = UDim.new(0, 8)
+incCorner.Parent = increaseBtn
 
--- 右上のウィンドウ操作ボタン（記号のみ）
-local function createWindowButton(text, posX, color)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 30, 0, 30)
-    btn.Position = UDim2.new(1, posX, 0, 10)
-    btn.BackgroundTransparency = 1
-    btn.Text = text
-    btn.TextColor3 = color
-    btn.TextSize = 18
-    btn.Font = Enum.Font.GothamBold
-    btn.Parent = Header
-    
-    btn.MouseButton1Click:Connect(function()
-        if text == "X" then
-            MainFrame.Visible = false
-            VoidToggleButton.Visible = true
-        end
-    end)
+-- マイナスボタン (速度ダウン)
+local decreaseBtn = Instance.new("TextButton")
+decreaseBtn.Size = UDim2.new(0.35, 0, 0, 80)
+decreaseBtn.Position = UDim2.new(0.55, 0, 0, 180)
+decreaseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+decreaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+decreaseBtn.TextScaled = true
+decreaseBtn.Font = Enum.Font.GothamBold
+decreaseBtn.Text = "- 速度ダウン"
+decreaseBtn.Parent = mainFrame
+
+local decCorner = Instance.new("UICorner")
+decCorner.CornerRadius = UDim.new(0, 8)
+decCorner.Parent = decreaseBtn
+
+-- 閉じるボタン
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0.8, 0, 0, 50)
+closeBtn.Position = UDim2.new(0.1, 0, 0, 300)
+closeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.Gotham
+closeBtn.Text = "UIを閉じる"
+closeBtn.Parent = mainFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeBtn
+
+-- 速度更新関数
+local function updateSpeed()
+    if humanoid and humanoid.Parent then
+        humanoid.WalkSpeed = speedStages[currentSpeedIndex]
+        speedDisplay.Text = "現在: " .. speedNames[currentSpeedIndex] .. " (" .. speedStages[currentSpeedIndex] .. ")"
+    end
 end
-createWindowButton("-", -100, Color3.fromRGB(200, 200, 200))
-createWindowButton("[]", -60, Color3.fromRGB(200, 200, 200))
-createWindowButton("X", -20, Color3.fromRGB(200, 100, 255))
 
--- サイドバー（文字はなし、アイコンの四角のみ）
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 150, 1, -50)
-Sidebar.Position = UDim2.new(0, 0, 0, 50)
-Sidebar.BackgroundTransparency = 1
-Sidebar.Parent = MainFrame
-
-for i = 1, 7 do
-    local icon = Instance.new("Frame")
-    icon.Size = UDim2.new(0, 15, 0, 15)
-    icon.Position = UDim2.new(0, 20, 0, i * 35)
-    icon.BackgroundColor3 = Color3.fromRGB(200, 150, 255)
-    icon.BackgroundTransparency = 0.5
-    icon.Parent = Sidebar
-    Instance.new("UICorner", icon).CornerRadius = UDim.new(0, 4)
-end
-
--- 中央コンテンツ（文字はなし、丸いアイコンだけ）
-local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -170, 1, -60)
-Content.Position = UDim2.new(0, 160, 0, 50)
-Content.BackgroundTransparency = 1
-Content.Parent = MainFrame
-
-local CaoModIcon = Instance.new("Frame")
-CaoModIcon.Size = UDim2.new(0, 40, 0, 40)
-CaoModIcon.Position = UDim2.new(0, 50, 0, 60)
-CaoModIcon.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
-CaoModIcon.BackgroundTransparency = 0.5
-CaoModIcon.Parent = Content
-Instance.new("UICorner", CaoModIcon).CornerRadius = UDim.new(1, 0)
-
--- ==========================================
--- 「Viod」ボタン（閉じた時に表示されるUI）
--- ==========================================
-local VoidToggleButton = Instance.new("TextButton")
-VoidToggleButton.Size = UDim2.new(0, 80, 0, 30)
-VoidToggleButton.Position = UDim2.new(0.5, 0, 0, 10) 
-VoidToggleButton.AnchorPoint = Vector2.new(0.5, 0)
-VoidToggleButton.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-VoidToggleButton.Text = "Viod"
-VoidToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-VoidToggleButton.Font = Enum.Font.GothamBold
-VoidToggleButton.TextSize = 16
-VoidToggleButton.Visible = false
-VoidToggleButton.Parent = ScreenGui
-
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 6)
-ToggleCorner.Parent = VoidToggleButton
-
-local ToggleStroke = Instance.new("UIStroke")
-ToggleStroke.Color = Color3.fromRGB(150, 100, 255)
-ToggleStroke.Thickness = 1.5
-ToggleStroke.Parent = VoidToggleButton
-
--- 「Viod」ボタンを押した時の処理
-VoidToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    VoidToggleButton.Visible = false
-end)
-
--- ドラッグ移動
-local dragging, dragInput, dragStart, startPos
-Header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
+-- ボタンイベント
+increaseBtn.MouseButton1Click:Connect(function()
+    if currentSpeedIndex < #speedStages then
+        currentSpeedIndex = currentSpeedIndex + 1
+        updateSpeed()
     end
 end)
-Header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+
+decreaseBtn.MouseButton1Click:Connect(function()
+    if currentSpeedIndex > 1 then
+        currentSpeedIndex = currentSpeedIndex - 1
+        updateSpeed()
     end
 end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- 初期化
+updateSpeed()
