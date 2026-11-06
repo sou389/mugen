@@ -1,285 +1,322 @@
--- Delta Executor 用 横長UI & 虹色枠 & プレイヤーメニュー
-local player = game.Players.LocalPlayer
+-- ============================================
+-- Delta Menu 完全版
+-- 横長UI / 半透明 / 虹色枠 / プレイヤーメニュー
+-- ============================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- 状態管理
+-- ===== 状態管理 =====
 local state = {
-    wallWalk = false,
-    noclip = false,
     speed = 16,
     jumpPower = 50,
+    wallWalk = false,
+    noclip = false,
+    speedEnabled = false,
+    jumpEnabled = false,
 }
 
--- ===== UI 作成 =====
+local originalCollide = {} -- 貫通OFF時に戻す用
+
+-- ===== Humanoid 確実取得 =====
+local function getChar()
+    return player.Character or player.CharacterAdded:Wait()
+end
+
+local function getHum()
+    local char = player.Character
+    if not char then return nil end
+    return char:FindFirstChildOfClass("Humanoid")
+end
+
+local function getHRP()
+    local char = player.Character
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart")
+end
+
+-- ===== UI =====
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DeltaMenu"
 screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
--- メインフレーム（横長・半透明）
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 560, 0, 300)
-mainFrame.Position = UDim2.new(0.5, -280, 0.5, -150)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-mainFrame.BackgroundTransparency = 0.25
+mainFrame.Size = UDim2.new(0, 600, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -300, 0.5, -160)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.BackgroundTransparency = 0.2
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 12)
 mainCorner.Parent = mainFrame
 
--- 虹色に光る枠
+-- 虹色枠
 local stroke = Instance.new("UIStroke")
 stroke.Thickness = 3
-stroke.Color = Color3.fromRGB(255, 0, 0)
 stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 stroke.Parent = mainFrame
 
--- 虹色アニメーション
-local hue = 0
 task.spawn(function()
+    local hue = 0
     while screenGui.Parent do
-        hue = (hue + 0.01) % 1
+        hue = (hue + 0.008) % 1
         stroke.Color = Color3.fromHSV(hue, 1, 1)
         task.wait(0.03)
     end
 end)
 
--- タイトル
+-- タイトルバー（ドラッグ専用）
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundTransparency = 1
+titleBar.Parent = mainFrame
+titleBar.Active = true
+
+local dragging, dragStart, startPos = false, nil, nil
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -20, 0, 40)
-title.Position = UDim2.new(0, 10, 0, 8)
+title.Size = UDim2.new(1, -20, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "Delta Menu"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = mainFrame
+title.Parent = titleBar
 
--- 左側のボタンエリア（横並び）
-local buttonContainer = Instance.new("Frame")
-buttonContainer.Size = UDim2.new(0, 150, 1, -60)
-buttonContainer.Position = UDim2.new(0, 10, 0, 50)
-buttonContainer.BackgroundTransparency = 1
-buttonContainer.Parent = mainFrame
+-- 左側ボタン列
+local leftPanel = Instance.new("Frame")
+leftPanel.Size = UDim2.new(0, 160, 1, -50)
+leftPanel.Position = UDim2.new(0, 10, 0, 45)
+leftPanel.BackgroundTransparency = 1
+leftPanel.Parent = mainFrame
 
-local buttonLayout = Instance.new("UIListLayout")
-buttonLayout.Padding = UDim.new(0, 8)
-buttonLayout.SortOrder = Enum.SortOrder.LayoutOrder
-buttonLayout.Parent = buttonContainer
+local leftLayout = Instance.new("UIListLayout")
+leftLayout.Padding = UDim.new(0, 8)
+leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+leftLayout.Parent = leftPanel
 
--- プレイヤーボタン
-local playerBtn = Instance.new("TextButton")
-playerBtn.Size = UDim2.new(1, 0, 0, 50)
-playerBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
-playerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerBtn.TextScaled = true
-playerBtn.Font = Enum.Font.GothamBold
-playerBtn.Text = "プレイヤー"
-playerBtn.LayoutOrder = 1
-playerBtn.Parent = buttonContainer
+local function makeTabButton(text, order)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 50)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = text
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.LayoutOrder = order
+    btn.AutoButtonColor = true
+    btn.Parent = leftPanel
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = btn
+    return btn
+end
 
-local pbCorner = Instance.new("UICorner")
-pbCorner.CornerRadius = UDim.new(0, 8)
-pbCorner.Parent = playerBtn
+local playerTab = makeTabButton("プレイヤー", 1)
 
--- 右側のコンテンツエリア
-local contentArea = Instance.new("Frame")
-contentArea.Size = UDim2.new(1, -180, 1, -60)
-contentArea.Position = UDim2.new(0, 170, 0, 50)
-contentArea.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-contentArea.BackgroundTransparency = 0.3
-contentArea.BorderSizePixel = 0
-contentArea.Visible = false
-contentArea.Parent = mainFrame
-
-local caCorner = Instance.new("UICorner")
-caCorner.CornerRadius = UDim.new(0, 8)
-caCorner.Parent = contentArea
-
+-- 右側コンテンツ
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, -190, 1, -50)
+content.Position = UDim2.new(0, 180, 0, 45)
+content.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+content.BackgroundTransparency = 0.3
+content.BorderSizePixel = 0
+content.Visible = false
+content.Parent = mainFrame
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0, 8)
+contentCorner.Parent = content
 local contentLayout = Instance.new("UIListLayout")
-contentLayout.Padding = UDim.new(0, 8)
-contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-contentLayout.Parent = contentArea
+contentLayout.Padding = UDim.new(0, 10)
+contentLayout.Parent = content
+local contentPad = Instance.new("UIPadding")
+contentPad.PaddingTop = UDim.new(0, 10)
+contentPad.PaddingLeft = UDim.new(0, 10)
+contentPad.PaddingRight = UDim.new(0, 10)
+contentPad.Parent = content
 
-local contentPadding = Instance.new("UIPadding")
-contentPadding.PaddingTop = UDim.new(0, 8)
-contentPadding.PaddingLeft = UDim.new(0, 8)
-contentPadding.PaddingRight = UDim.new(0, 8)
-contentPadding.Parent = contentArea
-
--- プレイヤーボタンでコンテンツ表示切替
-playerBtn.MouseButton1Click:Connect(function()
-    contentArea.Visible = not contentArea.Visible
+playerTab.MouseButton1Click:Connect(function()
+    content.Visible = not content.Visible
 end)
 
--- ===== プレイヤーメニュー内の項目 =====
-
--- ヘルパー: 行フレーム
-local function createRow(order)
+-- 行ヘルパー
+local function makeRow(order)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 40)
+    row.Size = UDim2.new(1, 0, 0, 42)
     row.BackgroundTransparency = 1
     row.LayoutOrder = order
-    row.Parent = contentArea
+    row.Parent = content
     return row
 end
 
--- ラベル作成ヘルパー
-local function createLabel(parent, text, x, width)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0, width, 1, 0)
-    lbl.Position = UDim2.new(0, x, 0, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextScaled = true
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = parent
-    return lbl
+local function makeLabel(parent, text, x, w)
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(0, w, 1, 0)
+    l.Position = UDim2.new(0, x, 0, 0)
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = Color3.fromRGB(255, 255, 255)
+    l.TextScaled = true
+    l.Font = Enum.Font.Gotham
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.Parent = parent
+    return l
 end
 
 -- スピード行
-local speedRow = createRow(1)
-createLabel(speedRow, "スピード:", 0, 90)
+local speedRow = makeRow(1)
+makeLabel(speedRow, "スピード:", 0, 100)
 local speedBox = Instance.new("TextBox")
-speedBox.Size = UDim2.new(0, 70, 1, 0)
-speedBox.Position = UDim2.new(0, 95, 0, 0)
-speedBox.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+speedBox.Size = UDim2.new(0, 80, 1, 0)
+speedBox.Position = UDim2.new(0, 105, 0, 0)
+speedBox.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
 speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedBox.Text = "16"
+speedBox.Text = "100"
 speedBox.Font = Enum.Font.Gotham
 speedBox.TextScaled = true
+speedBox.ClearTextOnFocus = false
 speedBox.Parent = speedRow
-local sbCorner = Instance.new("UICorner")
-sbCorner.CornerRadius = UDim.new(0, 6)
-sbCorner.Parent = speedBox
+local sbC = Instance.new("UICorner"); sbC.CornerRadius = UDim.new(0, 6); sbC.Parent = speedBox
 
 local speedApply = Instance.new("TextButton")
-speedApply.Size = UDim2.new(0, 80, 1, 0)
-speedApply.Position = UDim2.new(0, 175, 0, 0)
-speedApply.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+speedApply.Size = UDim2.new(0, 90, 1, 0)
+speedApply.Position = UDim2.new(0, 195, 0, 0)
+speedApply.BackgroundColor3 = Color3.fromRGB(0, 170, 110)
 speedApply.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedApply.Text = "実行"
 speedApply.Font = Enum.Font.GothamBold
 speedApply.TextScaled = true
 speedApply.Parent = speedRow
-local saCorner = Instance.new("UICorner")
-saCorner.CornerRadius = UDim.new(0, 6)
-saCorner.Parent = speedApply
+local saC = Instance.new("UICorner"); saC.CornerRadius = UDim.new(0, 6); saC.Parent = speedApply
 
 -- ジャンプ力行
-local jumpRow = createRow(2)
-createLabel(jumpRow, "ジャンプ力:", 0, 90)
+local jumpRow = makeRow(2)
+makeLabel(jumpRow, "ジャンプ力:", 0, 100)
 local jumpBox = Instance.new("TextBox")
-jumpBox.Size = UDim2.new(0, 70, 1, 0)
-jumpBox.Position = UDim2.new(0, 95, 0, 0)
-jumpBox.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+jumpBox.Size = UDim2.new(0, 80, 1, 0)
+jumpBox.Position = UDim2.new(0, 105, 0, 0)
+jumpBox.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
 jumpBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-jumpBox.Text = "50"
+jumpBox.Text = "120"
 jumpBox.Font = Enum.Font.Gotham
 jumpBox.TextScaled = true
+jumpBox.ClearTextOnFocus = false
 jumpBox.Parent = jumpRow
-local jbCorner = Instance.new("UICorner")
-jbCorner.CornerRadius = UDim.new(0, 6)
-jbCorner.Parent = jumpBox
+local jbC = Instance.new("UICorner"); jbC.CornerRadius = UDim.new(0, 6); jbC.Parent = jumpBox
 
 local jumpApply = Instance.new("TextButton")
-jumpApply.Size = UDim2.new(0, 80, 1, 0)
-jumpApply.Position = UDim2.new(0, 175, 0, 0)
-jumpApply.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+jumpApply.Size = UDim2.new(0, 90, 1, 0)
+jumpApply.Position = UDim2.new(0, 195, 0, 0)
+jumpApply.BackgroundColor3 = Color3.fromRGB(0, 170, 110)
 jumpApply.TextColor3 = Color3.fromRGB(255, 255, 255)
 jumpApply.Text = "実行"
 jumpApply.Font = Enum.Font.GothamBold
 jumpApply.TextScaled = true
 jumpApply.Parent = jumpRow
-local jaCorner = Instance.new("UICorner")
-jaCorner.CornerRadius = UDim.new(0, 6)
-jaCorner.Parent = jumpApply
+local jaC = Instance.new("UICorner"); jaC.CornerRadius = UDim.new(0, 6); jaC.Parent = jumpApply
 
 -- 壁歩き行
-local wallRow = createRow(3)
-createLabel(wallRow, "壁歩き:", 0, 90)
+local wallRow = makeRow(3)
+makeLabel(wallRow, "壁歩き:", 0, 100)
 local wallToggle = Instance.new("TextButton")
-wallToggle.Size = UDim2.new(0, 150, 1, 0)
-wallToggle.Position = UDim2.new(0, 95, 0, 0)
-wallToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+wallToggle.Size = UDim2.new(0, 180, 1, 0)
+wallToggle.Position = UDim2.new(0, 105, 0, 0)
+wallToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 wallToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 wallToggle.Text = "OFF"
 wallToggle.Font = Enum.Font.GothamBold
 wallToggle.TextScaled = true
 wallToggle.Parent = wallRow
-local wCorner = Instance.new("UICorner")
-wCorner.CornerRadius = UDim.new(0, 6)
-wCorner.Parent = wallToggle
+local wC = Instance.new("UICorner"); wC.CornerRadius = UDim.new(0, 6); wC.Parent = wallToggle
 
 -- 貫通行
-local noclipRow = createRow(4)
-createLabel(noclipRow, "貫通:", 0, 90)
+local noclipRow = makeRow(4)
+makeLabel(noclipRow, "貫通:", 0, 100)
 local noclipToggle = Instance.new("TextButton")
-noclipToggle.Size = UDim2.new(0, 150, 1, 0)
-noclipToggle.Position = UDim2.new(0, 95, 0, 0)
-noclipToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+noclipToggle.Size = UDim2.new(0, 180, 1, 0)
+noclipToggle.Position = UDim2.new(0, 105, 0, 0)
+noclipToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 noclipToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 noclipToggle.Text = "OFF"
 noclipToggle.Font = Enum.Font.GothamBold
 noclipToggle.TextScaled = true
 noclipToggle.Parent = noclipRow
-local nCorner = Instance.new("UICorner")
-nCorner.CornerRadius = UDim.new(0, 6)
-nCorner.Parent = noclipToggle
+local nC = Instance.new("UICorner"); nC.CornerRadius = UDim.new(0, 6); nC.Parent = noclipToggle
 
 -- リスポーン行
-local respawnRow = createRow(5)
+local respawnRow = makeRow(5)
 local respawnBtn = Instance.new("TextButton")
 respawnBtn.Size = UDim2.new(1, 0, 1, 0)
-respawnBtn.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
+respawnBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
 respawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 respawnBtn.Text = "即リスポーン"
 respawnBtn.Font = Enum.Font.GothamBold
 respawnBtn.TextScaled = true
 respawnBtn.Parent = respawnRow
-local rCorner = Instance.new("UICorner")
-rCorner.CornerRadius = UDim.new(0, 6)
-rCorner.Parent = respawnBtn
+local rC = Instance.new("UICorner"); rC.CornerRadius = UDim.new(0, 6); rC.Parent = respawnBtn
 
 -- ===== 機能実装 =====
 
-local function getHumanoid()
-    local char = player.Character
-    if char then
-        return char:FindFirstChildOfClass("Humanoid")
-    end
-    return nil
-end
-
--- スピード実行
+-- スピード適用
 speedApply.MouseButton1Click:Connect(function()
-    local val = tonumber(speedBox.Text)
-    if val then
-        local hum = getHumanoid()
-        if hum then
-            hum.WalkSpeed = val
-            state.speed = val
-        end
+    local v = tonumber(speedBox.Text)
+    if not v or v <= 0 then
+        speedBox.Text = "数値エラー"
+        return
     end
+    state.speed = v
+    state.speedEnabled = true
+    local hum = getHum()
+    if hum then hum.WalkSpeed = v end
 end)
 
--- ジャンプ力実行
+-- ジャンプ適用
 jumpApply.MouseButton1Click:Connect(function()
-    local val = tonumber(jumpBox.Text)
-    if val then
-        local hum = getHumanoid()
-        if hum then
-            hum.UseJumpPower = true
-            hum.JumpPower = val
-            state.jumpPower = val
-        end
+    local v = tonumber(jumpBox.Text)
+    if not v or v <= 0 then
+        jumpBox.Text = "数値エラー"
+        return
+    end
+    state.jumpPower = v
+    state.jumpEnabled = true
+    local hum = getHum()
+    if hum then
+        hum.UseJumpPower = true
+        hum.JumpPower = v
     end
 end)
 
@@ -287,63 +324,67 @@ end)
 wallToggle.MouseButton1Click:Connect(function()
     state.wallWalk = not state.wallWalk
     wallToggle.Text = state.wallWalk and "ON" or "OFF"
-    wallToggle.BackgroundColor3 = state.wallWalk and Color3.fromRGB(0, 180, 120) or Color3.fromRGB(80, 80, 100)
+    wallToggle.BackgroundColor3 = state.wallWalk
+        and Color3.fromRGB(0, 170, 110)
+        or Color3.fromRGB(70, 70, 90)
 
-    local char = player.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local bodyVelocity = hrp:FindFirstChild("WallWalkVelocity")
-            local bodyGyro = hrp:FindFirstChild("WallWalkGyro")
-            if state.wallWalk then
-                if not bodyVelocity then
-                    bodyVelocity = Instance.new("BodyVelocity")
-                    bodyVelocity.Name = "WallWalkVelocity"
-                    bodyVelocity.MaxForce = Vector3.new(0, 0, 0)
-                    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                    bodyVelocity.Parent = hrp
-                end
-                if not bodyGyro then
-                    bodyGyro = Instance.new("BodyGyro")
-                    bodyGyro.Name = "WallWalkGyro"
-                    bodyGyro.MaxTorque = Vector3.new(0, 0, 0)
-                    bodyGyro.Parent = hrp
-                end
-            else
-                if bodyVelocity then bodyVelocity:Destroy() end
-                if bodyGyro then bodyGyro:Destroy() end
-            end
+    local hrp = getHRP()
+    if not hrp then return end
+
+    if state.wallWalk then
+        if not hrp:FindFirstChild("WallWalkForce") then
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "WallWalkForce"
+            bv.MaxForce = Vector3.zero
+            bv.Velocity = Vector3.zero
+            bv.Parent = hrp
         end
+        if not hrp:FindFirstChild("WallWalkGyro") then
+            local bg = Instance.new("BodyGyro")
+            bg.Name = "WallWalkGyro"
+            bg.MaxTorque = Vector3.zero
+            bg.Parent = hrp
+        end
+    else
+        local bv = hrp:FindFirstChild("WallWalkForce")
+        if bv then bv:Destroy() end
+        local bg = hrp:FindFirstChild("WallWalkGyro")
+        if bg then bg:Destroy() end
     end
 end)
 
--- 壁歩きの簡易実装（キャラクターに追従）
-task.spawn(function()
-    while screenGui.Parent do
-        if state.wallWalk then
-            local char = player.Character
-            if char then
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local bv = hrp:FindFirstChild("WallWalkVelocity")
-                    local bg = hrp:FindFirstChild("WallWalkGyro")
-                    if bv then
-                        local ray = Ray.new(hrp.Position, hrp.CFrame.LookVector * 5)
-                        local hit, pos, normal = workspace:FindPartOnRay(ray, char)
-                        if hit and normal then
-                            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-                            bv.Velocity = Vector3.new(0, 0, 0)
-                            bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-                            bg.CFrame = CFrame.new(hrp.Position, hrp.Position + normal)
-                        else
-                            bv.MaxForce = Vector3.new(0, 0, 0)
-                            bg.MaxTorque = Vector3.new(0, 0, 0)
-                        end
-                    end
-                end
-            end
-        end
-        task.wait(0.05)
+-- 壁歩き更新ループ（Raycast正しい版）
+RunService.Heartbeat:Connect(function()
+    if not state.wallWalk then return end
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    local bv = hrp:FindFirstChild("WallWalkForce")
+    local bg = hrp:FindFirstChild("WallWalkGyro")
+    if not bv or not bg then return end
+
+    -- キャラクター自身を除いて前方にレイキャスト
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {char}
+    params.IgnoreWater = true
+
+    local dir = hrp.CFrame.LookVector * 5 + Vector3.new(0, -1, 0) * 0
+    local result = workspace:Raycast(hrp.Position, dir, params)
+
+    if result and result.Normal then
+        local n = result.Normal
+        -- 壁に密着して上方向に進む
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bv.Velocity = Vector3.new(0, hum.WalkSpeed * 0.6, 0) + (-n * 4)
+        bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+        bg.CFrame = CFrame.new(hrp.Position, hrp.Position - n)
+    else
+        bv.MaxForce = Vector3.zero
+        bg.MaxTorque = Vector3.zero
     end
 end)
 
@@ -351,45 +392,87 @@ end)
 noclipToggle.MouseButton1Click:Connect(function()
     state.noclip = not state.noclip
     noclipToggle.Text = state.noclip and "ON" or "OFF"
-    noclipToggle.BackgroundColor3 = state.noclip and Color3.fromRGB(0, 180, 120) or Color3.fromRGB(80, 80, 100)
+    noclipToggle.BackgroundColor3 = state.noclip
+        and Color3.fromRGB(0, 170, 110)
+        or Color3.fromRGB(70, 70, 90)
 end)
 
--- 貫通の実装
-task.spawn(function()
-    while screenGui.Parent do
-        if state.noclip then
-            local char = player.Character
-            if char then
-                for _, part in ipairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") and part.CanCollide then
-                        part.CanCollide = false
-                    end
-                end
+-- 貫通ループ
+RunService.Stepped:Connect(function()
+    if not state.noclip then return end
+    local char = player.Character
+    if not char then return end
+    for _, p in ipairs(char:GetDescendants()) do
+        if p:IsA("BasePart") and p.CanCollide then
+            if originalCollide[p] == nil then
+                originalCollide[p] = true
             end
+            p.CanCollide = false
         end
-        task.wait(0.1)
+    end
+end)
+
+-- 貫通OFF時の復元
+local function restoreCollide()
+    for part in pairs(originalCollide) do
+        if part and part.Parent then
+            part.CanCollide = true
+        end
+    end
+    originalCollide = {}
+end
+
+-- 貫通をOFFにした瞬間に戻す（トグルを書き換え）
+local oldNoclipClick
+oldNoclipClick = noclipToggle.MouseButton1Click:Connect(function()
+    if not state.noclip then
+        restoreCollide()
     end
 end)
 
 -- 即リスポーン
 respawnBtn.MouseButton1Click:Connect(function()
-    local char = player.Character
-    if char then
-        local hum = char:FindFirstChildOfClass("Humanoid")
+    local hum = getHum()
+    if hum then
+        hum.Health = 0
+    else
+        -- フォールバック
+        local char = player.Character
+        if char then char:BreakJoints() end
+    end
+end)
+
+-- ===== 定期再適用（サーバーに戻される対策） =====
+task.spawn(function()
+    while screenGui.Parent do
+        local hum = getHum()
         if hum then
-            hum.Health = 0
+            if state.speedEnabled and hum.WalkSpeed ~= state.speed then
+                hum.WalkSpeed = state.speed
+            end
+            if state.jumpEnabled then
+                hum.UseJumpPower = true
+                if hum.JumpPower ~= state.jumpPower then
+                    hum.JumpPower = state.jumpPower
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+-- キャラクター再生成時の再適用
+player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid", 5)
+    task.wait(0.3)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if state.speedEnabled then hum.WalkSpeed = state.speed end
+        if state.jumpEnabled then
+            hum.UseJumpPower = true
+            hum.JumpPower = state.jumpPower
         end
     end
 end)
 
--- リスポーン時の再適用
-player.CharacterAdded:Connect(function(char)
-    char:WaitForChild("Humanoid")
-    task.wait(0.5)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed = state.speed
-        hum.UseJumpPower = true
-        hum.JumpPower = state.jumpPower
-    end
-end)
+print("[Delta Menu] 読み込み完了")
