@@ -1,4 +1,4 @@
--- ===== Viod Menu Part 1/5 =====
+-- ===== Viod Menu Part 1/6 =====
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -8,16 +8,22 @@ local playerGui = player:WaitForChild("PlayerGui")
 local LANG = {
     ja = { title="Viod", player="プレイヤー", tools="ツール", settings="設定",
            speed="スピード:", jump="ジャンプ力:", wall="壁歩き:", noclip="貫通:",
-           respawn="即リスポーン", exec="実行", on="ON", off="OFF", err="数値エラー",
+           respawn="即リスポーン", on="ON", off="OFF",
            tp="テレポート", invis="透明化", rot="回転スピード:",
-           fontSize="文字サイズ:", bg="背景色:",
+           fontSize="文字サイズ:", bg="背景色:", save="保存", tpsave="テレポート保存",
+           pose="ポーズ歩き:", poseNormal="通常", poseRagdoll="ラグドール",
+           poseT="Tポーズ", poseSit="座り",
+           saveName="名前を入力", saveBtn="保存", del="削除",
            small="小", medium="中", large="大",
            blue="青", yellow="黄", red="赤", rainbow="虹", black="黒", white="白" },
     en = { title="Viod", player="Player", tools="Tools", settings="Settings",
            speed="Speed:", jump="Jump:", wall="Wall Walk:", noclip="Noclip:",
-           respawn="Respawn", exec="Apply", on="ON", off="OFF", err="Invalid",
+           respawn="Respawn", on="ON", off="OFF",
            tp="Teleport", invis="Invisible", rot="Rot Speed:",
-           fontSize="Font Size:", bg="Background:",
+           fontSize="Font Size:", bg="Background:", save="Save", tpsave="Save TP",
+           pose="Pose Walk:", poseNormal="Normal", poseRagdoll="Ragdoll",
+           poseT="T-Pose", poseSit="Sit",
+           saveName="Enter name", saveBtn="Save", del="Delete",
            small="S", medium="M", large="L",
            blue="Blue", yellow="Yellow", red="Red", rainbow="Rainbow", black="Black", white="White" },
 }
@@ -25,12 +31,12 @@ local LANG = {
 local state = {
     speed=16, jumpPower=50, wallWalk=false, noclip=false,
     speedEnabled=false, jumpEnabled=false, lang="en",
-    tpEnabled=false, invisEnabled=false, rotSpeed=0,
-    fontSize="medium", bgColor="black",
+    tpEnabled=false, invisEnabled=false, rotEnabled=false, rotSpeed=180,
+    fontSize="medium", bgColor="black", pose="normal",
+    savedTPs = {},
 }
 local originalCollide = {}
 local originalTransparency = {}
-local originalRot = {}
 
 local function getHum()
     local c = player.Character; if not c then return nil end
@@ -49,10 +55,10 @@ screenGui.DisplayOrder = 999
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 650, 0, 380)
-mainFrame.Position = UDim2.new(0.5, -325, 0.5, -190)
+mainFrame.Size = UDim2.new(0, 650, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -325, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-mainFrame.BackgroundTransparency = 0.2
+mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Parent = screenGui
@@ -74,12 +80,12 @@ task.spawn(function()
     end
 end)
 
+-- ドラッグ
 local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1, 0, 0, 40)
 titleBar.BackgroundTransparency = 1
 titleBar.Active = true
 titleBar.Parent = mainFrame
-
 local dragging, dragStart, startPos = false, nil, nil
 titleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -143,15 +149,16 @@ closeBtn.Text = "✖"
 closeBtn.Parent = titleBar
 local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 6); cc.Parent = closeBtn
 
+-- 本体
 local body = Instance.new("Frame")
 body.Size = UDim2.new(1, -20, 1, -50)
 body.Position = UDim2.new(0, 10, 0, 45)
 body.BackgroundTransparency = 1
 body.Parent = mainFrame
 
--- 左タブ（プレイヤー / ツール / 設定）
+-- 左タブ
 local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0, 130, 1, 0)
+leftPanel.Size = UDim2.new(0, 130, 1, -60)
 leftPanel.BackgroundTransparency = 1
 leftPanel.Parent = body
 local leftLayout = Instance.new("UIListLayout")
@@ -171,7 +178,6 @@ local function makeTab(text, order)
     local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = b
     return b
 end
-
 local playerTab = makeTab("Player", 1)
 local toolsTab = makeTab("Tools", 2)
 local settingsTab = makeTab("Settings", 3)
@@ -180,10 +186,53 @@ local content = Instance.new("Frame")
 content.Size = UDim2.new(1, -140, 1, 0)
 content.Position = UDim2.new(0, 140, 0, 0)
 content.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-content.BackgroundTransparency = 0.3
 content.BorderSizePixel = 0
 content.Parent = body
 local cC = Instance.new("UICorner"); cC.CornerRadius = UDim.new(0, 8); cC.Parent = content
+
+-- 左下 プレイヤーカード
+local playerCard = Instance.new("Frame")
+playerCard.Size = UDim2.new(0, 130, 0, 52)
+playerCard.Position = UDim2.new(0, 0, 1, 8)
+playerCard.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+playerCard.BorderSizePixel = 0
+playerCard.Parent = leftPanel.Parent.Parent -- body
+local pcC = Instance.new("UICorner"); pcC.CornerRadius = UDim.new(0, 8); pcC.Parent = playerCard
+
+local avatarImg = Instance.new("ImageLabel")
+avatarImg.Size = UDim2.new(0, 40, 0, 40)
+avatarImg.Position = UDim2.new(0, 6, 0, 6)
+avatarImg.BackgroundColor3 = Color3.fromRGB(255,255,255)
+avatarImg.BackgroundTransparency = 0.2
+avatarImg.Image = ""
+avatarImg.Parent = playerCard
+local avC = Instance.new("UICorner"); avC.CornerRadius = UDim.new(1, 0); avC.Parent = avatarImg
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(0, 74, 0, 40)
+nameLabel.Position = UDim2.new(0, 50, 0, 6)
+nameLabel.BackgroundTransparency = 1
+nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameLabel.TextSize = 12
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+nameLabel.Parent = playerCard
+
+-- アイコンと名前取得
+task.spawn(function()
+    local userId = player.UserId
+    local ok, thumb = pcall(function()
+        return Players:GetUserThumbnailAsync(userId,
+            Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+    end)
+    if ok and thumb then avatarImg.Image = thumb end
+    nameLabel.Text = player.DisplayName or player.Name
+end)
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    nameLabel.Text = player.DisplayName or player.Name
+end)
 
 _G.ViodMenu = _G.ViodMenu or {}
 _G.ViodMenu.p1 = { screenGui=screenGui, mainFrame=mainFrame, body=body,
@@ -191,8 +240,8 @@ _G.ViodMenu.p1 = { screenGui=screenGui, mainFrame=mainFrame, body=body,
     playerTab=playerTab, toolsTab=toolsTab, settingsTab=settingsTab,
     content=content, state=state, LANG=LANG, getHum=getHum, getHRP=getHRP,
     originalCollide=originalCollide, originalTransparency=originalTransparency,
-    originalRot=originalRot }
--- ===== Viod Menu Part 2/5 =====
+    avatarImg=avatarImg, nameLabel=nameLabel }
+-- ===== Viod Menu Part 2/6 =====
 local V = _G.ViodMenu.p1
 local LANG = V.LANG
 local state = V.state
@@ -249,7 +298,7 @@ local function makeBtn(parent, x, w, text, color)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(0, w, 1, 0)
     b.Position = UDim2.new(0, x, 0, 0)
-    b.BackgroundColor3 = color or Color3.fromRGB(0, 170, 110)
+    b.BackgroundColor3 = color or Color3.fromRGB(70,70,90)
     b.TextColor3 = Color3.fromRGB(255, 255, 255)
     b.TextSize = 14
     b.Font = Enum.Font.GothamBold
@@ -259,33 +308,31 @@ local function makeBtn(parent, x, w, text, color)
     return b
 end
 
--- スピード
+-- スピード（数値 + ON/OFF のみ）
 local speedRow = row(pagePlayer, 1)
 local speedLabel = label(speedRow, 0, 95)
-local speedBox = makeBox(speedRow, 100, 70, "100")
-local speedApply = makeBtn(speedRow, 175, 70, "Apply")
-local speedToggle = makeBtn(speedRow, 250, 90, "OFF", Color3.fromRGB(70,70,90))
+local speedBox = makeBox(speedRow, 100, 80, "100")
+local speedToggle = makeBtn(speedRow, 185, 90, "OFF", Color3.fromRGB(70,70,90))
 
--- ジャンプ
+-- ジャンプ（数値 + ON/OFF のみ）
 local jumpRow = row(pagePlayer, 2)
 local jumpLabel = label(jumpRow, 0, 95)
-local jumpBox = makeBox(jumpRow, 100, 70, "120")
-local jumpApply = makeBtn(jumpRow, 175, 70, "Apply")
-local jumpToggle = makeBtn(jumpRow, 250, 90, "OFF", Color3.fromRGB(70,70,90))
+local jumpBox = makeBox(jumpRow, 100, 80, "120")
+local jumpToggle = makeBtn(jumpRow, 185, 90, "OFF", Color3.fromRGB(70,70,90))
 
 -- 壁歩き
 local wallRow = row(pagePlayer, 3)
 local wallLabel = label(wallRow, 0, 95)
-local wallToggle = makeBtn(wallRow, 100, 245, "OFF", Color3.fromRGB(70,70,90))
+local wallToggle = makeBtn(wallRow, 100, 175, "OFF")
 
 -- 貫通
 local noclipRow = row(pagePlayer, 4)
 local noclipLabel = label(noclipRow, 0, 95)
-local noclipToggle = makeBtn(noclipRow, 100, 245, "OFF", Color3.fromRGB(70,70,90))
+local noclipToggle = makeBtn(noclipRow, 100, 175, "OFF")
 
 -- リスポーン
 local respawnRow = row(pagePlayer, 5)
-local respawnBtn = makeBtn(respawnRow, 0, 340, "Respawn", Color3.fromRGB(200,70,70))
+local respawnBtn = makeBtn(respawnRow, 0, 275, "Respawn", Color3.fromRGB(200,70,70))
 
 -- ツール画面
 local pageTools = Instance.new("Frame")
@@ -302,21 +349,49 @@ local ptL = Instance.new("UIListLayout")
 ptL.Padding = UDim.new(0, 8)
 ptL.Parent = pageTools
 
--- テレポート
+-- テレポート（クリック移動）
 local tpRow = row(pageTools, 1)
 local tpLabel = label(tpRow, 0, 95)
-local tpToggle = makeBtn(tpRow, 100, 245, "OFF", Color3.fromRGB(70,70,90))
+local tpToggle = makeBtn(tpRow, 100, 175, "OFF")
+
+-- テレポート保存
+local tpSaveRow = row(pageTools, 2)
+local tpSaveLabel = label(tpSaveRow, 0, 95)
+local tpSaveBox = makeBox(tpSaveRow, 100, 110, "")
+local tpSaveBtn = makeBtn(tpSaveRow, 215, 60, "Save")
+
+-- 保存リスト
+local tpListRow = row(pageTools, 3)
+tpListRow.Size = UDim2.new(1, 0, 0, 110)
+local tpListFrame = Instance.new("ScrollingFrame")
+tpListFrame.Size = UDim2.new(1, 0, 1, 0)
+tpListFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+tpListFrame.BorderSizePixel = 0
+tpListFrame.ScrollBarThickness = 4
+tpListFrame.Parent = tpListRow
+local tlC = Instance.new("UICorner"); tlC.CornerRadius = UDim.new(0, 6); tlC.Parent = tpListFrame
+local tlLayout = Instance.new("UIListLayout")
+tlLayout.Padding = UDim.new(0, 4)
+tlLayout.Parent = tpListFrame
 
 -- 透明化
-local invisRow = row(pageTools, 2)
+local invisRow = row(pageTools, 4)
 local invisLabel = label(invisRow, 0, 95)
-local invisToggle = makeBtn(invisRow, 100, 245, "OFF", Color3.fromRGB(70,70,90))
+local invisToggle = makeBtn(invisRow, 100, 175, "OFF")
 
--- 回転スピード
-local rotRow = row(pageTools, 3)
+-- 回転（数値 + ON/OFF）
+local rotRow = row(pageTools, 5)
 local rotLabel = label(rotRow, 0, 95)
-local rotBox = makeBox(rotRow, 100, 70, "0")
-local rotApply = makeBtn(rotRow, 175, 70, "Apply")
+local rotBox = makeBox(rotRow, 100, 80, "180")
+local rotToggle = makeBtn(rotRow, 185, 90, "OFF")
+
+-- ポーズ歩き
+local poseRow = row(pageTools, 6)
+local poseLabel = label(poseRow, 0, 95)
+local poseNormal = makeBtn(poseRow, 100, 60, "Normal", Color3.fromRGB(0,150,200))
+local poseRagdoll = makeBtn(poseRow, 165, 55, "Ragdoll")
+local poseT = makeBtn(poseRow, 225, 55, "T-Pose")
+local poseSit = makeBtn(poseRow, 285, 55, "Sit")
 
 -- 設定画面
 local pageSettings = Instance.new("Frame")
@@ -333,26 +408,23 @@ local psL = Instance.new("UIListLayout")
 psL.Padding = UDim.new(0, 8)
 psL.Parent = pageSettings
 
--- 文字サイズ
 local fontRow = row(pageSettings, 1)
 local fontLabel = label(fontRow, 0, 95)
-local fontSmall = makeBtn(fontRow, 100, 70, "S", Color3.fromRGB(70,70,90))
-local fontMedium = makeBtn(fontRow, 175, 70, "M", Color3.fromRGB(0,150,200))
-local fontLarge = makeBtn(fontRow, 250, 70, "L", Color3.fromRGB(70,70,90))
+local fontSmall = makeBtn(fontRow, 100, 60, "S")
+local fontMedium = makeBtn(fontRow, 165, 60, "M", Color3.fromRGB(0,150,200))
+local fontLarge = makeBtn(fontRow, 230, 60, "L")
 
--- 背景色
 local bgRow = row(pageSettings, 2)
 local bgLabel = label(bgRow, 0, 95)
-local bgBlue = makeBtn(bgRow, 100, 70, "Blue", Color3.fromRGB(40,80,200))
-local bgYellow = makeBtn(bgRow, 175, 70, "Yellow", Color3.fromRGB(200,180,0))
-local bgRed = makeBtn(bgRow, 250, 70, "Red", Color3.fromRGB(200,50,50))
+local bgBlue = makeBtn(bgRow, 100, 55, "Blue", Color3.fromRGB(40,80,200))
+local bgYellow = makeBtn(bgRow, 160, 60, "Yellow", Color3.fromRGB(200,180,0))
+local bgRed = makeBtn(bgRow, 225, 55, "Red", Color3.fromRGB(200,50,50))
 
 local bgRow2 = row(pageSettings, 3)
 local bgRainbow = makeBtn(bgRow2, 0, 70, "Rainbow", Color3.fromRGB(120,50,200))
 local bgBlack = makeBtn(bgRow2, 75, 70, "Black", Color3.fromRGB(20,20,30))
 local bgWhite = makeBtn(bgRow2, 150, 70, "White", Color3.fromRGB(230,230,230))
 
--- タブ切替
 local function showPage(which)
     pagePlayer.Visible = (which == "player")
     pageTools.Visible = (which == "tools")
@@ -362,25 +434,27 @@ local function showPage(which)
     V.settingsTab.BackgroundColor3 = (which=="settings") and Color3.fromRGB(70,70,110) or Color3.fromRGB(50,50,75)
 end
 showPage("player")
-
 V.playerTab.MouseButton1Click:Connect(function() showPage("player") end)
 V.toolsTab.MouseButton1Click:Connect(function() showPage("tools") end)
 V.settingsTab.MouseButton1Click:Connect(function() showPage("settings") end)
 
 _G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools, pageSettings=pageSettings,
-    speedLabel=speedLabel, speedBox=speedBox, speedApply=speedApply, speedToggle=speedToggle,
-    jumpLabel=jumpLabel, jumpBox=jumpBox, jumpApply=jumpApply, jumpToggle=jumpToggle,
+    speedLabel=speedLabel, speedBox=speedBox, speedToggle=speedToggle,
+    jumpLabel=jumpLabel, jumpBox=jumpBox, jumpToggle=jumpToggle,
     wallLabel=wallLabel, wallToggle=wallToggle,
     noclipLabel=noclipLabel, noclipToggle=noclipToggle,
     respawnBtn=respawnBtn,
     tpLabel=tpLabel, tpToggle=tpToggle,
+    tpSaveLabel=tpSaveLabel, tpSaveBox=tpSaveBox, tpSaveBtn=tpSaveBtn, tpListFrame=tpListFrame,
     invisLabel=invisLabel, invisToggle=invisToggle,
-    rotLabel=rotLabel, rotBox=rotBox, rotApply=rotApply,
+    rotLabel=rotLabel, rotBox=rotBox, rotToggle=rotToggle,
+    poseLabel=poseLabel, poseNormal=poseNormal, poseRagdoll=poseRagdoll,
+    poseT=poseT, poseSit=poseSit,
     fontLabel=fontLabel, fontSmall=fontSmall, fontMedium=fontMedium, fontLarge=fontLarge,
     bgLabel=bgLabel, bgBlue=bgBlue, bgYellow=bgYellow, bgRed=bgRed,
     bgRainbow=bgRainbow, bgBlack=bgBlack, bgWhite=bgWhite,
     showPage=showPage }
--- ===== Viod Menu Part 3/5 =====
+-- ===== Viod Menu Part 3/6 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
@@ -388,19 +462,16 @@ local state = V1.state
 local getHum = V1.getHum
 local getHRP = V1.getHRP
 local originalCollide = V1.originalCollide
-local originalTransparency = V1.originalTransparency
-local originalRot = V1.originalRot
 local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 
 local baseSpeed = 16
 local baseJump = 50
 
--- ===== スピード（即反映・高頻度再適用） =====
-V2.speedApply.MouseButton1Click:Connect(function()
+-- スピード: 数値変更だけで反映（ON中）
+V2.speedBox.FocusLost:Connect(function()
     local v = tonumber(V2.speedBox.Text)
-    if not v or v <= 0 then V2.speedBox.Text = "0"; return end
+    if not v or v <= 0 then V2.speedBox.Text = tostring(state.speed); return end
     state.speed = v
     if state.speedEnabled then
         local h = getHum(); if h then h.WalkSpeed = v end
@@ -416,16 +487,14 @@ V2.speedToggle.MouseButton1Click:Connect(function()
         if state.speedEnabled then
             baseSpeed = h.WalkSpeed
             h.WalkSpeed = state.speed
-        else
-            h.WalkSpeed = baseSpeed
-        end
+        else h.WalkSpeed = baseSpeed end
     end
 end)
 
--- ===== ジャンプ =====
-V2.jumpApply.MouseButton1Click:Connect(function()
+-- ジャンプ
+V2.jumpBox.FocusLost:Connect(function()
     local v = tonumber(V2.jumpBox.Text)
-    if not v or v <= 0 then V2.jumpBox.Text = "0"; return end
+    if not v or v <= 0 then V2.jumpBox.Text = tostring(state.jumpPower); return end
     state.jumpPower = v
     if state.jumpEnabled then
         local h = getHum(); if h then h.UseJumpPower=true; h.JumpPower = v end
@@ -442,13 +511,11 @@ V2.jumpToggle.MouseButton1Click:Connect(function()
             baseJump = h.JumpPower
             h.UseJumpPower = true
             h.JumpPower = state.jumpPower
-        else
-            h.JumpPower = baseJump
-        end
+        else h.JumpPower = baseJump end
     end
 end)
 
--- ===== 壁歩き（接触時のみ発動） =====
+-- 壁歩き
 V2.wallToggle.MouseButton1Click:Connect(function()
     state.wallWalk = not state.wallWalk
     V2.wallToggle.BackgroundColor3 = state.wallWalk
@@ -484,23 +551,20 @@ RunService.Heartbeat:Connect(function()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {char}
     params.IgnoreWater = true
-    -- 前方向に短いレイ（接触判定）
     local res = workspace:Raycast(hrp.Position, hrp.CFrame.LookVector * 2.5, params)
     if res and res.Normal and math.abs(res.Normal.Y) < 0.3 then
-        -- 壁に接触している時だけ吸着
         local n = res.Normal
         bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
         bv.Velocity = Vector3.new(0, hum.WalkSpeed * 0.5, 0) + (-n * 3)
         bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
         bg.CFrame = CFrame.new(hrp.Position, hrp.Position - n)
     else
-        -- 接触していない時は無効
         bv.MaxForce = Vector3.zero
         bg.MaxTorque = Vector3.zero
     end
 end)
 
--- ===== 貫通 =====
+-- 貫通
 V2.noclipToggle.MouseButton1Click:Connect(function()
     state.noclip = not state.noclip
     V2.noclipToggle.BackgroundColor3 = state.noclip
@@ -523,74 +587,14 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ===== リスポーン =====
+-- リスポーン
 V2.respawnBtn.MouseButton1Click:Connect(function()
     local h = getHum()
     if h then h.Health = 0
     else local c = player.Character; if c then c:BreakJoints() end end
 end)
 
--- ===== テレポート =====
-local tpGui = nil
-local function createTpButton()
-    if tpGui then tpGui:Destroy() end
-    tpGui = Instance.new("ScreenGui")
-    tpGui.Name = "ViodTp"
-    tpGui.ResetOnSpawn = false
-    tpGui.IgnoreGuiInset = true
-    tpGui.DisplayOrder = 1000
-    tpGui.Parent = player:WaitForChild("PlayerGui")
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 90, 0, 30)
-    btn.Position = UDim2.new(0.5, -45, 1, -50)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
-    btn.BackgroundTransparency = 0.3
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 11
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = "Teleport"
-    btn.Parent = tpGui
-    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 6); c.Parent = btn
-
-    -- 画面タップ判定（UI以外の場所）
-    UIS.InputBegan:Connect(function(input)
-        if not state.tpEnabled then return end
-        if input.UserInputType == Enum.UserInputType.Touch
-            or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local guiObjects = player.PlayerGui:GetGuiObjectsAtPosition(
-                input.Position.X, input.Position.Y)
-            for _, g in ipairs(guiObjects) do
-                if g:IsDescendantOf(tpGui) or g:IsDescendantOf(V1.screenGui) then
-                    return -- UI上は無視
-                end
-            end
-            -- タップ位置からレイを飛ばして移動
-            local cam = workspace.CurrentCamera
-            local ray = cam:ScreenPointToRay(input.Position.X, input.Position.Y)
-            local params = RaycastParams.new()
-            params.FilterType = Enum.RaycastFilterType.Exclude
-            params.FilterDescendantsInstances = {player.Character}
-            local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
-            if result then
-                local hrp = getHRP()
-                if hrp then
-                    hrp.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0))
-                end
-            end
-        end
-    end)
-end
-
-V2.tpToggle.MouseButton1Click:Connect(function()
-    state.tpEnabled = not state.tpEnabled
-    V2.tpToggle.BackgroundColor3 = state.tpEnabled
-        and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
-    V2.tpToggle.Text = state.tpEnabled and LANG[state.lang].on or LANG[state.lang].off
-    if state.tpEnabled then createTpButton() else if tpGui then tpGui:Destroy(); tpGui = nil end end
-end)
-
--- ===== 透明化 =====
+-- 透明化
 V2.invisToggle.MouseButton1Click:Connect(function()
     state.invisEnabled = not state.invisEnabled
     V2.invisToggle.BackgroundColor3 = state.invisEnabled
@@ -600,53 +604,302 @@ V2.invisToggle.MouseButton1Click:Connect(function()
     if state.invisEnabled then
         for _, p in ipairs(char:GetDescendants()) do
             if p:IsA("BasePart") then
-                originalTransparency[p] = p.Transparency
                 p.Transparency = 0.95
             end
         end
     else
-        for p, t in pairs(originalTransparency) do
-            if p and p.Parent then p.Transparency = t end
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.Transparency = 0
+            end
         end
-        for k in pairs(originalTransparency) do originalTransparency[k] = nil end
     end
 end)
 
--- ===== 回転スピード =====
-V2.rotApply.MouseButton1Click:Connect(function()
-    local v = tonumber(V2.rotBox.Text)
-    if not v then V2.rotBox.Text = "0"; return end
-    state.rotSpeed = v
+-- 回転（数値 + ON/OFF）
+local function applyRot()
     local char = player.Character; if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
     local av = hrp:FindFirstChild("RotVelocity")
-    if v == 0 then
+    if not state.rotEnabled then
         if av then av:Destroy() end
-    else
-        if not av then
-            av = Instance.new("AngularVelocity")
-            av.Name = "RotVelocity"
-            av.AffectsGroundOnly = false
-            av.AffectsTorque = true
-            av.RelativeTo = Enum.ActuatorRelativeTo.World
-            av.Parent = hrp
+        return
+    end
+    if not av then
+        av = Instance.new("AngularVelocity")
+        av.Name = "RotVelocity"
+        av.AffectsGroundOnly = false
+        av.AffectsTorque = true
+        av.RelativeTo = Enum.ActuatorRelativeTo.World
+        av.Parent = hrp
+    end
+    av.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+    av.AngularVelocity = Vector3.new(0, state.rotSpeed, 0)
+end
+V2.rotBox.FocusLost:Connect(function()
+    local v = tonumber(V2.rotBox.Text)
+    if not v then V2.rotBox.Text = tostring(state.rotSpeed); return end
+    state.rotSpeed = v
+    if state.rotEnabled then applyRot() end
+end)
+V2.rotToggle.MouseButton1Click:Connect(function()
+    state.rotEnabled = not state.rotEnabled
+    V2.rotToggle.BackgroundColor3 = state.rotEnabled
+        and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+    V2.rotToggle.Text = state.rotEnabled and LANG[state.lang].on or LANG[state.lang].off
+    applyRot()
+end)
+
+-- 定期再適用（スピード・ジャンプ）
+task.spawn(function()
+    while V1.screenGui.Parent do
+        local h = getHum()
+        if h then
+            if state.speedEnabled and h.WalkSpeed ~= state.speed then h.WalkSpeed = state.speed end
+            if state.jumpEnabled then
+                h.UseJumpPower = true
+                if h.JumpPower ~= state.jumpPower then h.JumpPower = state.jumpPower end
+            end
         end
-        av.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-        av.AngularVelocity = Vector3.new(0, v, 0)
+        task.wait(0.05)
     end
 end)
--- ===== Viod Menu Part 4/5 =====
+-- ===== Viod Menu Part 4/6 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
 local state = V1.state
+local getHRP = V1.getHRP
+local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
+-- ===== 画面下のテレポートボタン（ON/OFF付き） =====
+local tpGui = nil
+local tpButton = nil
+local tpToggleBtn = nil
+
+local function createTpUI()
+    if tpGui then tpGui:Destroy() end
+    tpGui = Instance.new("ScreenGui")
+    tpGui.Name = "ViodTp"
+    tpGui.ResetOnSpawn = false
+    tpGui.IgnoreGuiInset = true
+    tpGui.DisplayOrder = 1000
+    tpGui.Parent = player:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 170, 0, 32)
+    frame.Position = UDim2.new(0.5, -85, 1, -60)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
+    frame.BackgroundTransparency = 0.2
+    frame.BorderSizePixel = 0
+    frame.Parent = tpGui
+    local fC = Instance.new("UICorner"); fC.CornerRadius = UDim.new(0, 8); fC.Parent = frame
+
+    tpButton = Instance.new("TextButton")
+    tpButton.Size = UDim2.new(0, 130, 1, 0)
+    tpButton.Position = UDim2.new(0, 0, 0, 0)
+    tpButton.BackgroundTransparency = 1
+    tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tpButton.TextSize = 10
+    tpButton.Font = Enum.Font.GothamBold
+    tpButton.Text = "Teleport"
+    tpButton.Parent = frame
+
+    tpToggleBtn = Instance.new("TextButton")
+    tpToggleBtn.Size = UDim2.new(0, 36, 1, 0)
+    tpToggleBtn.Position = UDim2.new(1, -36, 0, 0)
+    tpToggleBtn.BackgroundColor3 = Color3.fromRGB(70,70,90)
+    tpToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tpToggleBtn.TextSize = 9
+    tpToggleBtn.Font = Enum.Font.GothamBold
+    tpToggleBtn.Text = "OFF"
+    tpToggleBtn.Parent = frame
+    local tC = Instance.new("UICorner"); tC.CornerRadius = UDim.new(0, 8); tC.Parent = tpToggleBtn
+
+    -- 小さなテレポートのON/OFF（独立トグル）
+    tpToggleBtn.MouseButton1Click:Connect(function()
+        state.tpEnabled = not state.tpEnabled
+        tpToggleBtn.Text = state.tpEnabled and "ON" or "OFF"
+        tpToggleBtn.BackgroundColor3 = state.tpEnabled
+            and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+        V2.tpToggle.Text = state.tpEnabled and LANG[state.lang].on or LANG[state.lang].off
+        V2.tpToggle.BackgroundColor3 = state.tpEnabled
+            and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+    end)
+end
+
+-- タップで移動（視点操作中は無効化）
+local lastCamUpdate = 0
+local camTouchStart = nil
+local function shouldIgnore(input)
+    -- カメラ操作（右側/ドラッグ）を検出したら無視
+    if input.UserInputType == Enum.UserInputType.Touch then
+        local pos = input.Position
+        local viewport = workspace.CurrentCamera.ViewportSize
+        -- 右半分のドラッグはカメラ操作とみなす
+        if pos.X > viewport.X * 0.5 then return true end
+    end
+    return false
+end
+
+UIS.InputBegan:Connect(function(input, processed)
+    if not state.tpEnabled then return end
+    if processed then return end
+    if input.UserInputType ~= Enum.UserInputType.Touch
+        and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+    if shouldIgnore(input) then return end
+    -- わずかな移動（ドラッグ）は無視
+    camTouchStart = { pos = input.Position, time = tick() }
+end)
+
+UIS.InputEnded:Connect(function(input, processed)
+    if not state.tpEnabled then return end
+    if processed then return end
+    if not camTouchStart then return end
+    if input.UserInputType ~= Enum.UserInputType.Touch
+        and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+    -- タップ判定: 0.3秒以内 & 20px以内の移動
+    local duration = tick() - camTouchStart.time
+    local dist = (input.Position - camTouchStart.pos).Magnitude
+    camTouchStart = nil
+    if duration > 0.3 or dist > 20 then return end
+    -- UI上のタップは除外
+    local guis = player.PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
+    for _, g in ipairs(guis) do
+        if g:IsDescendantOf(tpGui) or g:IsDescendantOf(V1.screenGui) then return end
+    end
+    -- レイを飛ばして移動
+    local cam = workspace.CurrentCamera
+    local ray = cam:ScreenPointToRay(input.Position.X, input.Position.Y)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {player.Character}
+    local result = workspace:Raycast(ray.Origin, ray.Direction * 2000, params)
+    if result then
+        local hrp = getHRP()
+        if hrp then hrp.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0)) end
+    end
+end)
+
+-- メニュー側のテレポートトグル
+V2.tpToggle.MouseButton1Click:Connect(function()
+    state.tpEnabled = not state.tpEnabled
+    V2.tpToggle.BackgroundColor3 = state.tpEnabled
+        and Color3.fromRGB(0, 170, 110) or Color3.fromRGB(70,70,90)
+    V2.tpToggle.Text = state.tpEnabled and LANG[state.lang].on or LANG[state.lang].off
+    if state.tpEnabled then createTpUI() else if tpGui then tpGui:Destroy(); tpGui=nil end end
+end)
+
+-- ===== テレポート保存 =====
+local function refreshTpList()
+    -- クリア
+    for _, c in ipairs(V2.tpListFrame:GetChildren()) do
+        if c:IsA("TextButton") or c:IsA("Frame") then c:Destroy() end
+    end
+    local y = 0
+    for i, entry in ipairs(state.savedTPs) do
+        local item = Instance.new("Frame")
+        item.Size = UDim2.new(1, -8, 0, 28)
+        item.Position = UDim2.new(0, 4, 0, y)
+        item.BackgroundColor3 = Color3.fromRGB(55, 55, 80)
+        item.BorderSizePixel = 0
+        item.Parent = V2.tpListFrame
+        local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(0, 4); ic.Parent = item
+
+        local goBtn = Instance.new("TextButton")
+        goBtn.Size = UDim2.new(1, -40, 1, 0)
+        goBtn.BackgroundTransparency = 1
+        goBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        goBtn.TextSize = 12
+        goBtn.Font = Enum.Font.Gotham
+        goBtn.TextXAlignment = Enum.TextXAlignment.Left
+        goBtn.Text = " " .. entry.name
+        goBtn.Parent = item
+        goBtn.MouseButton1Click:Connect(function()
+            local hrp = getHRP()
+            if hrp then hrp.CFrame = CFrame.new(entry.pos) end
+        end)
+
+        local delBtn = Instance.new("TextButton")
+        delBtn.Size = UDim2.new(0, 32, 1, 0)
+        delBtn.Position = UDim2.new(1, -36, 0, 0)
+        delBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
+        delBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        delBtn.TextSize = 11
+        delBtn.Font = Enum.Font.GothamBold
+        delBtn.Text = "×"
+        delBtn.Parent = item
+        local dc = Instance.new("UICorner"); dc.CornerRadius = UDim.new(0, 4); dc.Parent = delBtn
+        delBtn.MouseButton1Click:Connect(function()
+            table.remove(state.savedTPs, i)
+            refreshTpList()
+        end)
+        y = y + 32
+    end
+    V2.tpListFrame.CanvasSize = UDim2.new(0, 0, 0, y)
+end
+
+V2.tpSaveBtn.MouseButton1Click:Connect(function()
+    local name = V2.tpSaveBox.Text
+    if name == "" then name = "TP" .. (#state.savedTPs + 1) end
+    local hrp = getHRP(); if not hrp then return end
+    table.insert(state.savedTPs, { name=name, pos=hrp.Position })
+    V2.tpSaveBox.Text = ""
+    refreshTpList()
+end)
+
+_G.ViodMenu.p4 = { createTpUI=createTpUI, refreshTpList=refreshTpList }
+-- ===== Viod Menu Part 5/6 =====
+local V1 = _G.ViodMenu.p1
+local V2 = _G.ViodMenu.p2
+local LANG = V1.LANG
+local state = V1.state
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- ===== ポーズ歩き =====
+local function setPose(pose)
+    state.pose = pose
+    -- ボタン色更新
+    V2.poseNormal.BackgroundColor3 = (pose=="normal") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    V2.poseRagdoll.BackgroundColor3 = (pose=="ragdoll") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    V2.poseT.BackgroundColor3 = (pose=="tpose") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    V2.poseSit.BackgroundColor3 = (pose=="sit") and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
+    local char = player.Character; if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    if pose == "normal" then
+        hum.PlatformStand = false
+        for _, m in ipairs(char:GetDescendants()) do
+            if m:IsA("Motor6D") then m.Enabled = true end
+        end
+    elseif pose == "ragdoll" then
+        hum.PlatformStand = true
+        for _, m in ipairs(char:GetDescendants()) do
+            if m:IsA("Motor6D") then m.Enabled = false end
+        end
+    elseif pose == "tpose" then
+        hum.PlatformStand = false
+        local ra = char:FindFirstChild("Right Arm")
+        local la = char:FindFirstChild("Left Arm")
+        if ra then ra.CFrame = ra.CFrame * CFrame.Angles(0,0,math.rad(90)) end
+        if la then la.CFrame = la.CFrame * CFrame.Angles(0,0,math.rad(-90)) end
+    elseif pose == "sit" then
+        hum.Sit = true
+    end
+end
+
+V2.poseNormal.MouseButton1Click:Connect(function() setPose("normal") end)
+V2.poseRagdoll.MouseButton1Click:Connect(function() setPose("ragdoll") end)
+V2.poseT.MouseButton1Click:Connect(function() setPose("tpose") end)
+V2.poseSit.MouseButton1Click:Connect(function() setPose("sit") end)
 
 -- ===== 文字サイズ =====
 local fontScale = { small=0.75, medium=1.0, large=1.3 }
 local function applyFontSize()
     local s = fontScale[state.fontSize] or 1.0
-    -- メイン内の全TextLabel/TextButton/TextBoxをスケール
     for _, obj in ipairs(V1.mainFrame:GetDescendants()) do
         if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
             if not obj:GetAttribute("baseSize") then
@@ -656,7 +909,6 @@ local function applyFontSize()
             obj.TextSize = math.floor(base * s)
         end
     end
-    -- ボタン色の更新
     V2.fontSmall.BackgroundColor3 = (state.fontSize=="small")
         and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
     V2.fontMedium.BackgroundColor3 = (state.fontSize=="medium")
@@ -664,74 +916,76 @@ local function applyFontSize()
     V2.fontLarge.BackgroundColor3 = (state.fontSize=="large")
         and Color3.fromRGB(0,150,200) or Color3.fromRGB(70,70,90)
 end
-
 V2.fontSmall.MouseButton1Click:Connect(function() state.fontSize="small"; applyFontSize() end)
 V2.fontMedium.MouseButton1Click:Connect(function() state.fontSize="medium"; applyFontSize() end)
 V2.fontLarge.MouseButton1Click:Connect(function() state.fontSize="large"; applyFontSize() end)
 
--- ===== 背景色 =====
-local bgRainbowLoop = nil
+-- ===== 背景色（完全切替・黒が残らない） =====
+local rainbowActive = false
+local rainbowConn = nil
+
 local function stopRainbow()
-    if bgRainbowLoop then bgRainbowLoop = nil end
+    rainbowActive = false
+    if rainbowConn then rainbowConn:Disconnect(); rainbowConn = nil end
 end
 
-local function applyBgColor(color)
+local function setBg(color)
     stopRainbow()
     V1.mainFrame.BackgroundColor3 = color
-    V1.content.BackgroundColor3 = Color3.fromRGB(
-        math.max(0, color.R*255*0.6),
-        math.max(0, color.G*255*0.6),
-        math.max(0, color.B*255*0.6))
-    -- ボタン色の更新
-    V2.bgBlue.BackgroundColor3 = Color3.fromRGB(40,80,200)
-    V2.bgYellow.BackgroundColor3 = Color3.fromRGB(200,180,0)
-    V2.bgRed.BackgroundColor3 = Color3.fromRGB(200,50,50)
-    V2.bgRainbow.BackgroundColor3 = Color3.fromRGB(120,50,200)
-    V2.bgBlack.BackgroundColor3 = Color3.fromRGB(20,20,30)
-    V2.bgWhite.BackgroundColor3 = Color3.fromRGB(230,230,230)
+    -- contentも連動
+    V1.content.BackgroundColor3 = Color3.new(
+        math.clamp(color.R*0.6, 0, 1),
+        math.clamp(color.G*0.6, 0, 1),
+        math.clamp(color.B*0.6, 0, 1))
+    -- ボタン状態更新
+    local colors = {
+        blue=Color3.fromRGB(20,50,120),
+        yellow=Color3.fromRGB(120,110,0),
+        red=Color3.fromRGB(120,30,30),
+        black=Color3.fromRGB(20,20,30),
+        white=Color3.fromRGB(230,230,230),
+        rainbow=Color3.fromRGB(120,50,200),
+    }
+    for k, btn in pairs({blue=V2.bgBlue, yellow=V2.bgYellow, red=V2.bgRed,
+        black=V2.bgBlack, white=V2.bgWhite, rainbow=V2.bgRainbow}) do
+        btn.BackgroundColor3 = (state.bgColor==k) and colors[k] or Color3.fromRGB(70,70,90)
+    end
 end
 
-V2.bgBlue.MouseButton1Click:Connect(function()
-    state.bgColor="blue"; applyBgColor(Color3.fromRGB(20,50,120))
-end)
-V2.bgYellow.MouseButton1Click:Connect(function()
-    state.bgColor="yellow"; applyBgColor(Color3.fromRGB(120,110,0))
-end)
-V2.bgRed.MouseButton1Click:Connect(function()
-    state.bgColor="red"; applyBgColor(Color3.fromRGB(120,30,30))
-end)
-V2.bgBlack.MouseButton1Click:Connect(function()
-    state.bgColor="black"; applyBgColor(Color3.fromRGB(20,20,30))
-end)
-V2.bgWhite.MouseButton1Click:Connect(function()
-    state.bgColor="white"; applyBgColor(Color3.fromRGB(230,230,230))
-end)
+V2.bgBlue.MouseButton1Click:Connect(function() state.bgColor="blue"; setBg(Color3.fromRGB(20,50,120)) end)
+V2.bgYellow.MouseButton1Click:Connect(function() state.bgColor="yellow"; setBg(Color3.fromRGB(120,110,0)) end)
+V2.bgRed.MouseButton1Click:Connect(function() state.bgColor="red"; setBg(Color3.fromRGB(120,30,30)) end)
+V2.bgBlack.MouseButton1Click:Connect(function() state.bgColor="black"; setBg(Color3.fromRGB(20,20,30)) end)
+V2.bgWhite.MouseButton1Click:Connect(function() state.bgColor="white"; setBg(Color3.fromRGB(230,230,230)) end)
 
 V2.bgRainbow.MouseButton1Click:Connect(function()
-    state.bgColor="rainbow"
+    state.bgColor = "rainbow"
     stopRainbow()
+    rainbowActive = true
     local hue = 0
-    local function loop()
-        if not bgRainbowLoop then return end
-        hue = (hue + 0.01) % 1
+    -- RunServiceで毎フレーム更新（他の色に切り替えたら停止）
+    rainbowConn = RunService.RenderStepped:Connect(function()
+        if not rainbowActive then return end
+        hue = (hue + 0.008) % 1
         local c = Color3.fromHSV(hue, 0.9, 0.6)
         V1.mainFrame.BackgroundColor3 = c
         V1.content.BackgroundColor3 = Color3.fromHSV(hue, 0.9, 0.35)
-        task.wait(0.05)
-        loop()
+    end)
+    -- ボタン状態
+    for k, btn in pairs({blue=V2.bgBlue, yellow=V2.bgYellow, red=V2.bgRed,
+        black=V2.bgBlack, white=V2.bgWhite}) do
+        btn.BackgroundColor3 = Color3.fromRGB(70,70,90)
     end
-    bgRainbowLoop = true
-    task.spawn(loop)
+    V2.bgRainbow.BackgroundColor3 = Color3.fromRGB(120,50,200)
 end)
 
-_G.ViodMenu.p4 = { applyFontSize=applyFontSize, applyBgColor=applyBgColor }
--- ===== Viod Menu Part 5/5 =====
+_G.ViodMenu.p5 = { applyFontSize=applyFontSize, setBg=setBg, setPose=setPose }
+-- ===== Viod Menu Part 6/6 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
 local state = V1.state
 local getHum = V1.getHum
-local originalCollide = V1.originalCollide
 
 local function applyLang()
     local t = LANG[state.lang]
@@ -745,20 +999,23 @@ local function applyLang()
     V2.wallLabel.Text = t.wall
     V2.noclipLabel.Text = t.noclip
     V2.respawnBtn.Text = t.respawn
-    V2.speedApply.Text = t.exec
-    V2.jumpApply.Text = t.exec
     V2.speedToggle.Text = state.speedEnabled and t.on or t.off
     V2.jumpToggle.Text = state.jumpEnabled and t.on or t.off
     V2.wallToggle.Text = state.wallWalk and t.on or t.off
     V2.noclipToggle.Text = state.noclip and t.on or t.off
-    -- tools
     V2.tpLabel.Text = t.tp
-    V2.invisLabel.Text = t.invis
-    V2.rotLabel.Text = t.rot
-    V2.rotApply.Text = t.exec
+    V2.tpSaveLabel.Text = t.tpsave
+    V2.tpSaveBtn.Text = t.saveBtn
     V2.tpToggle.Text = state.tpEnabled and t.on or t.off
+    V2.invisLabel.Text = t.invis
     V2.invisToggle.Text = state.invisEnabled and t.on or t.off
-    -- settings
+    V2.rotLabel.Text = t.rot
+    V2.rotToggle.Text = state.rotEnabled and t.on or t.off
+    V2.poseLabel.Text = t.pose
+    V2.poseNormal.Text = t.poseNormal
+    V2.poseRagdoll.Text = t.poseRagdoll
+    V2.poseT.Text = t.poseT
+    V2.poseSit.Text = t.poseSit
     V2.fontLabel.Text = t.fontSize
     V2.fontSmall.Text = t.small
     V2.fontMedium.Text = t.medium
@@ -777,24 +1034,7 @@ V1.langBtn.MouseButton1Click:Connect(function()
     applyLang()
 end)
 
--- ===== 定期再適用（0.05秒） =====
-task.spawn(function()
-    while V1.screenGui.Parent do
-        local h = getHum()
-        if h then
-            if state.speedEnabled and h.WalkSpeed ~= state.speed then
-                h.WalkSpeed = state.speed
-            end
-            if state.jumpEnabled then
-                h.UseJumpPower = true
-                if h.JumpPower ~= state.jumpPower then h.JumpPower = state.jumpPower end
-            end
-        end
-        task.wait(0.05)
-    end
-end)
-
--- ===== ✖ : ウィンドウ非表示 → 右上に V =====
+-- ✖ : 右上に V
 V1.closeBtn.MouseButton1Click:Connect(function()
     V1.mainFrame.Visible = false
     local old = V1.screenGui:FindFirstChild("VOnlyButton")
@@ -828,7 +1068,7 @@ V1.closeBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- ===== − : V に変化 → もう一度で戻る =====
+-- − : Vに変化
 local minimized = false
 V1.minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -841,14 +1081,24 @@ V1.minBtn.MouseButton1Click:Connect(function()
         V1.body.Visible = true
         V1.minBtn.Text = "−"
         V1.minBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 110)
-        V1.mainFrame.Size = UDim2.new(0, 650, 0, 380)
+        V1.mainFrame.Size = UDim2.new(0, 650, 0, 420)
+    end
+end)
+
+-- キャラ再生成時
+player = game.Players.LocalPlayer
+player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid", 5)
+    task.wait(0.3)
+    local h = char:FindFirstChildOfClass("Humanoid")
+    if h then
+        if state.speedEnabled then h.WalkSpeed = state.speed end
+        if state.jumpEnabled then h.UseJumpPower=true; h.JumpPower = state.jumpPower end
     end
 end)
 
 -- 初期反映
 applyLang()
-if _G.ViodMenu.p4 then
-    _G.ViodMenu.p4.applyFontSize()
-    _G.ViodMenu.p4.applyBgColor(Color3.fromRGB(20,20,30))
-end
+if _G.ViodMenu.p5 then _G.ViodMenu.p5.applyFontSize() end
+if _G.ViodMenu.p4 then _G.ViodMenu.p4.refreshTpList() end
 print("[Viod Menu] Loaded / 読み込み完了")
