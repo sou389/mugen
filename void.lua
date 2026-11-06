@@ -15,7 +15,7 @@ local LANG = {
 }
 
 local state = { speed=16, jumpPower=50, wallWalk=false, noclip=false,
-    speedEnabled=false, jumpEnabled=false, lang="ja", minimized=false }
+    speedEnabled=false, jumpEnabled=false, lang="ja" }
 local originalCollide = {}
 
 local function getHum()
@@ -31,9 +31,10 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ViodMenu"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999
 screenGui.Parent = playerGui
 
+-- ===== メインウィンドウ =====
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 600, 0, 320)
 mainFrame.Position = UDim2.new(0.5, -300, 0.5, -160)
@@ -41,6 +42,7 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 mainFrame.BackgroundTransparency = 0.2
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
+mainFrame.Visible = true
 mainFrame.Parent = screenGui
 
 local mainCorner = Instance.new("UICorner")
@@ -129,38 +131,13 @@ closeBtn.Text = "✖"
 closeBtn.Parent = titleBar
 local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 6); cc.Parent = closeBtn
 
--- 「V」だけ表示する復元ボタン（普段は非表示）
-local vBtn = Instance.new("TextButton")
-vBtn.Size = UDim2.new(0, 40, 0, 40)
-vBtn.Position = UDim2.new(1, -50, 0, 10)
-vBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
-vBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-vBtn.TextSize = 20
-vBtn.Font = Enum.Font.GothamBold
-vBtn.Text = "V"
-vBtn.Visible = false
-vBtn.Parent = screenGui
-local vC = Instance.new("UICorner"); vC.CornerRadius = UDim.new(0, 8); vC.Parent = vBtn
-local vStroke = Instance.new("UIStroke")
-vStroke.Thickness = 2
-vStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-vStroke.Parent = vBtn
-task.spawn(function()
-    local hue = 0
-    while vBtn.Parent do
-        hue = (hue + 0.01) % 1
-        vStroke.Color = Color3.fromHSV(hue, 1, 1)
-        task.wait(0.03)
-    end
-end)
-
 local body = Instance.new("Frame")
 body.Size = UDim2.new(1, -20, 1, -50)
 body.Position = UDim2.new(0, 10, 0, 45)
 body.BackgroundTransparency = 1
 body.Parent = mainFrame
 
--- 左タブ（プレイヤー1つだけ）
+-- 左タブ（プレイヤー）
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0, 130, 1, 0)
 leftPanel.BackgroundTransparency = 1
@@ -185,6 +162,7 @@ content.Position = UDim2.new(0, 140, 0, 0)
 content.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 content.BackgroundTransparency = 0.3
 content.BorderSizePixel = 0
+content.Visible = false
 content.Parent = body
 local cC = Instance.new("UICorner"); cC.CornerRadius = UDim.new(0, 8); cC.Parent = content
 local cP = Instance.new("UIPadding")
@@ -196,7 +174,7 @@ cP.Parent = content
 _G.ViodMenu = _G.ViodMenu or {}
 _G.ViodMenu.p1 = { screenGui=screenGui, mainFrame=mainFrame, body=body,
     titleBar=titleBar, title=title, langBtn=langBtn, minBtn=minBtn, closeBtn=closeBtn,
-    vBtn=vBtn, playerTab=playerTab, content=content, state=state, LANG=LANG,
+    playerTab=playerTab, content=content, state=state, LANG=LANG,
     getHum=getHum, getHRP=getHRP, originalCollide=originalCollide }
 -- ===== Viod Menu Part 2/3 =====
 local V = _G.ViodMenu.p1
@@ -204,11 +182,10 @@ local content = V.content
 local LANG = V.LANG
 local state = V.state
 
--- プレイヤータブを押すと全機能が出る
+-- プレイヤーボタンで表示切替（初期は非表示 → 押すと表示）
 V.playerTab.MouseButton1Click:Connect(function()
     content.Visible = not content.Visible
 end)
-content.Visible = true -- 最初から表示
 
 local page = Instance.new("Frame")
 page.Size = UDim2.new(1, 0, 1, 0)
@@ -239,7 +216,7 @@ local function label(parent, x, w)
     return l
 end
 
--- スピード（数値 + 実行 + ON/OFF）
+-- スピード
 local speedRow = row(1)
 local speedLabel = label(speedRow, 0, 95)
 local speedBox = Instance.new("TextBox")
@@ -270,10 +247,11 @@ speedToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 speedToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedToggle.TextSize = 14
 speedToggle.Font = Enum.Font.GothamBold
+speedToggle.Text = "OFF"
 speedToggle.Parent = speedRow
 local stC = Instance.new("UICorner"); stC.CornerRadius = UDim.new(0, 6); stC.Parent = speedToggle
 
--- ジャンプ力（数値 + 実行 + ON/OFF）
+-- ジャンプ
 local jumpRow = row(2)
 local jumpLabel = label(jumpRow, 0, 95)
 local jumpBox = Instance.new("TextBox")
@@ -304,6 +282,7 @@ jumpToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 jumpToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 jumpToggle.TextSize = 14
 jumpToggle.Font = Enum.Font.GothamBold
+jumpToggle.Text = "OFF"
 jumpToggle.Parent = jumpRow
 local jtC = Instance.new("UICorner"); jtC.CornerRadius = UDim.new(0, 6); jtC.Parent = jumpToggle
 
@@ -317,6 +296,7 @@ wallToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 wallToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 wallToggle.TextSize = 14
 wallToggle.Font = Enum.Font.GothamBold
+wallToggle.Text = "OFF"
 wallToggle.Parent = wallRow
 local wC = Instance.new("UICorner"); wC.CornerRadius = UDim.new(0, 6); wC.Parent = wallToggle
 
@@ -330,6 +310,7 @@ noclipToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 noclipToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 noclipToggle.TextSize = 14
 noclipToggle.Font = Enum.Font.GothamBold
+noclipToggle.Text = "OFF"
 noclipToggle.Parent = noclipRow
 local nC = Instance.new("UICorner"); nC.CornerRadius = UDim.new(0, 6); nC.Parent = noclipToggle
 
@@ -341,6 +322,7 @@ respawnBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
 respawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 respawnBtn.TextSize = 14
 respawnBtn.Font = Enum.Font.GothamBold
+respawnBtn.Text = "即リスポーン"
 respawnBtn.Parent = respawnRow
 local rC = Instance.new("UICorner"); rC.CornerRadius = UDim.new(0, 6); rC.Parent = respawnBtn
 
@@ -361,10 +343,10 @@ local originalCollide = V1.originalCollide
 local RunService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 
--- 元の値を記録（OFF時に戻す）
 local baseSpeed = 16
 local baseJump = 50
 
+-- ===== 言語 =====
 local function applyLang()
     local t = LANG[state.lang]
     V1.title.Text = t.title
@@ -417,7 +399,7 @@ V2.speedToggle.MouseButton1Click:Connect(function()
     applyLang()
 end)
 
--- ===== ジャンプ力 =====
+-- ===== ジャンプ =====
 V2.jumpApply.MouseButton1Click:Connect(function()
     local v = tonumber(V2.jumpBox.Text)
     if not v or v <= 0 then
@@ -554,24 +536,46 @@ player.CharacterAdded:Connect(function(char)
     end
 end)
 
--- ===== ✖ を押すと「V」だけ表示 =====
+-- ===== ✖ : 完全に非表示 → 画面右上に V だけ =====
 V1.closeBtn.MouseButton1Click:Connect(function()
     V1.mainFrame.Visible = false
-    V1.vBtn.Visible = true
-    V1.vBtn.Position = UDim2.new(1, -50, 0, 10)
+    local v = V1.screenGui:FindFirstChild("VOnlyButton")
+    if v then v:Destroy() end
+    local vBtn = Instance.new("TextButton")
+    vBtn.Name = "VOnlyButton"
+    vBtn.Size = UDim2.new(0, 44, 0, 44)
+    vBtn.Position = UDim2.new(1, -60, 0, 15)
+    vBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
+    vBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    vBtn.TextSize = 22
+    vBtn.Font = Enum.Font.GothamBold
+    vBtn.Text = "V"
+    vBtn.ZIndex = 100
+    vBtn.Parent = V1.screenGui
+    local vc = Instance.new("UICorner"); vc.CornerRadius = UDim.new(0, 8); vc.Parent = vBtn
+    local vs = Instance.new("UIStroke")
+    vs.Thickness = 2
+    vs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    vs.Parent = vBtn
+    task.spawn(function()
+        local hue = 0
+        while vBtn.Parent do
+            hue = (hue + 0.01) % 1
+            vs.Color = Color3.fromHSV(hue, 1, 1)
+            task.wait(0.03)
+        end
+    end)
+    vBtn.MouseButton1Click:Connect(function()
+        V1.mainFrame.Visible = true
+        vBtn:Destroy()
+    end)
 end)
 
--- Vを押すと元に戻る
-V1.vBtn.MouseButton1Click:Connect(function()
-    V1.mainFrame.Visible = true
-    V1.vBtn.Visible = false
-end)
-
--- ===== − を押すと通常サイズに戻る（最小化トグル） =====
-local isMin = false
+-- ===== − : 押すと「V」に変わる → もう一度押すと「−」に戻る =====
+local minimized = false
 V1.minBtn.MouseButton1Click:Connect(function()
-    isMin = not isMin
-    if isMin then
+    minimized = not minimized
+    if minimized then
         V1.body.Visible = false
         V1.minBtn.Text = "V"
         V1.minBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
