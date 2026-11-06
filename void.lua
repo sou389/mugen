@@ -1,14 +1,43 @@
 -- ============================================
--- Delta Menu 完全版
--- 横長UI / 半透明 / 虹色枠 / プレイヤーメニュー
+-- Delta Menu 完全版 + 言語切替
 -- ============================================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ===== 状態管理 =====
+-- ===== 言語辞書 =====
+local LANG = {
+    ja = {
+        title = "Delta メニュー",
+        player = "プレイヤー",
+        speed = "スピード:",
+        jump = "ジャンプ力:",
+        wall = "壁歩き:",
+        noclip = "貫通:",
+        respawn = "即リスポーン",
+        exec = "実行",
+        on = "ON",
+        off = "OFF",
+        err = "数値エラー",
+    },
+    en = {
+        title = "Delta Menu",
+        player = "Player",
+        speed = "Speed:",
+        jump = "Jump:",
+        wall = "Wall Walk:",
+        noclip = "Noclip:",
+        respawn = "Respawn",
+        exec = "Apply",
+        on = "ON",
+        off = "OFF",
+        err = "Invalid",
+    },
+}
+
 local state = {
     speed = 16,
     jumpPower = 50,
@@ -16,15 +45,12 @@ local state = {
     noclip = false,
     speedEnabled = false,
     jumpEnabled = false,
+    lang = "ja",
 }
 
-local originalCollide = {} -- 貫通OFF時に戻す用
+local originalCollide = {}
 
--- ===== Humanoid 確実取得 =====
-local function getChar()
-    return player.Character or player.CharacterAdded:Wait()
-end
-
+-- ===== Humanoid ヘルパー =====
 local function getHum()
     local char = player.Character
     if not char then return nil end
@@ -73,12 +99,12 @@ task.spawn(function()
     end
 end)
 
--- タイトルバー（ドラッグ専用）
+-- タイトルバー（ドラッグ用）
 local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1, 0, 0, 40)
 titleBar.BackgroundTransparency = 1
-titleBar.Parent = mainFrame
 titleBar.Active = true
+titleBar.Parent = mainFrame
 
 local dragging, dragStart, startPos = false, nil, nil
 titleBar.InputBegan:Connect(function(input)
@@ -89,7 +115,7 @@ titleBar.InputBegan:Connect(function(input)
         startPos = mainFrame.Position
     end
 end)
-game:GetService("UserInputService").InputChanged:Connect(function(input)
+UIS.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
         or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
@@ -99,25 +125,39 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
         )
     end
 end)
-game:GetService("UserInputService").InputEnded:Connect(function(input)
+UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
 end)
 
+-- タイトルテキスト
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -20, 1, 0)
+title.Size = UDim2.new(0, 300, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Delta Menu"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = titleBar
 
--- 左側ボタン列
+-- ===== 右上 言語切替ボタン =====
+local langBtn = Instance.new("TextButton")
+langBtn.Size = UDim2.new(0, 130, 0, 30)
+langBtn.Position = UDim2.new(1, -140, 0, 5)
+langBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+langBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+langBtn.TextScaled = true
+langBtn.Font = Enum.Font.GothamBold
+langBtn.Text = "日本語 🇯🇵"
+langBtn.Parent = titleBar
+local langC = Instance.new("UICorner")
+langC.CornerRadius = UDim.new(0, 6)
+langC.Parent = langBtn
+
+-- 左側タブ
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0, 160, 1, -50)
 leftPanel.Position = UDim2.new(0, 10, 0, 45)
@@ -126,27 +166,16 @@ leftPanel.Parent = mainFrame
 
 local leftLayout = Instance.new("UIListLayout")
 leftLayout.Padding = UDim.new(0, 8)
-leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 leftLayout.Parent = leftPanel
 
-local function makeTabButton(text, order)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 50)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Text = text
-    btn.TextScaled = true
-    btn.Font = Enum.Font.GothamBold
-    btn.LayoutOrder = order
-    btn.AutoButtonColor = true
-    btn.Parent = leftPanel
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 8)
-    c.Parent = btn
-    return btn
-end
-
-local playerTab = makeTabButton("プレイヤー", 1)
+local playerTab = Instance.new("TextButton")
+playerTab.Size = UDim2.new(1, 0, 0, 50)
+playerTab.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
+playerTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerTab.TextScaled = true
+playerTab.Font = Enum.Font.GothamBold
+playerTab.Parent = leftPanel
+local ptC = Instance.new("UICorner"); ptC.CornerRadius = UDim.new(0, 8); ptC.Parent = playerTab
 
 -- 右側コンテンツ
 local content = Instance.new("Frame")
@@ -157,9 +186,7 @@ content.BackgroundTransparency = 0.3
 content.BorderSizePixel = 0
 content.Visible = false
 content.Parent = mainFrame
-local contentCorner = Instance.new("UICorner")
-contentCorner.CornerRadius = UDim.new(0, 8)
-contentCorner.Parent = content
+local contentC = Instance.new("UICorner"); contentC.CornerRadius = UDim.new(0, 8); contentC.Parent = content
 local contentLayout = Instance.new("UIListLayout")
 contentLayout.Padding = UDim.new(0, 10)
 contentLayout.Parent = content
@@ -183,12 +210,11 @@ local function makeRow(order)
     return row
 end
 
-local function makeLabel(parent, text, x, w)
+local function makeLabel(parent, x, w)
     local l = Instance.new("TextLabel")
     l.Size = UDim2.new(0, w, 1, 0)
     l.Position = UDim2.new(0, x, 0, 0)
     l.BackgroundTransparency = 1
-    l.Text = text
     l.TextColor3 = Color3.fromRGB(255, 255, 255)
     l.TextScaled = true
     l.Font = Enum.Font.Gotham
@@ -199,7 +225,7 @@ end
 
 -- スピード行
 local speedRow = makeRow(1)
-makeLabel(speedRow, "スピード:", 0, 100)
+local speedLabel = makeLabel(speedRow, 0, 100)
 local speedBox = Instance.new("TextBox")
 speedBox.Size = UDim2.new(0, 80, 1, 0)
 speedBox.Position = UDim2.new(0, 105, 0, 0)
@@ -217,7 +243,6 @@ speedApply.Size = UDim2.new(0, 90, 1, 0)
 speedApply.Position = UDim2.new(0, 195, 0, 0)
 speedApply.BackgroundColor3 = Color3.fromRGB(0, 170, 110)
 speedApply.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedApply.Text = "実行"
 speedApply.Font = Enum.Font.GothamBold
 speedApply.TextScaled = true
 speedApply.Parent = speedRow
@@ -225,7 +250,7 @@ local saC = Instance.new("UICorner"); saC.CornerRadius = UDim.new(0, 6); saC.Par
 
 -- ジャンプ力行
 local jumpRow = makeRow(2)
-makeLabel(jumpRow, "ジャンプ力:", 0, 100)
+local jumpLabel = makeLabel(jumpRow, 0, 100)
 local jumpBox = Instance.new("TextBox")
 jumpBox.Size = UDim2.new(0, 80, 1, 0)
 jumpBox.Position = UDim2.new(0, 105, 0, 0)
@@ -243,7 +268,6 @@ jumpApply.Size = UDim2.new(0, 90, 1, 0)
 jumpApply.Position = UDim2.new(0, 195, 0, 0)
 jumpApply.BackgroundColor3 = Color3.fromRGB(0, 170, 110)
 jumpApply.TextColor3 = Color3.fromRGB(255, 255, 255)
-jumpApply.Text = "実行"
 jumpApply.Font = Enum.Font.GothamBold
 jumpApply.TextScaled = true
 jumpApply.Parent = jumpRow
@@ -251,13 +275,12 @@ local jaC = Instance.new("UICorner"); jaC.CornerRadius = UDim.new(0, 6); jaC.Par
 
 -- 壁歩き行
 local wallRow = makeRow(3)
-makeLabel(wallRow, "壁歩き:", 0, 100)
+local wallLabel = makeLabel(wallRow, 0, 100)
 local wallToggle = Instance.new("TextButton")
 wallToggle.Size = UDim2.new(0, 180, 1, 0)
 wallToggle.Position = UDim2.new(0, 105, 0, 0)
 wallToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 wallToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-wallToggle.Text = "OFF"
 wallToggle.Font = Enum.Font.GothamBold
 wallToggle.TextScaled = true
 wallToggle.Parent = wallRow
@@ -265,13 +288,12 @@ local wC = Instance.new("UICorner"); wC.CornerRadius = UDim.new(0, 6); wC.Parent
 
 -- 貫通行
 local noclipRow = makeRow(4)
-makeLabel(noclipRow, "貫通:", 0, 100)
+local noclipLabel = makeLabel(noclipRow, 0, 100)
 local noclipToggle = Instance.new("TextButton")
 noclipToggle.Size = UDim2.new(0, 180, 1, 0)
 noclipToggle.Position = UDim2.new(0, 105, 0, 0)
 noclipToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 noclipToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-noclipToggle.Text = "OFF"
 noclipToggle.Font = Enum.Font.GothamBold
 noclipToggle.TextScaled = true
 noclipToggle.Parent = noclipRow
@@ -283,19 +305,40 @@ local respawnBtn = Instance.new("TextButton")
 respawnBtn.Size = UDim2.new(1, 0, 1, 0)
 respawnBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
 respawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-respawnBtn.Text = "即リスポーン"
 respawnBtn.Font = Enum.Font.GothamBold
 respawnBtn.TextScaled = true
 respawnBtn.Parent = respawnRow
 local rC = Instance.new("UICorner"); rC.CornerRadius = UDim.new(0, 6); rC.Parent = respawnBtn
 
--- ===== 機能実装 =====
+-- ===== 言語反映 =====
+local function applyLang()
+    local t = LANG[state.lang]
+    title.Text = t.title
+    langBtn.Text = (state.lang == "ja") and "日本語 🇯🇵" or "English 🇺🇸"
+    playerTab.Text = t.player
+    speedLabel.Text = t.speed
+    jumpLabel.Text = t.jump
+    wallLabel.Text = t.wall
+    noclipLabel.Text = t.noclip
+    respawnBtn.Text = t.respawn
+    speedApply.Text = t.exec
+    jumpApply.Text = t.exec
+    wallToggle.Text = state.wallWalk and t.on or t.off
+    noclipToggle.Text = state.noclip and t.on or t.off
+end
 
--- スピード適用
+langBtn.MouseButton1Click:Connect(function()
+    state.lang = (state.lang == "ja") and "en" or "ja"
+    applyLang()
+end)
+
+-- ===== 機能 =====
 speedApply.MouseButton1Click:Connect(function()
     local v = tonumber(speedBox.Text)
     if not v or v <= 0 then
-        speedBox.Text = "数値エラー"
+        speedBox.Text = LANG[state.lang].err
+        task.wait(1)
+        speedBox.Text = tostring(state.speed)
         return
     end
     state.speed = v
@@ -304,11 +347,12 @@ speedApply.MouseButton1Click:Connect(function()
     if hum then hum.WalkSpeed = v end
 end)
 
--- ジャンプ適用
 jumpApply.MouseButton1Click:Connect(function()
     local v = tonumber(jumpBox.Text)
     if not v or v <= 0 then
-        jumpBox.Text = "数値エラー"
+        jumpBox.Text = LANG[state.lang].err
+        task.wait(1)
+        jumpBox.Text = tostring(state.jumpPower)
         return
     end
     state.jumpPower = v
@@ -320,17 +364,15 @@ jumpApply.MouseButton1Click:Connect(function()
     end
 end)
 
--- 壁歩きトグル
 wallToggle.MouseButton1Click:Connect(function()
     state.wallWalk = not state.wallWalk
-    wallToggle.Text = state.wallWalk and "ON" or "OFF"
+    applyLang()
     wallToggle.BackgroundColor3 = state.wallWalk
         and Color3.fromRGB(0, 170, 110)
         or Color3.fromRGB(70, 70, 90)
 
     local hrp = getHRP()
     if not hrp then return end
-
     if state.wallWalk then
         if not hrp:FindFirstChild("WallWalkForce") then
             local bv = Instance.new("BodyVelocity")
@@ -353,7 +395,6 @@ wallToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- 壁歩き更新ループ（Raycast正しい版）
 RunService.Heartbeat:Connect(function()
     if not state.wallWalk then return end
     local char = player.Character
@@ -361,23 +402,18 @@ RunService.Heartbeat:Connect(function()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
-
     local bv = hrp:FindFirstChild("WallWalkForce")
     local bg = hrp:FindFirstChild("WallWalkGyro")
     if not bv or not bg then return end
 
-    -- キャラクター自身を除いて前方にレイキャスト
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {char}
     params.IgnoreWater = true
-
-    local dir = hrp.CFrame.LookVector * 5 + Vector3.new(0, -1, 0) * 0
-    local result = workspace:Raycast(hrp.Position, dir, params)
+    local result = workspace:Raycast(hrp.Position, hrp.CFrame.LookVector * 5, params)
 
     if result and result.Normal then
         local n = result.Normal
-        -- 壁に密着して上方向に進む
         bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
         bv.Velocity = Vector3.new(0, hum.WalkSpeed * 0.6, 0) + (-n * 4)
         bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
@@ -388,61 +424,43 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 貫通トグル
 noclipToggle.MouseButton1Click:Connect(function()
     state.noclip = not state.noclip
-    noclipToggle.Text = state.noclip and "ON" or "OFF"
+    applyLang()
     noclipToggle.BackgroundColor3 = state.noclip
         and Color3.fromRGB(0, 170, 110)
         or Color3.fromRGB(70, 70, 90)
+    if not state.noclip then
+        for part in pairs(originalCollide) do
+            if part and part.Parent then part.CanCollide = true end
+        end
+        originalCollide = {}
+    end
 end)
 
--- 貫通ループ
 RunService.Stepped:Connect(function()
     if not state.noclip then return end
     local char = player.Character
     if not char then return end
     for _, p in ipairs(char:GetDescendants()) do
         if p:IsA("BasePart") and p.CanCollide then
-            if originalCollide[p] == nil then
-                originalCollide[p] = true
-            end
+            originalCollide[p] = true
             p.CanCollide = false
         end
     end
 end)
 
--- 貫通OFF時の復元
-local function restoreCollide()
-    for part in pairs(originalCollide) do
-        if part and part.Parent then
-            part.CanCollide = true
-        end
-    end
-    originalCollide = {}
-end
-
--- 貫通をOFFにした瞬間に戻す（トグルを書き換え）
-local oldNoclipClick
-oldNoclipClick = noclipToggle.MouseButton1Click:Connect(function()
-    if not state.noclip then
-        restoreCollide()
-    end
-end)
-
--- 即リスポーン
 respawnBtn.MouseButton1Click:Connect(function()
     local hum = getHum()
     if hum then
         hum.Health = 0
     else
-        -- フォールバック
         local char = player.Character
         if char then char:BreakJoints() end
     end
 end)
 
--- ===== 定期再適用（サーバーに戻される対策） =====
+-- 定期再適用
 task.spawn(function()
     while screenGui.Parent do
         local hum = getHum()
@@ -461,7 +479,6 @@ task.spawn(function()
     end
 end)
 
--- キャラクター再生成時の再適用
 player.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid", 5)
     task.wait(0.3)
@@ -475,4 +492,6 @@ player.CharacterAdded:Connect(function(char)
     end
 end)
 
-print("[Delta Menu] 読み込み完了")
+-- 初期言語適用
+applyLang()
+print("[Delta Menu] Loaded / 読み込み完了")
