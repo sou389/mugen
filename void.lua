@@ -1,4 +1,4 @@
--- ===== Viod Menu Part 1/4 =====
+-- ===== Viod Menu Part 1/5 =====
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -6,23 +6,23 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local LANG = {
-    ja = { title="Viod", player="プレイヤー", tools="ツール",
+    ja = { title="Viod", player="プレイヤー", tools="ツール", ai="AI",
            speed="スピード:", jump="ジャンプ力:", wall="壁歩き:", noclip="貫通:",
            respawn="即リスポーン", on="ON", off="OFF",
-           tp="テレポート", tpDesc="画面を指でタップしよう", invis="透明化", rot="回転スピード:", tpsave="テレポート保存",
+           tp="テレポート", tpDesc="指でタップしよう", invis="透明化", rot="回転スピード:", tpsave="テレポート保存",
            pose="ポーズ歩き:", poseNormal="通常", poseRagdoll="ラグドール",
            poseT="Tポーズ", poseSit="座り", saveBtn="保存" },
-    en = { title="Viod", player="Player", tools="Tools",
+    en = { title="Viod", player="Player", tools="Tools", ai="AI",
            speed="Speed:", jump="Jump:", wall="Wall Walk:", noclip="Noclip:",
            respawn="Respawn", on="ON", off="OFF",
-           tp="Teleport", tpDesc="Tap screen to fly/move", invis="Invisible", rot="Rot Speed:", tpsave="Save TP",
+           tp="Teleport", tpDesc="Tap screen", invis="Invisible", rot="Rot Speed:", tpsave="Save TP",
            pose="Pose Walk:", poseNormal="Normal", poseRagdoll="Ragdoll",
            poseT="T-Pose", poseSit="Sit", saveBtn="Save" },
 }
 
 local state = {
     speed=16, jumpPower=50, wallWalk=false, noclip=false,
-    speedEnabled=false, jumpEnabled=false, lang="en",
+    speedEnabled=false, jumpEnabled=false, lang="ja", -- 初期言語を日本語に変更
     tpEnabled=false, invisEnabled=false, rotEnabled=false, rotSpeed=180,
     pose="normal", savedTPs = {},
 }
@@ -44,7 +44,6 @@ screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999
 screenGui.Parent = playerGui
 
--- メインフレーム（高さ400）
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 560, 0, 400)
 mainFrame.Position = UDim2.new(0.5, -280, 0.5, -200)
@@ -114,7 +113,7 @@ langBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
 langBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 langBtn.TextSize = 12
 langBtn.Font = Enum.Font.GothamBold
-langBtn.Text = "English 🇺🇸"
+langBtn.Text = "日本語 🇯🇵"
 langBtn.Parent = titleBar
 local lc = Instance.new("UICorner"); lc.CornerRadius = UDim.new(0, 6); lc.Parent = langBtn
 
@@ -146,7 +145,6 @@ body.Position = UDim2.new(0, 8, 0, 40)
 body.BackgroundTransparency = 1
 body.Parent = mainFrame
 
--- 左タブ
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0, 110, 1, 0)
 leftPanel.BackgroundTransparency = 1
@@ -171,6 +169,7 @@ local function makeTab(text, order)
 end
 local playerTab = makeTab("Player", 1)
 local toolsTab = makeTab("Tools", 2)
+local aiTab = makeTab("AI", 3)
 
 local content = Instance.new("Frame")
 content.Size = UDim2.new(1, -120, 1, 0)
@@ -181,15 +180,15 @@ content.BorderSizePixel = 0
 content.Parent = body
 local cC = Instance.new("UICorner"); cC.CornerRadius = UDim.new(0, 8); cC.Parent = content
 
--- 【修正】左下 プレイヤーカード（UIの中に完全に収める）
+-- 左下 プレイヤーカード（UIの中に完全に収める）
 local playerCard = Instance.new("Frame")
-playerCard.Size = UDim2.new(0, 110, 0, 48) -- タブの幅に合わせる
-playerCard.Position = UDim2.new(0, 0, 1, -48) -- leftPanelの一番下に配置
+playerCard.Size = UDim2.new(0, 110, 0, 48)
+playerCard.Position = UDim2.new(0, 0, 1, -48)
 playerCard.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 playerCard.BackgroundTransparency = 0.2
 playerCard.BorderSizePixel = 0
 playerCard.ZIndex = 50
-playerCard.Parent = leftPanel -- UIの中に配置
+playerCard.Parent = leftPanel
 local pcC = Instance.new("UICorner"); pcC.CornerRadius = UDim.new(0, 8); pcC.Parent = playerCard
 
 local avatarImg = Instance.new("ImageLabel")
@@ -231,9 +230,9 @@ end)
 _G.ViodMenu = _G.ViodMenu or {}
 _G.ViodMenu.p1 = { screenGui=screenGui, mainFrame=mainFrame, body=body,
     titleBar=titleBar, title=title, langBtn=langBtn, minBtn=minBtn, closeBtn=closeBtn,
-    playerTab=playerTab, toolsTab=toolsTab, content=content, state=state, LANG=LANG,
+    playerTab=playerTab, toolsTab=toolsTab, aiTab=aiTab, content=content, state=state, LANG=LANG,
     getHum=getHum, getHRP=getHRP, originalCollide=originalCollide }
--- ===== Viod Menu Part 2/4 =====
+-- ===== Viod Menu Part 2/5 =====
 local V = _G.ViodMenu.p1
 local LANG = V.LANG
 local state = V.state
@@ -339,14 +338,13 @@ local ptL = Instance.new("UIListLayout")
 ptL.Padding = UDim.new(0, 6)
 ptL.Parent = pageTools
 
--- テレポート
 local tpRow = row(pageTools, 1)
 local tpLabel = label(tpRow, 0, 85)
-local tpDescLabel = Instance.new("TextLabel") -- 説明文用
+local tpDescLabel = Instance.new("TextLabel")
 tpDescLabel.Size = UDim2.new(0, 100, 1, 0)
 tpDescLabel.Position = UDim2.new(0, 90, 0, 0)
 tpDescLabel.BackgroundTransparency = 1
-tpDescLabel.TextColor3 = Color3.fromRGB(150, 255, 150) -- 緑色で目立たせる
+tpDescLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
 tpDescLabel.TextSize = 11
 tpDescLabel.Font = Enum.Font.Gotham
 tpDescLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -354,14 +352,13 @@ tpDescLabel.TextTruncate = Enum.TextTruncate.AtEnd
 tpDescLabel.Parent = tpRow
 local tpToggle = makeBtn(tpRow, 195, 50, "OFF")
 
--- テレポート保存
 local tpSaveRow = row(pageTools, 2)
 local tpSaveLabel = label(tpSaveRow, 0, 85)
 local tpSaveBox = makeBox(tpSaveRow, 90, 100, "")
 local tpSaveBtn = makeBtn(tpSaveRow, 195, 50, "Save")
 
 local tpListRow = row(pageTools, 3)
-tpListRow.Size = UDim2.new(1, 0, 0, 60) -- リストの高さ
+tpListRow.Size = UDim2.new(1, 0, 0, 60)
 local tpListFrame = Instance.new("ScrollingFrame")
 tpListFrame.Size = UDim2.new(1, 0, 1, 0)
 tpListFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
@@ -392,17 +389,74 @@ local poseT = makeBtn(poseRow, 200, 45, "T")
 local poseRow2 = row(pageTools, 7)
 local poseSit = makeBtn(poseRow2, 0, 60, "Sit")
 
+-- ================= AIタブ =================
+local pageAI = Instance.new("Frame")
+pageAI.Size = UDim2.new(1, 0, 1, 0)
+pageAI.BackgroundTransparency = 1
+pageAI.Visible = false
+pageAI.Parent = content
+local aiPad = Instance.new("UIPadding")
+aiPad.PaddingTop = UDim.new(0, 6)
+aiPad.PaddingLeft = UDim.new(0, 8)
+aiPad.PaddingRight = UDim.new(0, 8)
+aiPad.PaddingBottom = UDim.new(0, 6)
+aiPad.Parent = pageAI
+
+local chatScroll = Instance.new("ScrollingFrame")
+chatScroll.Size = UDim2.new(1, 0, 1, -40)
+chatScroll.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+chatScroll.BackgroundTransparency = 0.2
+chatScroll.BorderSizePixel = 0
+chatScroll.ScrollBarThickness = 4
+chatScroll.Parent = pageAI
+local csC = Instance.new("UICorner"); csC.CornerRadius = UDim.new(0, 6); csC.Parent = chatScroll
+local csLayout = Instance.new("UIListLayout")
+csLayout.Padding = UDim.new(0, 4)
+csLayout.Parent = chatScroll
+local csPad = Instance.new("UIPadding")
+csPad.PaddingTop = UDim.new(0, 4)
+csPad.PaddingLeft = UDim.new(0, 4)
+csPad.PaddingRight = UDim.new(0, 4)
+csPad.Parent = chatScroll
+
+local chatInput = Instance.new("TextBox")
+chatInput.Size = UDim2.new(1, -60, 0, 30)
+chatInput.Position = UDim2.new(0, 0, 1, -30)
+chatInput.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+chatInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+chatInput.TextSize = 13
+chatInput.PlaceholderText = "AIに指示を出す (例: スピード 100)"
+chatInput.Text = ""
+chatInput.ClearTextOnFocus = false
+chatInput.Font = Enum.Font.Gotham
+chatInput.Parent = pageAI
+local ciC = Instance.new("UICorner"); ciC.CornerRadius = UDim.new(0, 6); ciC.Parent = chatInput
+
+local chatSend = Instance.new("TextButton")
+chatSend.Size = UDim2.new(0, 55, 0, 30)
+chatSend.Position = UDim2.new(1, -55, 1, -30)
+chatSend.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
+chatSend.TextColor3 = Color3.fromRGB(255, 255, 255)
+chatSend.TextSize = 12
+chatSend.Font = Enum.Font.GothamBold
+chatSend.Text = "送信"
+chatSend.Parent = pageAI
+local cseC = Instance.new("UICorner"); cseC.CornerRadius = UDim.new(0, 6); cseC.Parent = chatSend
+
 local function showPage(which)
     pagePlayer.Visible = (which == "player")
     pageTools.Visible = (which == "tools")
+    pageAI.Visible = (which == "ai")
     V.playerTab.BackgroundColor3 = (which=="player") and Color3.fromRGB(70,70,110) or Color3.fromRGB(50,50,75)
     V.toolsTab.BackgroundColor3 = (which=="tools") and Color3.fromRGB(70,70,110) or Color3.fromRGB(50,50,75)
+    V.aiTab.BackgroundColor3 = (which=="ai") and Color3.fromRGB(70,70,110) or Color3.fromRGB(50,50,75)
 end
 showPage("player")
 V.playerTab.MouseButton1Click:Connect(function() showPage("player") end)
 V.toolsTab.MouseButton1Click:Connect(function() showPage("tools") end)
+V.aiTab.MouseButton1Click:Connect(function() showPage("ai") end)
 
-_G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools,
+_G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools, pageAI=pageAI,
     speedLabel=speedLabel, speedBox=speedBox, speedToggle=speedToggle,
     jumpLabel=jumpLabel, jumpBox=jumpBox, jumpToggle=jumpToggle,
     wallLabel=wallLabel, wallToggle=wallToggle,
@@ -413,8 +467,9 @@ _G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools,
     invisLabel=invisLabel, invisToggle=invisToggle,
     rotLabel=rotLabel, rotBox=rotBox, rotToggle=rotToggle,
     poseLabel=poseLabel, poseNormal=poseNormal, poseRagdoll=poseRagdoll,
-    poseT=poseT, poseSit=poseSit, showPage=showPage }
--- ===== Viod Menu Part 3/4 =====
+    poseT=poseT, poseSit=poseSit, showPage=showPage,
+    chatScroll=chatScroll, chatInput=chatInput, chatSend=chatSend }
+-- ===== Viod Menu Part 3/5 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
@@ -506,7 +561,6 @@ RunService.Heartbeat:Connect(function()
     if res and res.Normal and math.abs(res.Normal.Y) < 0.3 then
         local n = res.Normal
         bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-        -- 【修正】通常のスピード(hum.WalkSpeed)で登れるようにする
         bv.Velocity = Vector3.new(0, hum.WalkSpeed, 0) + (-n * 3)
         bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
         bg.CFrame = CFrame.new(hrp.Position, hrp.Position - n)
@@ -559,7 +613,7 @@ V2.invisToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- 回転（スピンON/OFF）
+-- 回転
 local function applyRot()
     local char = player.Character; if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
@@ -627,7 +681,7 @@ V2.poseRagdoll.MouseButton1Click:Connect(function() setPose("ragdoll") end)
 V2.poseT.MouseButton1Click:Connect(function() setPose("tpose") end)
 V2.poseSit.MouseButton1Click:Connect(function() setPose("sit") end)
 
--- ================= テレポート機能 =================
+-- テレポート機能
 local tpGui = nil
 local function createTpUI()
     if tpGui then tpGui:Destroy() end
@@ -675,22 +729,18 @@ local function createTpUI()
     end)
 end
 
--- タップで移動（UIの上は反応しないように除外）
 local touchStart = nil
 UIS.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.UserInputType ~= Enum.UserInputType.Touch
         and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-    
-    -- UI（移動スティックやジャンプ等）を押した場合はテレポートしない
     local guis = player.PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
     for _, g in ipairs(guis) do
         if g:IsA("GuiObject") and g.Visible then return end
     end
-
     local pos = input.Position
     local vp = workspace.CurrentCamera.ViewportSize
-    if pos.X > vp.X * 0.5 then return end -- 右半分（カメラ操作）は除外
+    if pos.X > vp.X * 0.5 then return end
     touchStart = { pos = pos, time = tick() }
 end)
 
@@ -725,7 +775,6 @@ V2.tpToggle.MouseButton1Click:Connect(function()
     if state.tpEnabled then createTpUI() else if tpGui then tpGui:Destroy(); tpGui=nil end end
 end)
 
--- 保存リスト
 local function refreshTpList()
     for _, c in ipairs(V2.tpListFrame:GetChildren()) do
         if c:IsA("TextButton") or c:IsA("Frame") then c:Destroy() end
@@ -783,7 +832,6 @@ V2.tpSaveBtn.MouseButton1Click:Connect(function()
     refreshTpList()
 end)
 
--- 定期再適用
 task.spawn(function()
     while V1.screenGui.Parent do
         local h = getHum()
@@ -799,7 +847,133 @@ task.spawn(function()
 end)
 
 _G.ViodMenu.p3 = { createTpUI=createTpUI, refreshTpList=refreshTpList }
--- ===== Viod Menu Part 4/4 =====
+-- ===== Viod Menu Part 4/5 =====
+local V1 = _G.ViodMenu.p1
+local V2 = _G.ViodMenu.p2
+local state = V1.state
+local player = game.Players.LocalPlayer
+
+-- チャットログ追加関数
+local function addChatMsg(text, isUser)
+    local msg = Instance.new("TextLabel")
+    msg.Size = UDim2.new(1, 0, 0, 0)
+    msg.AutomaticSize = Enum.AutomaticSize.Y
+    msg.BackgroundTransparency = 1
+    msg.TextWrapped = true
+    msg.TextXAlignment = Enum.TextXAlignment.Left
+    msg.TextYAlignment = Enum.TextYAlignment.Top
+    msg.Font = Enum.Font.Gotham
+    msg.TextSize = 12
+    msg.Text = (isUser and "[あなた] " or "[AI] ") .. text
+    msg.TextColor3 = isUser and Color3.fromRGB(150, 200, 255) or Color3.fromRGB(150, 255, 150)
+    msg.Parent = V2.chatScroll
+    task.wait()
+    V2.chatScroll.CanvasSize = UDim2.new(0, 0, 0, V2.chatScroll.UIListLayout.AbsoluteContentSize.Y + 10)
+    V2.chatScroll.CanvasPosition = Vector2.new(0, V2.chatScroll.AbsoluteCanvasSize.Y)
+end
+
+-- AI処理ロジック
+local function processAICommand(cmd)
+    local lowerCmd = string.lower(cmd)
+    
+    -- スピード
+    local speedVal = string.match(lowerCmd, "スピード%s*(%d+)")
+    if not speedVal then speedVal = string.match(lowerCmd, "speed%s*(%d+)") end
+    if speedVal then
+        state.speed = tonumber(speedVal)
+        if state.speedEnabled then
+            local h = V1.getHum()
+            if h then h.WalkSpeed = state.speed end
+        else
+            V2.speedToggle.MouseButton1Click:Fire()
+        end
+        V2.speedBox.Text = tostring(state.speed)
+        return "スピードを " .. speedVal .. " に設定しました"
+    end
+
+    -- ジャンプ
+    local jumpVal = string.match(lowerCmd, "ジャンプ%s*(%d+)")
+    if not jumpVal then jumpVal = string.match(lowerCmd, "jump%s*(%d+)") end
+    if jumpVal then
+        state.jumpPower = tonumber(jumpVal)
+        if state.jumpEnabled then
+            local h = V1.getHum()
+            if h then h.JumpPower = state.jumpPower end
+        else
+            V2.jumpToggle.MouseButton1Click:Fire()
+        end
+        V2.jumpBox.Text = tostring(state.jumpPower)
+        return "ジャンプ力を " .. jumpVal .. " に設定しました"
+    end
+
+    -- 壁歩き
+    if string.find(lowerCmd, "壁歩き") or string.find(lowerCmd, "wall") then
+        if string.find(lowerCmd, "on") or string.find(lowerCmd, "オン") or string.find(lowerCmd, "有効") then
+            if not state.wallWalk then V2.wallToggle.MouseButton1Click:Fire() end
+            return "壁歩きを ON にしました"
+        elseif string.find(lowerCmd, "off") or string.find(lowerCmd, "オフ") or string.find(lowerCmd, "無効") then
+            if state.wallWalk then V2.wallToggle.MouseButton1Click:Fire() end
+            return "壁歩きを OFF にしました"
+        end
+    end
+
+    -- 透明化
+    if string.find(lowerCmd, "透明") or string.find(lowerCmd, "invis") then
+        if string.find(lowerCmd, "on") or string.find(lowerCmd, "オン") or string.find(lowerCmd, "有効") then
+            if not state.invisEnabled then V2.invisToggle.MouseButton1Click:Fire() end
+            return "透明化を ON にしました"
+        elseif string.find(lowerCmd, "off") or string.find(lowerCmd, "オフ") or string.find(lowerCmd, "無効") then
+            if state.invisEnabled then V2.invisToggle.MouseButton1Click:Fire() end
+            return "透明化を OFF にしました"
+        end
+    end
+
+    -- 回転
+    local rotVal = string.match(lowerCmd, "回転%s*(%d+)")
+    if not rotVal then rotVal = string.match(lowerCmd, "rot%s*(%d+)") end
+    if rotVal then
+        state.rotSpeed = tonumber(rotVal)
+        V2.rotBox.Text = tostring(state.rotSpeed)
+        if not state.rotEnabled then V2.rotToggle.MouseButton1Click:Fire() end
+        return "回転スピードを " .. rotVal .. " にしました"
+    end
+
+    -- リスポーン
+    if string.find(lowerCmd, "リスポーン") or string.find(lowerCmd, "respawn") then
+        local h = V1.getHum()
+        if h then h.Health = 0 end
+        return "リスポーンしました"
+    end
+
+    -- ヘルプ
+    if string.find(lowerCmd, "ヘルプ") or string.find(lowerCmd, "help") or string.find(lowerCmd, "使い方") then
+        return "使えるコマンド:\n・スピード 100\n・ジャンプ 120\n・壁歩き ON/OFF\n・透明化 ON/OFF\n・回転 360\n・リスポーン"
+    end
+
+    return "すみません、そのコマンドは理解できません。「ヘルプ」と入力すると使えるコマンドが出ます。"
+end
+
+-- 送信処理
+local function sendChat()
+    local text = V2.chatInput.Text
+    if text == "" then return end
+    addChatMsg(text, true)
+    V2.chatInput.Text = ""
+    task.wait(0.3)
+    local response = processAICommand(text)
+    addChatMsg(response, false)
+end
+
+V2.chatSend.MouseButton1Click:Connect(sendChat)
+V2.chatInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then sendChat() end
+end)
+
+-- 最初のメッセージ
+addChatMsg("こんにちは！Viod AIです。\n「ヘルプ」と入力すると使えるコマンドが見れます。", false)
+
+_G.ViodMenu.p4 = { addChatMsg=addChatMsg }
+-- ===== Viod Menu Part 5/5 =====
 local V1 = _G.ViodMenu.p1
 local V2 = _G.ViodMenu.p2
 local LANG = V1.LANG
@@ -813,6 +987,7 @@ local function applyLang()
     V1.langBtn.Text = (state.lang == "ja") and "日本語 🇯🇵" or "English 🇺🇸"
     V1.playerTab.Text = t.player
     V1.toolsTab.Text = t.tools
+    V1.aiTab.Text = t.ai
     V2.speedLabel.Text = t.speed
     V2.jumpLabel.Text = t.jump
     V2.wallLabel.Text = t.wall
@@ -836,6 +1011,7 @@ local function applyLang()
     V2.poseRagdoll.Text = t.poseRagdoll
     V2.poseT.Text = t.poseT
     V2.poseSit.Text = t.poseSit
+    V2.chatSend.Text = (state.lang == "ja") and "送信" or "Send"
 end
 
 V1.langBtn.MouseButton1Click:Connect(function()
@@ -882,7 +1058,6 @@ V1.closeBtn.MouseButton1Click:Connect(function()
             vDragStart = input.Position
             vStartPos = vBtn.Position
             vMoved = false
-            -- 0.25秒長押しでドラッグモード開始
             vHoldTimer = task.delay(0.25, function()
                 if not vMoved then
                     vDragging = true
@@ -916,7 +1091,6 @@ V1.closeBtn.MouseButton1Click:Connect(function()
         vDragging = false
         vDragStart = nil
         vBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
-        -- ドラッグしていない & 動いていない → タップとしてメニュー復元
         if not wasDrag and not wasMoved then
             V1.mainFrame.Visible = true
             vBtn:Destroy()
@@ -924,7 +1098,7 @@ V1.closeBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- − : Vに変化（最小化）
+-- − : Vに変化
 local minimized = false
 V1.minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -953,4 +1127,4 @@ end)
 
 applyLang()
 if _G.ViodMenu.p3 then _G.ViodMenu.p3.refreshTpList() end
-print("[Viod Menu] Loaded / 読み込み完了")
+print("[Viod Menu] Loaded AI Version / 読み込み完了")
