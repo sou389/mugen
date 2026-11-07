@@ -9,13 +9,13 @@ local LANG = {
     ja = { title="Viod", player="プレイヤー", tools="ツール",
            speed="スピード:", jump="ジャンプ力:", wall="壁歩き:", noclip="貫通:",
            respawn="即リスポーン", on="ON", off="OFF",
-           tp="テレポート", invis="透明化", rot="回転スピード:", tpsave="テレポート保存",
+           tp="テレポート", tpDesc="画面を指でタップしよう", invis="透明化", rot="回転スピード:", tpsave="テレポート保存",
            pose="ポーズ歩き:", poseNormal="通常", poseRagdoll="ラグドール",
            poseT="Tポーズ", poseSit="座り", saveBtn="保存" },
     en = { title="Viod", player="Player", tools="Tools",
            speed="Speed:", jump="Jump:", wall="Wall Walk:", noclip="Noclip:",
            respawn="Respawn", on="ON", off="OFF",
-           tp="Teleport", invis="Invisible", rot="Rot Speed:", tpsave="Save TP",
+           tp="Teleport", tpDesc="Tap screen to fly/move", invis="Invisible", rot="Rot Speed:", tpsave="Save TP",
            pose="Pose Walk:", poseNormal="Normal", poseRagdoll="Ragdoll",
            poseT="T-Pose", poseSit="Sit", saveBtn="Save" },
 }
@@ -44,7 +44,7 @@ screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999
 screenGui.Parent = playerGui
 
--- メインフレーム（高さを400に広げました）
+-- メインフレーム（高さ400）
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 560, 0, 400)
 mainFrame.Position = UDim2.new(0.5, -280, 0.5, -200)
@@ -146,7 +146,7 @@ body.Position = UDim2.new(0, 8, 0, 40)
 body.BackgroundTransparency = 1
 body.Parent = mainFrame
 
--- 左タブ（プレイヤー、ツールのみ）
+-- 左タブ
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0, 110, 1, 0)
 leftPanel.BackgroundTransparency = 1
@@ -181,20 +181,20 @@ content.BorderSizePixel = 0
 content.Parent = body
 local cC = Instance.new("UICorner"); cC.CornerRadius = UDim.new(0, 8); cC.Parent = content
 
--- 【修正】左下 プレイヤーカード（はみ出さないようにサイズ調整）
+-- 【修正】左下 プレイヤーカード（UIの中に完全に収める）
 local playerCard = Instance.new("Frame")
-playerCard.Size = UDim2.new(0, 180, 0, 52)
-playerCard.Position = UDim2.new(0, 10, 1, -62)
+playerCard.Size = UDim2.new(0, 110, 0, 48) -- タブの幅に合わせる
+playerCard.Position = UDim2.new(0, 0, 1, -48) -- leftPanelの一番下に配置
 playerCard.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-playerCard.BackgroundTransparency = 0.25
+playerCard.BackgroundTransparency = 0.2
 playerCard.BorderSizePixel = 0
 playerCard.ZIndex = 50
-playerCard.Parent = screenGui
+playerCard.Parent = leftPanel -- UIの中に配置
 local pcC = Instance.new("UICorner"); pcC.CornerRadius = UDim.new(0, 8); pcC.Parent = playerCard
 
 local avatarImg = Instance.new("ImageLabel")
-avatarImg.Size = UDim2.new(0, 36, 0, 36) -- サイズ縮小
-avatarImg.Position = UDim2.new(0, 8, 0.5, -18)
+avatarImg.Size = UDim2.new(0, 32, 0, 32)
+avatarImg.Position = UDim2.new(0, 6, 0.5, -16)
 avatarImg.BackgroundColor3 = Color3.fromRGB(255,255,255)
 avatarImg.BackgroundTransparency = 0.2
 avatarImg.ScaleType = Enum.ScaleType.Crop
@@ -206,11 +206,11 @@ avAR.AspectRatio = 1
 avAR.Parent = avatarImg
 
 local nameLabel = Instance.new("TextLabel")
-nameLabel.Size = UDim2.new(1, -60, 1, -16) -- 上下に余白
-nameLabel.Position = UDim2.new(0, 50, 0, 8)
+nameLabel.Size = UDim2.new(1, -44, 1, -8)
+nameLabel.Position = UDim2.new(0, 40, 0, 4)
 nameLabel.BackgroundTransparency = 1
 nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-nameLabel.TextSize = 12
+nameLabel.TextSize = 11
 nameLabel.Font = Enum.Font.GothamBold
 nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 nameLabel.TextYAlignment = Enum.TextYAlignment.Center
@@ -339,17 +339,29 @@ local ptL = Instance.new("UIListLayout")
 ptL.Padding = UDim.new(0, 6)
 ptL.Parent = pageTools
 
+-- テレポート
 local tpRow = row(pageTools, 1)
 local tpLabel = label(tpRow, 0, 85)
-local tpToggle = makeBtn(tpRow, 90, 155, "OFF")
+local tpDescLabel = Instance.new("TextLabel") -- 説明文用
+tpDescLabel.Size = UDim2.new(0, 100, 1, 0)
+tpDescLabel.Position = UDim2.new(0, 90, 0, 0)
+tpDescLabel.BackgroundTransparency = 1
+tpDescLabel.TextColor3 = Color3.fromRGB(150, 255, 150) -- 緑色で目立たせる
+tpDescLabel.TextSize = 11
+tpDescLabel.Font = Enum.Font.Gotham
+tpDescLabel.TextXAlignment = Enum.TextXAlignment.Left
+tpDescLabel.TextTruncate = Enum.TextTruncate.AtEnd
+tpDescLabel.Parent = tpRow
+local tpToggle = makeBtn(tpRow, 195, 50, "OFF")
 
+-- テレポート保存
 local tpSaveRow = row(pageTools, 2)
 local tpSaveLabel = label(tpSaveRow, 0, 85)
 local tpSaveBox = makeBox(tpSaveRow, 90, 100, "")
 local tpSaveBtn = makeBtn(tpSaveRow, 195, 50, "Save")
 
 local tpListRow = row(pageTools, 3)
-tpListRow.Size = UDim2.new(1, 0, 0, 70) -- 高さ調整
+tpListRow.Size = UDim2.new(1, 0, 0, 60) -- リストの高さ
 local tpListFrame = Instance.new("ScrollingFrame")
 tpListFrame.Size = UDim2.new(1, 0, 1, 0)
 tpListFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
@@ -396,7 +408,7 @@ _G.ViodMenu.p2 = { pagePlayer=pagePlayer, pageTools=pageTools,
     wallLabel=wallLabel, wallToggle=wallToggle,
     noclipLabel=noclipLabel, noclipToggle=noclipToggle,
     respawnBtn=respawnBtn,
-    tpLabel=tpLabel, tpToggle=tpToggle,
+    tpLabel=tpLabel, tpDescLabel=tpDescLabel, tpToggle=tpToggle,
     tpSaveLabel=tpSaveLabel, tpSaveBox=tpSaveBox, tpSaveBtn=tpSaveBtn, tpListFrame=tpListFrame,
     invisLabel=invisLabel, invisToggle=invisToggle,
     rotLabel=rotLabel, rotBox=rotBox, rotToggle=rotToggle,
@@ -494,7 +506,8 @@ RunService.Heartbeat:Connect(function()
     if res and res.Normal and math.abs(res.Normal.Y) < 0.3 then
         local n = res.Normal
         bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-        bv.Velocity = Vector3.new(0, hum.WalkSpeed * 0.5, 0) + (-n * 3)
+        -- 【修正】通常のスピード(hum.WalkSpeed)で登れるようにする
+        bv.Velocity = Vector3.new(0, hum.WalkSpeed, 0) + (-n * 3)
         bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
         bg.CFrame = CFrame.new(hrp.Position, hrp.Position - n)
     else
@@ -550,14 +563,20 @@ end)
 local function applyRot()
     local char = player.Character; if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
-    local av = hrp:FindFirstChild("RotVelocity")
-    if not state.rotEnabled then if av then av:Destroy() end return end
+    local av = hrp:FindFirstChild("ViodRotVelocity")
+    if not state.rotEnabled then 
+        if av then av:Destroy() end 
+        return 
+    end
     if not av then
         av = Instance.new("AngularVelocity")
-        av.Name="RotVelocity"; av.AffectsGroundOnly=false; av.AffectsTorque=true
-        av.RelativeTo=Enum.ActuatorRelativeTo.World; av.Parent=hrp
+        av.Name = "ViodRotVelocity"
+        av.AffectsGroundOnly = false
+        av.AffectsTorque = true
+        av.RelativeTo = Enum.ActuatorRelativeTo.World
+        av.Parent = hrp
     end
-    av.MaxTorque = Vector3.new(1e5,1e5,1e5)
+    av.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
     av.AngularVelocity = Vector3.new(0, state.rotSpeed, 0)
 end
 V2.rotBox.FocusLost:Connect(function()
@@ -620,8 +639,8 @@ local function createTpUI()
     tpGui.Parent = player:WaitForChild("PlayerGui")
 
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 150, 0, 30)
-    frame.Position = UDim2.new(0.5, -75, 1, -100)
+    frame.Size = UDim2.new(0, 200, 0, 35)
+    frame.Position = UDim2.new(0.5, -100, 1, -100)
     frame.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
     frame.BackgroundTransparency = 0.2
     frame.BorderSizePixel = 0
@@ -629,12 +648,12 @@ local function createTpUI()
     local fC = Instance.new("UICorner"); fC.CornerRadius = UDim.new(0, 8); fC.Parent = frame
 
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0, 110, 1, 0)
+    lbl.Size = UDim2.new(0, 160, 1, 0)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = Color3.fromRGB(255,255,255)
     lbl.TextSize = 10
     lbl.Font = Enum.Font.GothamBold
-    lbl.Text = "Teleport"
+    lbl.Text = LANG[state.lang].tp .. " (" .. LANG[state.lang].tpDesc .. ")"
     lbl.Parent = frame
 
     local tg = Instance.new("TextButton")
@@ -656,19 +675,17 @@ local function createTpUI()
     end)
 end
 
--- タップで移動（移動スティックやジャンプボタンを除外）
+-- タップで移動（UIの上は反応しないように除外）
 local touchStart = nil
 UIS.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.UserInputType ~= Enum.UserInputType.Touch
         and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
     
-    -- 【修正】UI（移動スティック等）を押した場合はテレポート判定をしない
+    -- UI（移動スティックやジャンプ等）を押した場合はテレポートしない
     local guis = player.PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
     for _, g in ipairs(guis) do
-        if g:IsA("GuiObject") and g.Visible then
-            return 
-        end
+        if g:IsA("GuiObject") and g.Visible then return end
     end
 
     local pos = input.Position
@@ -806,6 +823,7 @@ local function applyLang()
     V2.wallToggle.Text = state.wallWalk and t.on or t.off
     V2.noclipToggle.Text = state.noclip and t.on or t.off
     V2.tpLabel.Text = t.tp
+    V2.tpDescLabel.Text = t.tpDesc
     V2.tpSaveLabel.Text = t.tpsave
     V2.tpSaveBtn.Text = t.saveBtn
     V2.tpToggle.Text = state.tpEnabled and t.on or t.off
@@ -855,7 +873,6 @@ V1.closeBtn.MouseButton1Click:Connect(function()
     end)
 
     local vDragging, vDragStart, vStartPos = false, nil, nil
-    local vLongPress = false
     local vHoldTimer = nil
     local vMoved = false
 
@@ -865,6 +882,7 @@ V1.closeBtn.MouseButton1Click:Connect(function()
             vDragStart = input.Position
             vStartPos = vBtn.Position
             vMoved = false
+            -- 0.25秒長押しでドラッグモード開始
             vHoldTimer = task.delay(0.25, function()
                 if not vMoved then
                     vDragging = true
@@ -898,6 +916,7 @@ V1.closeBtn.MouseButton1Click:Connect(function()
         vDragging = false
         vDragStart = nil
         vBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 75)
+        -- ドラッグしていない & 動いていない → タップとしてメニュー復元
         if not wasDrag and not wasMoved then
             V1.mainFrame.Visible = true
             vBtn:Destroy()
@@ -905,7 +924,7 @@ V1.closeBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- − : Vに変化
+-- − : Vに変化（最小化）
 local minimized = false
 V1.minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
