@@ -11,7 +11,6 @@ local UserInputService = game:GetService("UserInputService")
 -- 1. ポップアップ（確認画面）を作る関数
 -- ==========================================
 local function showPopup()
-    -- すでに出ていたら消す
     local old = PlayerGui:FindFirstChild("VoidPopup")
     if old then old:Destroy() end
 
@@ -28,11 +27,11 @@ local function showPopup()
     DarkOverlay.BackgroundTransparency = 0.4
     DarkOverlay.BorderSizePixel = 0
 
-    -- 中央のポップアップ枠（紺色）
+    -- 中央のポップアップ枠（スマホ用にサイズ調整）
     local MainFrame = Instance.new("Frame")
     MainFrame.Parent = ScreenGui
-    MainFrame.Size = UDim2.new(0, 450, 0, 200)
-    MainFrame.Position = UDim2.new(0.5, -225, 0.5, -100)
+    MainFrame.Size = UDim2.new(0, 320, 0, 160) -- スマホで収まるサイズ
+    MainFrame.Position = UDim2.new(0.5, -160, 0.5, -80)
     MainFrame.BackgroundColor3 = Color3.fromRGB(17, 44, 59) 
     MainFrame.BorderSizePixel = 0
     
@@ -51,12 +50,12 @@ local function showPopup()
     -- 「実行しますか？」の文字
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = MainFrame
-    TextLabel.Size = UDim2.new(1, -40, 0.6, 0)
-    TextLabel.Position = UDim2.new(0, 20, 0, 0)
+    TextLabel.Size = UDim2.new(1, -20, 0.6, 0)
+    TextLabel.Position = UDim2.new(0, 15, 0, 0)
     TextLabel.BackgroundTransparency = 1
     TextLabel.Text = "実行しますか？"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 32
+    TextLabel.TextSize = 24
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -68,7 +67,7 @@ local function showPopup()
     ExecBtn.BackgroundTransparency = 1
     ExecBtn.Text = "実行"
     ExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ExecBtn.TextSize = 26
+    ExecBtn.TextSize = 22
     ExecBtn.Font = Enum.Font.GothamBold
 
     -- 「閉じる」ボタン
@@ -79,7 +78,7 @@ local function showPopup()
     CloseBtn.BackgroundTransparency = 1
     CloseBtn.Text = "閉じる"
     CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseBtn.TextSize = 26
+    CloseBtn.TextSize = 22
     CloseBtn.Font = Enum.Font.GothamBold
 
     -- ==========================================
@@ -88,8 +87,8 @@ local function showPopup()
     local VoidUI = Instance.new("Frame")
     VoidUI.Name = "MainVoidUI"
     VoidUI.Parent = ScreenGui
-    VoidUI.Size = UDim2.new(0, 300, 0, 100)
-    VoidUI.Position = UDim2.new(0.5, -150, 0.5, -50)
+    VoidUI.Size = UDim2.new(0, 250, 0, 80)
+    VoidUI.Position = UDim2.new(0.5, -125, 0.5, -40)
     VoidUI.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     VoidUI.BackgroundTransparency = 0.5
     VoidUI.BorderSizePixel = 0
@@ -107,18 +106,18 @@ local function showPopup()
     local VoidText = Instance.new("TextLabel")
     VoidText.Parent = VoidUI
     VoidText.BackgroundTransparency = 1
-    VoidText.Size = UDim2.new(1, -20, 1, 0)
-    VoidText.Position = UDim2.new(0, 20, 0, 0)
+    VoidText.Size = UDim2.new(1, -15, 1, 0)
+    VoidText.Position = UDim2.new(0, 15, 0, 0)
     VoidText.Text = "void"
     VoidText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    VoidText.TextSize = 40
+    VoidText.TextSize = 32
     VoidText.Font = Enum.Font.GothamBold
     VoidText.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- ドラッグで動かせるようにする
+    -- 指でドラッグして動かせるようにする
     local dragging, dragInput, dragStart, startPos
     VoidUI.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = VoidUI.Position
@@ -128,7 +127,7 @@ local function showPopup()
         end
     end)
     VoidUI.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
@@ -139,30 +138,41 @@ local function showPopup()
         end
     end)
 
-    -- ボタンが押された時の処理
+    -- ボタンの処理
     CloseBtn.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy() -- 閉じるを押したら全部消す
+        ScreenGui:Destroy()
     end)
     
     ExecBtn.MouseButton1Click:Connect(function()
         MainFrame.Visible = false
         DarkOverlay.Visible = false
         VoidUI.Visible = true
-        print("実行が押されました！void UI起動！")
     end)
 end
 
 -- ==========================================
--- 3. キー入力（Zキー）の設定
+-- 3. スマホ用：呼び出し設定
 -- ==========================================
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    -- チャット中などは反応しないようにする
-    if gameProcessed then return end
-    
-    -- Zキーが押されたらポップアップを出す
-    if input.KeyCode == Enum.KeyCode.Z then
-        showPopup()
-    end
+-- 画面の左上に「透明なボタン」を配置（これで確実にタップできます）
+local TriggerBtn = Instance.new("TextButton")
+TriggerBtn.Parent = PlayerGui
+TriggerBtn.Size = UDim2.new(0, 80, 0, 80)
+TriggerBtn.Position = UDim2.new(0, 10, 0, 10)
+TriggerBtn.BackgroundTransparency = 1 -- 見えないボタン
+TriggerBtn.Text = "" -- 文字も消す
+TriggerBtn.MouseButton1Click:Connect(function()
+    showPopup()
 end)
 
-print("準備完了！Zキーを押してください。")
+-- 画面のどこかを「ダブルタップ」しても出るようにする
+local lastTap = 0
+UserInputService.TouchTap:Connect(function(touchPositions, gameProcessed)
+    if gameProcessed then return end
+    local currentTime = tick()
+    if currentTime - lastTap < 0.3 then -- 0.3秒以内に2回タップしたら
+        showPopup()
+    end
+    lastTap = currentTime
+end)
+
+print("準備完了！画面左上の見えないボタン、または画面をダブルタップしてください。")
