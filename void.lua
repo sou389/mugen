@@ -1,41 +1,40 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
 
--- 既存の古いUIを確実に削除
-for _, v in pairs(playerGui:GetChildren()) do
-    if v:IsA("ScreenGui") and v.Name == "PhotoReplicaGui" then
-        v:Destroy()
-    end
-end
+-- 背景の円（黒）
+local Circle = Instance.new("Frame")
+Circle.Parent = ScreenGui
+Circle.Size = UDim2.new(0, 150, 0, 150)
+Circle.Position = UDim2.new(0.5, -75, 0.5, -75)
+Circle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Circle.BorderSizePixel = 0
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PhotoReplicaGui"
-screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.DisplayOrder = 999
-screenGui.Parent = playerGui
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(1, 0) -- 完全な円にする
+UICorner.Parent = Circle
 
--- ★画像のみを表示
-local background = Instance.new("ImageLabel")
-background.Size = UDim2.new(1, 0, 1, 0) -- 画面いっぱい
-background.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-background.Image = "rbxassetid://140280744855473" 
-background.ScaleType = Enum.ScaleType.Fit -- またはCrop。Fitだと全体が見える
-background.Parent = screenGui
+-- 紫の枠線（ネオンっぽく）
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = Circle
+UIStroke.Color = Color3.fromRGB(170, 0, 255) -- 紫色
+UIStroke.Thickness = 5
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- 画面右上の「✕」閉じるボタン（これだけはないと困るので）
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 40, 0, 40)
-closeBtn.Position = UDim2.new(1, -50, 0, 50)
-closeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 20
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.Parent = screenGui
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+-- Vの文字
+local VText = Instance.new("TextLabel")
+VText.Parent = Circle
+VText.BackgroundTransparency = 1
+VText.Size = UDim2.new(1, 0, 1, 0)
+VText.Text = "V"
+VText.TextColor3 = Color3.fromRGB(230, 200, 255) -- 光る薄紫
+VText.TextSize = 100
+VText.Font = Enum.Font.FredokaOne -- 太めのフォント
+VText.TextStrokeTransparency = 0 -- 文字の縁取り
+VText.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
 
-closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-end)
+-- 発光エフェクト（文字を脈打たせる）
+local TweenService = game:GetService("TweenService")
+local pulseInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+local pulseTween = TweenService:Create(VText, pulseInfo, {TextTransparency = 0.3})
+pulseTween:Play()
