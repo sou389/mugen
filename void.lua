@@ -1,40 +1,44 @@
+-- 既存のUIがあれば削除（連続実行時のエラー防止）
+local oldGui = game.CoreGui:FindFirstChild("VoidUI")
+if oldGui then oldGui:Destroy() end
+
+-- ScreenGuiの作成
 local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "VoidUI"
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true -- 画面の一番上に配置するため
 
--- 背景の円（黒）
-local Circle = Instance.new("Frame")
-Circle.Parent = ScreenGui
-Circle.Size = UDim2.new(0, 150, 0, 150)
-Circle.Position = UDim2.new(0.5, -75, 0.5, -75)
-Circle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Circle.BorderSizePixel = 0
+-- メインのUI（薄い透明な黒）
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- 黒
+MainFrame.BackgroundTransparency = 0.5 -- 透明度（0が不透明、1が完全透明。0.5で半透明）
+MainFrame.Position = UDim2.new(0, 20, 0, 20) -- 画面左上から少しずらす
+MainFrame.Size = UDim2.new(0, 200, 0, 40) -- 横長のUI
+MainFrame.BorderSizePixel = 0
 
+-- UIに角丸をつける（オシャレに見せる）
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(1, 0) -- 完全な円にする
-UICorner.Parent = Circle
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
 
--- 紫の枠線（ネオンっぽく）
+-- 枠線をつける（任意。不要なら削除）
 local UIStroke = Instance.new("UIStroke")
-UIStroke.Parent = Circle
-UIStroke.Color = Color3.fromRGB(170, 0, 255) -- 紫色
-UIStroke.Thickness = 5
+UIStroke.Parent = MainFrame
+UIStroke.Color = Color3.fromRGB(80, 0, 150) -- 暗い紫
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.3
 UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- Vの文字
-local VText = Instance.new("TextLabel")
-VText.Parent = Circle
-VText.BackgroundTransparency = 1
-VText.Size = UDim2.new(1, 0, 1, 0)
-VText.Text = "V"
-VText.TextColor3 = Color3.fromRGB(230, 200, 255) -- 光る薄紫
-VText.TextSize = 100
-VText.Font = Enum.Font.FredokaOne -- 太めのフォント
-VText.TextStrokeTransparency = 0 -- 文字の縁取り
-VText.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
-
--- 発光エフェクト（文字を脈打たせる）
-local TweenService = game:GetService("TweenService")
-local pulseInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-local pulseTween = TweenService:Create(VText, pulseInfo, {TextTransparency = 0.3})
-pulseTween:Play()
+-- 「void」という文字（左寄せ）
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Parent = MainFrame
+TextLabel.BackgroundTransparency = 1 -- 文字の背景は透明
+TextLabel.Size = UDim2.new(1, -10, 1, 0) -- 少し右に余白
+TextLabel.Position = UDim2.new(0, 10, 0, 0) -- 左から10ピクセルずらす
+TextLabel.Text = "void"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- 白文字
+TextLabel.TextSize = 20
+TextLabel.Font = Enum.Font.GothamBold -- 太めのスタイリッシュなフォント
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left -- 左揃え
