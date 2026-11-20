@@ -1,173 +1,167 @@
--- 既存のUIがあれば削除
-local oldGui = game.CoreGui:FindFirstChild("VoidTrigger")
-if oldGui then oldGui:Destroy() end
-local oldConfirm = game.CoreGui:FindFirstChild("RobloxStyleConfirm")
-if oldConfirm then oldConfirm:Destroy() end
+-- ==========================================
+-- 既存のUIを完全に削除する（二重起動防止）
+-- ==========================================
+for _, v in pairs(game.CoreGui:GetChildren()) do
+    if v.Name == "VoidTrigger" or v.Name == "RobloxStyleConfirm" then
+        v:Destroy()
+    end
+end
 
---------------------------------------------------
--- 1. 呼び出し用の隠しトリガー（Zキー、または画面タップ）
---------------------------------------------------
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VoidTrigger"
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
-
+local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
--- ポップアップを表示する関数
+-- ==========================================
+-- 1. ポップアップを表示する処理
+-- ==========================================
 local function showPopup()
-    -- すでに表示されているなら何もしない
-    if game.CoreGui:FindFirstChild("RobloxStyleConfirm") then return end
-    
-    --------------------------------------------------
-    -- 2. 画像と同じスタイルの確認UI（ダイアログ）の作成
-    --------------------------------------------------
+    -- すでに出ているなら消す
+    local existing = CoreGui:FindFirstChild("RobloxStyleConfirm")
+    if existing then existing:Destroy() end
+
+    -- ScreenGuiの作成
     local ConfirmGui = Instance.new("ScreenGui")
     ConfirmGui.Name = "RobloxStyleConfirm"
-    ConfirmGui.Parent = game.CoreGui
+    ConfirmGui.Parent = CoreGui
     ConfirmGui.ResetOnSpawn = false
-    
-    -- 背景を少し暗くする（画像のような暗さを再現）
+    ConfirmGui.DisplayOrder = 999
+
+    -- 黒い背景（後ろを暗くする）
     local DarkOverlay = Instance.new("Frame")
     DarkOverlay.Parent = ConfirmGui
     DarkOverlay.Size = UDim2.new(1, 0, 1, 0)
     DarkOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    DarkOverlay.BackgroundTransparency = 0.3
+    DarkOverlay.BackgroundTransparency = 0.4
     DarkOverlay.BorderSizePixel = 0
-    DarkOverlay.ZIndex = 1
-    
-    -- メインのポップアップ枠（半透明の紺色）
+
+    -- メインのポップアップ枠（写真の紺色のデザイン）
     local MainFrame = Instance.new("Frame")
     MainFrame.Parent = ConfirmGui
     MainFrame.Size = UDim2.new(0, 500, 0, 220)
     MainFrame.Position = UDim2.new(0.5, -250, 0.5, -110)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 35, 50) -- 画像のような濃い紺
-    MainFrame.BackgroundTransparency = 0.1
+    MainFrame.BackgroundColor3 = Color3.fromRGB(17, 44, 59) -- 写真に近い紺色
+    MainFrame.BackgroundTransparency = 0.05
     MainFrame.BorderSizePixel = 0
-    MainFrame.ZIndex = 2
     
-    -- 角丸
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 6)
+    UICorner.CornerRadius = UDim.new(0, 8)
     UICorner.Parent = MainFrame
-    
-    -- 枠線
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Parent = MainFrame
-    UIStroke.Color = Color3.fromRGB(100, 100, 100)
-    UIStroke.Thickness = 1
-    UIStroke.Transparency = 0.5
-    
+
     -- 中央の区切り線
     local Divider = Instance.new("Frame")
     Divider.Parent = MainFrame
     Divider.Size = UDim2.new(1, 0, 0, 2)
     Divider.Position = UDim2.new(0, 0, 0.6, 0)
-    Divider.BackgroundColor3 = Color3.fromRGB(40, 70, 90)
+    Divider.BackgroundColor3 = Color3.fromRGB(34, 68, 85)
     Divider.BorderSizePixel = 0
-    Divider.ZIndex = 3
-    
+
     -- 「実行しますか？」のテキスト
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = MainFrame
     TextLabel.Size = UDim2.new(1, -40, 0.6, 0)
-    TextLabel.Position = UDim2.new(0, 20, 0, 10)
+    TextLabel.Position = UDim2.new(0, 20, 0, 0)
     TextLabel.BackgroundTransparency = 1
     TextLabel.Text = "実行しますか？"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 26
+    TextLabel.TextSize = 32
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TextLabel.ZIndex = 3
-    
-    -- 左下の「実行」ボタン
+    TextLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+    -- 「実行」ボタン
     local ExecBtn = Instance.new("TextButton")
     ExecBtn.Parent = MainFrame
-    ExecBtn.Size = UDim2.new(0.45, 0, 0.35, 0)
-    ExecBtn.Position = UDim2.new(0.025, 0, 0.62, 0)
-    ExecBtn.BackgroundTransparency = 1 -- 背景を透明にする
-    ExecBtn.Text = "実行"
-    ExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ExecBtn.TextSize = 24
-    ExecBtn.Font = Enum.Font.GothamBold
-    ExecBtn.ZIndex = 3
+    ExecBtn.Size = UDim2.new(0.5, 0, 0.4, 0)
+    ExecBtn.Position = UDim2.new(0, 0, 0.6, 0)
+    ExecBtn.BackgroundTransparency = 1
+    ExecBtn.Text = ""
     
-    -- 実行ボタンの丸いアイコン背景
+    -- 丸い枠とアイコン（実行）
     local ExecCircle = Instance.new("Frame")
     ExecCircle.Parent = ExecBtn
-    ExecCircle.Size = UDim2.new(0, 80, 0, 80)
-    ExecCircle.Position = UDim2.new(0.5, -40, 0.5, -10)
+    ExecCircle.Size = UDim2.new(0, 60, 0, 60)
+    ExecCircle.Position = UDim2.new(0.5, -30, 0.3, 0)
     ExecCircle.BackgroundTransparency = 0.8
     ExecCircle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     ExecCircle.BorderSizePixel = 0
-    ExecCircle.ZIndex = 2
-    local ExecCircleCorner = Instance.new("UICorner")
-    ExecCircleCorner.CornerRadius = UDim.new(1, 0)
-    ExecCircleCorner.Parent = ExecCircle
+    local ExecCorner = Instance.new("UICorner")
+    ExecCorner.CornerRadius = UDim.new(1, 0)
+    ExecCorner.Parent = ExecCircle
+    
+    local ExecText = Instance.new("TextLabel")
+    ExecText.Parent = ExecBtn
+    ExecText.Size = UDim2.new(1, 0, 0.4, 0)
+    ExecText.Position = UDim2.new(0, 0, 0.6, 0)
+    ExecText.BackgroundTransparency = 1
+    ExecText.Text = "実行"
+    ExecText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ExecText.TextSize = 24
+    ExecText.Font = Enum.Font.GothamBold
 
-    -- 右下の「閉じる」ボタン
+    -- 「閉じる」ボタン
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Parent = MainFrame
-    CloseBtn.Size = UDim2.new(0.45, 0, 0.35, 0)
-    CloseBtn.Position = UDim2.new(0.525, 0, 0.62, 0)
+    CloseBtn.Size = UDim2.new(0.5, 0, 0.4, 0)
+    CloseBtn.Position = UDim2.new(0.5, 0, 0.6, 0)
     CloseBtn.BackgroundTransparency = 1
-    CloseBtn.Text = "閉じる"
-    CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseBtn.TextSize = 24
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.ZIndex = 3
+    CloseBtn.Text = ""
     
-    -- 閉じるボタンの丸いアイコン背景
+    -- 丸い枠とアイコン（閉じる）
     local CloseCircle = Instance.new("Frame")
     CloseCircle.Parent = CloseBtn
-    CloseCircle.Size = UDim2.new(0, 80, 0, 80)
-    CloseCircle.Position = UDim2.new(0.5, -40, 0.5, -10)
+    CloseCircle.Size = UDim2.new(0, 60, 0, 60)
+    CloseCircle.Position = UDim2.new(0.5, -30, 0.3, 0)
     CloseCircle.BackgroundTransparency = 0.8
     CloseCircle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     CloseCircle.BorderSizePixel = 0
-    CloseCircle.ZIndex = 2
-    local CloseCircleCorner = Instance.new("UICorner")
-    CloseCircleCorner.CornerRadius = UDim.new(1, 0)
-    CloseCircleCorner.Parent = CloseCircle
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(1, 0)
+    CloseCorner.Parent = CloseCircle
 
-    --------------------------------------------------
-    -- 3. メインUI（実行を押した後に出てくるUI）
-    --------------------------------------------------
+    local CloseText = Instance.new("TextLabel")
+    CloseText.Parent = CloseBtn
+    CloseText.Size = UDim2.new(1, 0, 0.4, 0)
+    CloseText.Position = UDim2.new(0, 0, 0.6, 0)
+    CloseText.BackgroundTransparency = 1
+    CloseText.Text = "閉じる"
+    CloseText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseText.TextSize = 24
+    CloseText.Font = Enum.Font.GothamBold
+
+    -- ==========================================
+    -- 2. メインの「void」UI（実行後に出てくる）
+    -- ==========================================
     local VoidUI = Instance.new("Frame")
     VoidUI.Name = "MainVoidUI"
     VoidUI.Parent = ConfirmGui
     VoidUI.Size = UDim2.new(0, 350, 0, 150)
     VoidUI.Position = UDim2.new(0.5, -175, 0.5, -75)
     VoidUI.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    VoidUI.BackgroundTransparency = 0.4
+    VoidUI.BackgroundTransparency = 0.5
     VoidUI.BorderSizePixel = 0
-    VoidUI.Visible = false -- 最初は非表示
-    VoidUI.ZIndex = 5
+    VoidUI.Visible = false 
     
-    local VoidUICorner = Instance.new("UICorner")
-    VoidUICorner.CornerRadius = UDim.new(0, 12)
-    VoidUICorner.Parent = VoidUI
+    local VoidCorner = Instance.new("UICorner")
+    VoidCorner.CornerRadius = UDim.new(0, 12)
+    VoidCorner.Parent = VoidUI
     
     local VoidStroke = Instance.new("UIStroke")
     VoidStroke.Parent = VoidUI
     VoidStroke.Color = Color3.fromRGB(150, 0, 255)
     VoidStroke.Thickness = 2
-    
-    -- 左に「void」と表示
+
     local VoidText = Instance.new("TextLabel")
     VoidText.Parent = VoidUI
     VoidText.BackgroundTransparency = 1
-    VoidText.Size = UDim2.new(1, -20, 0, 40)
-    VoidText.Position = UDim2.new(0, 15, 0, 10)
+    VoidText.Size = UDim2.new(1, -20, 0, 50)
+    VoidText.Position = UDim2.new(0, 20, 0, 20)
     VoidText.Text = "void"
     VoidText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    VoidText.TextSize = 36
+    VoidText.TextSize = 40
     VoidText.Font = Enum.Font.GothamBold
     VoidText.TextXAlignment = Enum.TextXAlignment.Left
-    VoidText.ZIndex = 6
 
-    -- メインUIをドラッグできるようにする
+    -- ドラッグ機能の実装
     local dragging, dragInput, dragStart, startPos
     VoidUI.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -191,28 +185,27 @@ local function showPopup()
         end
     end)
 
-    --------------------------------------------------
-    -- 4. ボタンの動作設定
-    --------------------------------------------------
-    -- 「閉じる」を押した時
+    -- ==========================================
+    -- 3. ボタンが押された時の処理
+    -- ==========================================
+    -- 閉じるを押したら全部消す
     CloseBtn.MouseButton1Click:Connect(function()
         ConfirmGui:Destroy()
     end)
     
-    -- 「実行」を押した時
+    -- 実行を押したらポップアップを消してvoid UIを出す
     ExecBtn.MouseButton1Click:Connect(function()
-        -- 確認画面を消す
         MainFrame.Visible = false
         DarkOverlay.Visible = false
-        -- メインのUIを表示
         VoidUI.Visible = true
+        print("UIが起動しました！")
     end)
 end
 
---------------------------------------------------
--- 5. 呼び出しトリガーの設定
---------------------------------------------------
--- PCの場合: Zキーを押すと出る
+-- ==========================================
+-- 4. 呼び出し設定（Zキー / 画面ダブルタップ）
+-- ==========================================
+-- PC: Zキー
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.Z then
@@ -220,7 +213,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- スマホ/タブレットの場合: 画面のどこかを素早く2回タップすると出る
+-- スマホ: 画面を素早く2回タップ
 local lastTap = 0
 UserInputService.TouchTap:Connect(function(touchPositions, gameProcessed)
     if gameProcessed then return end
@@ -230,3 +223,5 @@ UserInputService.TouchTap:Connect(function(touchPositions, gameProcessed)
     end
     lastTap = currentTime
 end)
+
+print("読み込み完了！『Zキー』または『画面ダブルタップ』でUIを呼び出してください。")
