@@ -1,5 +1,5 @@
 -- ============================================
--- Delta Executor 用 UIスクリプト（改良版）
+-- Delta Executor 用 UIスクリプト（タブ版）
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -10,9 +10,11 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- 既存UI削除
 local oldGui = playerGui:FindFirstChild("DeltaUI")
 if oldGui then oldGui:Destroy() end
+
+-- 現在のテーマカラー（設定で変更可能）
+local accentColor = Color3.fromRGB(0, 170, 255)
 
 -- ============================================
 -- メインGUI
@@ -25,8 +27,8 @@ ScreenGui.Parent = playerGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 300, 0, 330)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -165)
+MainFrame.Size = UDim2.new(0, 440, 0, 330)
+MainFrame.Position = UDim2.new(0.5, -220, 0.5, -165)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
@@ -44,13 +46,13 @@ UIGradient.Rotation = 45
 UIGradient.Parent = MainFrame
 
 local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(0, 170, 255)
+UIStroke.Color = accentColor
 UIStroke.Thickness = 2
 UIStroke.Transparency = 0.3
 UIStroke.Parent = MainFrame
 
 -- ============================================
--- タイトルバー（長押し移動）
+-- タイトルバー（スムーズドラッグ）
 -- ============================================
 local TitleBar = Instance.new("Frame")
 TitleBar.Name = "TitleBar"
@@ -68,7 +70,7 @@ Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Position = UDim2.new(0, 15, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "DELTA HUB"
-Title.TextColor3 = Color3.fromRGB(0, 200, 255)
+Title.TextColor3 = accentColor
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 18
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -94,11 +96,12 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================
--- スムーズな長押しドラッグ
+-- スムーズドラッグ（補間あり）
 -- ============================================
 local dragging = false
 local dragStart, startPos
 local targetPos = MainFrame.Position
+local currentPos = MainFrame.Position
 
 TitleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -106,6 +109,8 @@ TitleBar.InputBegan:Connect(function(input)
         dragging = true
         dragStart = input.Position
         startPos = MainFrame.Position
+        currentPos = MainFrame.Position
+        targetPos = MainFrame.Position
 
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
@@ -126,22 +131,83 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- 毎フレーム補間でスムーズに
 RunService.RenderStepped:Connect(function(dt)
-    if not dragging then return end
-    MainFrame.Position = MainFrame.Position:Lerp(targetPos, math.clamp(dt * 25, 0, 1))
+    if dragging then
+        currentPos = currentPos:Lerp(targetPos, math.clamp(dt * 30, 0, 1))
+        MainFrame.Position = currentPos
+    end
 end)
+
+-- ============================================
+-- 左側サイドバー（Player / Settings）
+-- ============================================
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 110, 1, -40)
+Sidebar.Position = UDim2.new(0, 0, 0, 40)
+Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local SidebarCorner = Instance.new("UICorner")
+SidebarCorner.CornerRadius = UDim.new(0, 12)
+SidebarCorner.Parent = Sidebar
+
+-- サイドバーの角丸を左下のみに（右側は角なし）
+local SidebarCornerFix = Instance.new("Frame")
+SidebarCornerFix.Size = UDim2.new(0, 10, 1, 0)
+SidebarCornerFix.Position = UDim2.new(1, -10, 0, 0)
+SidebarCornerFix.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+SidebarCornerFix.BorderSizePixel = 0
+SidebarCornerFix.Parent = Sidebar
+
+local tabButtons = {}
+local function createTab(name, yPos, onClick)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 45)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 14
+    btn.BorderSizePixel = 0
+    btn.Parent = Sidebar
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = accentColor
+    stroke.Thickness = 1
+    stroke.Transparency = 1
+    stroke.Parent = btn
+
+    btn.MouseButton1Click:Connect(onClick)
+    table.insert(tabButtons, {button = btn, stroke = stroke})
+    return btn
+end
+
+-- ============================================
+-- 右側コンテンツエリア
+-- ============================================
+local ContentArea = Instance.new("Frame")
+ContentArea.Name = "ContentArea"
+ContentArea.Size = UDim2.new(1, -110, 1, -40)
+ContentArea.Position = UDim2.new(0, 110, 0, 40)
+ContentArea.BackgroundTransparency = 1
+ContentArea.Parent = MainFrame
 
 -- ============================================
 -- スライダー作成（スムーズ版）
 -- ============================================
-local function createSlider(name, yPos, minVal, maxVal, defaultVal, callback)
+local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, callback)
     local Container = Instance.new("Frame")
-    Container.Name = name .. "Container"
     Container.Size = UDim2.new(1, -30, 0, 75)
     Container.Position = UDim2.new(0, 15, 0, yPos)
     Container.BackgroundTransparency = 1
-    Container.Parent = MainFrame
+    Container.Parent = parent
 
     local Label = Instance.new("TextLabel")
     Label.Size = UDim2.new(1, -70, 0, 25)
@@ -158,19 +224,17 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal, callback)
     ValueLabel.Position = UDim2.new(1, -60, 0, 0)
     ValueLabel.BackgroundTransparency = 1
     ValueLabel.Text = string.format("%.0f", defaultVal)
-    ValueLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
+    ValueLabel.TextColor3 = accentColor
     ValueLabel.Font = Enum.Font.GothamBold
     ValueLabel.TextSize = 14
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     ValueLabel.Parent = Container
 
-    -- スライダー背景（縦を太めに）
     local SliderBg = Instance.new("Frame")
     SliderBg.Size = UDim2.new(1, 0, 0, 12)
     SliderBg.Position = UDim2.new(0, 0, 0, 40)
     SliderBg.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
     SliderBg.BorderSizePixel = 0
-    SliderBg.ClipsDescendants = false
     SliderBg.Parent = Container
 
     local SliderBgCorner = Instance.new("UICorner")
@@ -179,7 +243,7 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal, callback)
 
     local Fill = Instance.new("Frame")
     Fill.Size = UDim2.new((defaultVal - minVal) / (maxVal - minVal), 0, 1, 0)
-    Fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    Fill.BackgroundColor3 = accentColor
     Fill.BorderSizePixel = 0
     Fill.Parent = SliderBg
 
@@ -187,10 +251,9 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal, callback)
     FillCorner.CornerRadius = UDim.new(1, 0)
     FillCorner.Parent = Fill
 
-    -- つまみ（大きめ）
     local Knob = Instance.new("Frame")
-    Knob.Size = UDim2.new(0, 28, 0, 28)
-    Knob.Position = UDim2.new((defaultVal - minVal) / (maxVal - minVal), -14, 0.5, -14)
+    Knob.Size = UDim2.new(0, 26, 0, 26)
+    Knob.Position = UDim2.new((defaultVal - minVal) / (maxVal - minVal), -13, 0.5, -13)
     Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Knob.BorderSizePixel = 0
     Knob.Parent = SliderBg
@@ -200,13 +263,13 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal, callback)
     KnobCorner.Parent = Knob
 
     local KnobStroke = Instance.new("UIStroke")
-    KnobStroke.Color = Color3.fromRGB(0, 170, 255)
+    KnobStroke.Color = accentColor
     KnobStroke.Thickness = 2
     KnobStroke.Parent = Knob
 
-    -- 操作（タッチ/マウス追従・スムーズ）
     local sliderDragging = false
     local targetRelX = (defaultVal - minVal) / (maxVal - minVal)
+    local currentRelX = targetRelX
 
     local function computeRelX(absX)
         return math.clamp((absX - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
@@ -234,37 +297,41 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal, callback)
         end
     end)
 
-    -- 毎フレーム補間（丸がスッと追従）
-    local currentRelX = (defaultVal - minVal) / (maxVal - minVal)
+    local sliderElements = {fill = Fill, knobStroke = KnobStroke, valueLabel = ValueLabel}
+
     RunService.RenderStepped:Connect(function(dt)
         if not sliderDragging then return end
-        currentRelX = currentRelX + (targetRelX - currentRelX) * math.clamp(dt * 20, 0, 1)
+        currentRelX = currentRelX + (targetRelX - currentRelX) * math.clamp(dt * 22, 0, 1)
         Fill.Size = UDim2.new(currentRelX, 0, 1, 0)
-        Knob.Position = UDim2.new(currentRelX, -14, 0.5, -14)
+        Knob.Position = UDim2.new(currentRelX, -13, 0.5, -13)
         local value = minVal + (maxVal - minVal) * currentRelX
         ValueLabel.Text = string.format("%.0f", value)
         callback(value)
     end)
 
-    return Container
+    return Container, sliderElements
 end
 
 -- ============================================
--- スピード
+-- Playerページ
 -- ============================================
+local PlayerPage = Instance.new("Frame")
+PlayerPage.Name = "PlayerPage"
+PlayerPage.Size = UDim2.new(1, 0, 1, 0)
+PlayerPage.BackgroundTransparency = 1
+PlayerPage.Parent = ContentArea
+
 local currentSpeed = 16
-createSlider("Speed", 50, 1, 500, 16, function(value)
+local currentJump = 50
+
+createSlider(PlayerPage, "Speed", 15, 1, 500, 16, function(value)
     currentSpeed = value
     local char = player.Character
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     if humanoid then humanoid.WalkSpeed = value end
 end)
 
--- ============================================
--- ジャンプ
--- ============================================
-local currentJump = 50
-createSlider("Jump Power", 130, 1, 500, 50, function(value)
+createSlider(PlayerPage, "Jump Power", 95, 1, 500, 50, function(value)
     currentJump = value
     local char = player.Character
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
@@ -275,22 +342,132 @@ createSlider("Jump Power", 130, 1, 500, 50, function(value)
 end)
 
 -- ============================================
--- 左下の自分のアイコン（検知して自動表示）
+-- Settingsページ
+-- ============================================
+local SettingsPage = Instance.new("Frame")
+SettingsPage.Name = "SettingsPage"
+SettingsPage.Size = UDim2.new(1, 0, 1, 0)
+SettingsPage.BackgroundTransparency = 1
+SettingsPage.Visible = false
+SettingsPage.Parent = ContentArea
+
+local themeLabel = Instance.new("TextLabel")
+themeLabel.Size = UDim2.new(1, -30, 0, 25)
+themeLabel.Position = UDim2.new(0, 15, 0, 15)
+themeLabel.BackgroundTransparency = 1
+themeLabel.Text = "Accent Color"
+themeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+themeLabel.Font = Enum.Font.GothamMedium
+themeLabel.TextSize = 14
+themeLabel.TextXAlignment = Enum.TextXAlignment.Left
+themeLabel.Parent = SettingsPage
+
+-- カラーパレット
+local colorPalette = {
+    {name = "Blue", color = Color3.fromRGB(0, 170, 255)},
+    {name = "Purple", color = Color3.fromRGB(160, 80, 255)},
+    {name = "Red", color = Color3.fromRGB(255, 60, 60)},
+    {name = "Green", color = Color3.fromRGB(0, 220, 120)},
+    {name = "Orange", color = Color3.fromRGB(255, 150, 0)},
+    {name = "Pink", color = Color3.fromRGB(255, 100, 180)},
+}
+
+local allThemeElements = {} -- テーマ変更で更新する要素を登録
+
+local function registerThemeElement(element, property, originalColor)
+    table.insert(allThemeElements, {element = element, property = property, color = originalColor or accentColor})
+end
+
+local swatchSize = 45
+local startX = 15
+local startY = 55
+
+for i, data in ipairs(colorPalette) do
+    local row = math.floor((i - 1) / 3)
+    local col = (i - 1) % 3
+    local swatch = Instance.new("TextButton")
+    swatch.Size = UDim2.new(0, swatchSize, 0, swatchSize)
+    swatch.Position = UDim2.new(0, startX + col * (swatchSize + 10), 0, startY + row * (swatchSize + 10))
+    swatch.BackgroundColor3 = data.color
+    swatch.Text = ""
+    swatch.BorderSizePixel = 0
+    swatch.Parent = SettingsPage
+
+    local sc = Instance.new("UICorner")
+    sc.CornerRadius = UDim.new(0, 8)
+    sc.Parent = swatch
+
+    local ss = Instance.new("UIStroke")
+    ss.Color = Color3.fromRGB(255, 255, 255)
+    ss.Thickness = 2
+    ss.Transparency = 1
+    ss.Parent = swatch
+
+    swatch.MouseButton1Click:Connect(function()
+        accentColor = data.color
+        -- UI全体の色を更新
+        UIStroke.Color = accentColor
+        Title.TextColor3 = accentColor
+        for _, tab in ipairs(tabButtons) do
+            tab.stroke.Color = accentColor
+        end
+        for _, item in ipairs(allThemeElements) do
+            if item.element and item.element.Parent then
+                item.element[item.property] = accentColor
+            end
+        end
+        -- スウォッチの選択枠
+        for _, other in ipairs(SettingsPage:GetChildren()) do
+            if other:IsA("TextButton") and other:FindFirstChildOfClass("UIStroke") then
+                other:FindFirstChildOfClass("UIStroke").Transparency = 1
+            end
+        end
+        ss.Transparency = 0
+    end)
+end
+
+-- ============================================
+-- タブ切り替え
+-- ============================================
+local function showPage(page, btn)
+    PlayerPage.Visible = (page == PlayerPage)
+    SettingsPage.Visible = (page == SettingsPage)
+    for _, tab in ipairs(tabButtons) do
+        if tab.button == btn then
+            tab.button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            tab.button.TextColor3 = accentColor
+            tab.stroke.Transparency = 0.3
+        else
+            tab.button.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+            tab.button.TextColor3 = Color3.fromRGB(200, 200, 200)
+            tab.stroke.Transparency = 1
+        end
+    end
+end
+
+local playerTab = createTab("Player", 15, function() showPage(PlayerPage, playerTab) end)
+local settingsTab = createTab("Settings", 70, function() showPage(SettingsPage, settingsTab) end)
+
+-- 初期表示
+showPage(PlayerPage, playerTab)
+
+-- ============================================
+-- 左下のアバターアイコン
 -- ============================================
 local AvatarContainer = Instance.new("Frame")
 AvatarContainer.Name = "AvatarContainer"
-AvatarContainer.Size = UDim2.new(0, 60, 0, 60)
-AvatarContainer.Position = UDim2.new(0, 12, 1, -72)
+AvatarContainer.Size = UDim2.new(0, 50, 0, 50)
+AvatarContainer.Position = UDim2.new(0, 12, 1, -62)
 AvatarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
 AvatarContainer.BorderSizePixel = 0
-AvatarContainer.Parent = MainFrame
+AvatarContainer.Parent = Sidebar
 
 local AvatarCorner = Instance.new("UICorner")
 AvatarCorner.CornerRadius = UDim.new(1, 0)
 AvatarCorner.Parent = AvatarContainer
 
 local AvatarStroke = Instance.new("UIStroke")
-AvatarStroke.Color = Color3.fromRGB(0, 170, 255)
+AvatarStroke.Color = accentColor
 AvatarStroke.Thickness = 2
 AvatarStroke.Parent = AvatarContainer
 
@@ -298,26 +475,26 @@ local AvatarImage = Instance.new("ImageLabel")
 AvatarImage.Size = UDim2.new(1, -4, 1, -4)
 AvatarImage.Position = UDim2.new(0, 2, 0, 2)
 AvatarImage.BackgroundTransparency = 1
-AvatarImage.Image = ""
 AvatarImage.Parent = AvatarContainer
 
 local AvatarImageCorner = Instance.new("UICorner")
 AvatarImageCorner.CornerRadius = UDim.new(1, 0)
 AvatarImageCorner.Parent = AvatarImage
 
--- ユーザーID検知→サムネイル取得
-local function updateAvatar()
-    local userId = player.UserId
-    AvatarImage.Image = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", userId)
-end
-
-updateAvatar()
+AvatarImage.Image = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", player.UserId)
 player.Changed:Connect(function(prop)
-    if prop == "UserId" then updateAvatar() end
+    if prop == "UserId" then
+        AvatarImage.Image = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", player.UserId)
+    end
 end)
 
+-- テーマ登録
+registerThemeElement(UIStroke, "Color")
+registerThemeElement(Title, "TextColor3")
+registerThemeElement(AvatarStroke, "Color")
+
 -- ============================================
--- キャラクター再スポーン時適用
+-- リスポーン対応
 -- ============================================
 local function applyStats(char)
     local humanoid = char:WaitForChild("Humanoid", 5)
@@ -331,9 +508,7 @@ end
 player.CharacterAdded:Connect(applyStats)
 if player.Character then applyStats(player.Character) end
 
--- ============================================
 -- 右Shiftで表示/非表示
--- ============================================
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.RightShift then
