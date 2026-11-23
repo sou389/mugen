@@ -1,5 +1,5 @@
 -- ============================================
--- Delta Executor 用 UIスクリプト Part 1
+-- Delta Executor 用 UIスクリプト Part 1（エンター対応）
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -18,7 +18,6 @@ local function registerThemeElement(element, property)
     table.insert(allThemeElements, {element = element, property = property})
 end
 
--- 共有用テーブル（Part 2 と連携）
 _G.DeltaUI = {
     accentColor = accentColor,
     allThemeElements = allThemeElements,
@@ -27,9 +26,7 @@ _G.DeltaUI = {
     currentJump = 50,
 }
 
--- ============================================
 -- メインGUI
--- ============================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaUI"
 ScreenGui.ResetOnSpawn = false
@@ -62,9 +59,7 @@ UIStroke.Thickness = 2
 UIStroke.Transparency = 0.3
 UIStroke.Parent = MainFrame
 
--- ============================================
 -- タイトルバー
--- ============================================
 local TitleBar = Instance.new("Frame")
 TitleBar.Name = "TitleBar"
 TitleBar.Size = UDim2.new(1, 0, 0, 38)
@@ -106,9 +101,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- ============================================
 -- スムーズドラッグ
--- ============================================
 local dragging = false
 local dragStart, startPos
 local targetPos = MainFrame.Position
@@ -148,9 +141,7 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
--- ============================================
 -- 左サイドバー
--- ============================================
 local Sidebar = Instance.new("Frame")
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 110, 1, -38)
@@ -198,9 +189,7 @@ local function createTab(name, yPos, onClick)
     return btn
 end
 
--- ============================================
 -- コンテンツエリア
--- ============================================
 local ContentArea = Instance.new("Frame")
 ContentArea.Name = "ContentArea"
 ContentArea.Size = UDim2.new(1, -110, 1, -38)
@@ -208,9 +197,7 @@ ContentArea.Position = UDim2.new(0, 110, 0, 38)
 ContentArea.BackgroundTransparency = 1
 ContentArea.Parent = MainFrame
 
--- ============================================
 -- スライダー関数
--- ============================================
 local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, callback)
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(1, -30, 0, 72)
@@ -322,9 +309,7 @@ local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, call
     return Container
 end
 
--- ============================================
 -- Playerページ
--- ============================================
 local PlayerPage = Instance.new("Frame")
 PlayerPage.Name = "PlayerPage"
 PlayerPage.Size = UDim2.new(1, 0, 1, 0)
@@ -348,9 +333,7 @@ createSlider(PlayerPage, "Jump Power", 95, 1, 500, 50, function(value)
     end
 end)
 
--- ============================================
 -- Teleportページ
--- ============================================
 local TeleportPage = Instance.new("Frame")
 TeleportPage.Name = "TeleportPage"
 TeleportPage.Size = UDim2.new(1, 0, 1, 0)
@@ -421,9 +404,7 @@ SavedSubPage.BackgroundTransparency = 1
 SavedSubPage.Visible = false
 SavedSubPage.Parent = TeleportPage
 
--- ============================================
--- Settingsページ（色のみ）
--- ============================================
+-- Settingsページ
 local SettingsPage = Instance.new("Frame")
 SettingsPage.Name = "SettingsPage"
 SettingsPage.Size = UDim2.new(1, 0, 1, 0)
@@ -497,9 +478,7 @@ for i, data in ipairs(colorPalette) do
     end)
 end
 
--- ============================================
 -- タブ表示切替
--- ============================================
 local pages = {PlayerPage, TeleportPage, SettingsPage}
 local function showPage(page, btn)
     for _, p in ipairs(pages) do p.Visible = false end
@@ -522,9 +501,7 @@ local teleportTab = createTab("Teleport", 65, function() showPage(TeleportPage, 
 local settingsTab = createTab("Settings", 115, function() showPage(SettingsPage, settingsTab) end)
 showPage(PlayerPage, playerTab)
 
--- ============================================
 -- 左下アバター
--- ============================================
 local AvatarContainer = Instance.new("Frame")
 AvatarContainer.Size = UDim2.new(0, 46, 0, 46)
 AvatarContainer.Position = UDim2.new(0, 12, 1, -58)
@@ -554,9 +531,7 @@ AvatarImageCorner.Parent = AvatarImage
 
 AvatarImage.Image = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", player.UserId)
 
--- ============================================
--- Part 2 に渡す参照
--- ============================================
+-- Part 2 へ参照渡し
 _G.DeltaUI.player = player
 _G.DeltaUI.Players = Players
 _G.DeltaUI.UserInputService = UserInputService
@@ -577,8 +552,26 @@ _G.DeltaUI.showSubPage_ref = function(page, btn)
             tab.button.TextColor3 = _G.DeltaUI.accentColor
             tab.stroke.Transparency = 0.3
         else
- -- ============================================
--- Delta Executor 用 UIスクリプト Part 2
+            tab.button.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+            tab.button.TextColor3 = Color3.fromRGB(200, 200, 200)
+            tab.stroke.Transparency = 1
+        end
+    end
+end
+
+-- ============================================
+-- エンターキーでUI表示/非表示
+-- ============================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Return then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+print("Delta Hub Part 1 Loaded!")
+-- ============================================
+-- Delta Executor 用 UIスクリプト Part 2（エンター対応）
 -- Part 1 の後に実行してください
 -- ============================================
 
@@ -592,9 +585,7 @@ local Players = D.Players
 local player = D.player
 local UserInputService = D.UserInputService
 
--- ============================================
 -- Playersサブタブ
--- ============================================
 local playersSubTab = D.createSubTab("Players", 0, 100, function()
     D.showSubPage_ref(D.PlayersSubPage, playersSubTab)
 end)
@@ -603,9 +594,7 @@ local savedSubTab = D.createSubTab("Saved", 108, 100, function()
 end)
 D.showSubPage_ref(D.PlayersSubPage, playersSubTab)
 
--- ============================================
 -- プレイヤーTP
--- ============================================
 local function teleportTo(targetChar)
     local myChar = player.Character
     if not myChar or not targetChar then return end
@@ -660,9 +649,7 @@ Players.PlayerAdded:Connect(function() task.wait(0.5) refreshPlayerList() end)
 Players.PlayerRemoving:Connect(function() task.wait(0.5) refreshPlayerList() end)
 refreshPlayerList()
 
--- ============================================
 -- Savedサブタブ
--- ============================================
 local saveBtn = Instance.new("TextButton")
 saveBtn.Size = UDim2.new(1, -30, 0, 32)
 saveBtn.Position = UDim2.new(0, 15, 0, 5)
@@ -772,9 +759,7 @@ saveBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ============================================
 -- リスポーン対応
--- ============================================
 local function applyStats(char)
     local humanoid = char:WaitForChild("Humanoid", 5)
     if humanoid then
@@ -786,15 +771,5 @@ end
 
 player.CharacterAdded:Connect(applyStats)
 if player.Character then applyStats(player.Character) end
-
--- ============================================
--- 右Shiftで表示/非表示
--- ============================================
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.RightShift then
-        D.MainFrame.Visible = not D.MainFrame.Visible
-    end
-end)
 
 print("Delta Hub Part 2 Loaded!")
