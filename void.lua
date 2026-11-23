@@ -578,7 +578,7 @@ _G.DeltaUI.showSubPage_ref = function(page, btn)
             tab.stroke.Transparency = 0.3
         else
 
-            -- ============================================
+           -- ============================================
 -- Delta Executor 用 UIスクリプト Part 2
 -- Part 1 の後に実行してください
 -- ============================================
@@ -798,4 +798,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("Delta Hub Part 2 Loaded!")
+print("Delta Hub Part 2 Loaded!") 
