@@ -40,8 +40,11 @@ close.TextSize=12 close.BorderSizePixel=0 close.Parent=tb
 local cc=Instance.new("UICorner") cc.CornerRadius=UDim.new(0,8) cc.Parent=close
 close.MouseButton1Click:Connect(function() gui:Destroy() end)
 
-local dragging=false dragStart=nil startPos=nil
-local tPos=main.Position cPos=main.Position
+local dragging=false
+local dragStart=nil
+local startPos=nil
+local tPos=main.Position
+local cPos=main.Position
 tb.InputBegan:Connect(function(i)
  if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
   dragging=true dragStart=i.Position startPos=main.Position cPos=main.Position tPos=main.Position
@@ -68,11 +71,12 @@ content.Size=UDim2.new(1,-110,1,-38) content.Position=UDim2.new(0,110,0,38)
 content.BackgroundTransparency=1 content.Parent=main
 
 _G.D.gui=gui _G.D.main=main _G.D.side=side _G.D.content=content
-_G.D.title=title _G.D.ms=ms
+_G.D.title=title _G.D.ms=ms _G.D.plr=plr
+
 print("Part 1 OK")
 local D=_G.D
 if not D then warn("Part 1 を先に！") return end
-local plr=D.main.Parent.Parent
+local plr=D.plr
 local UIS=game:GetService("UserInputService")
 local RS=game:GetService("RunService")
 local accent=D.accent
@@ -122,7 +126,9 @@ local function createSlider(parent,name,y,mn,mx,dv,cb)
  local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(1,0) kc.Parent=knob
  local ks=Instance.new("UIStroke") ks.Color=accent ks.Thickness=2 ks.Parent=knob
  reg(ks,"Color")
- local sd=false trx=(dv-mn)/(mx-mn) crx=trx
+ local sd=false
+ local trx=(dv-mn)/(mx-mn)
+ local crx=trx
  local function crxof(x) return math.clamp((x-bg.AbsolutePosition.X)/bg.AbsoluteSize.X,0,1) end
  bg.InputBegan:Connect(function(i)
   if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
@@ -159,7 +165,8 @@ local function createToggle(parent,name,y,cb,autoOff)
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.6 s.Parent=b
  reg(s,"Color")
- local st=false busy=false
+ local st=false
+ local busy=false
  local ind=Instance.new("Frame")
  ind.Size=UDim2.new(0,8,0,8) ind.Position=UDim2.new(1,-18,0.5,-4)
  ind.BackgroundColor3=Color3.fromRGB(100,100,100) ind.BorderSizePixel=0 ind.Parent=b
@@ -176,7 +183,6 @@ local function createToggle(parent,name,y,cb,autoOff)
  return b
 end
 
--- Playerページ
 local playerPage=Instance.new("ScrollingFrame")
 playerPage.Size=UDim2.new(1,0,1,0) playerPage.BackgroundTransparency=1
 playerPage.BorderSizePixel=0 playerPage.ScrollBarThickness=4
@@ -223,7 +229,6 @@ pl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
  playerPage.CanvasSize=UDim2.new(0,0,0,pl.AbsoluteContentSize.Y+12)
 end)
 
--- Teleport枠
 local tpPage=Instance.new("Frame")
 tpPage.Size=UDim2.new(1,0,1,0) tpPage.BackgroundTransparency=1
 tpPage.Visible=false tpPage.Parent=D.content
@@ -245,6 +250,7 @@ local function createSub(name,x,w,fn)
  table.insert(subTabs,{button=b,stroke=s})
  return b
 end
+
 local playersSub=Instance.new("Frame")
 playersSub.Size=UDim2.new(1,0,1,-46) playersSub.Position=UDim2.new(0,0,0,46)
 playersSub.BackgroundTransparency=1 playersSub.Parent=tpPage
@@ -255,11 +261,11 @@ plist.ScrollBarThickness=4 plist.ScrollBarImageColor3=accent
 plist.CanvasSize=UDim2.new(0,0,0,0) plist.Parent=playersSub
 reg(plist,"ScrollBarImageColor3")
 local pll=Instance.new("UIListLayout") pll.Padding=UDim.new(0,5) pll.Parent=plist
+
 local savedSub=Instance.new("Frame")
 savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46)
 savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
 
--- Settings
 local setPage=Instance.new("Frame")
 setPage.Size=UDim2.new(1,0,1,0) setPage.BackgroundTransparency=1
 setPage.Visible=false setPage.Parent=D.content
@@ -323,7 +329,6 @@ local tTab=createTab("Teleport",65,function() showPage(tpPage,tTab) end)
 local sTab=createTab("Settings",115,function() showPage(setPage,sTab) end)
 showPage(playerPage,pTab)
 
--- アバター
 local av=Instance.new("Frame")
 av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58)
 av.BackgroundColor3=Color3.fromRGB(30,30,50) av.BorderSizePixel=0 av.Parent=D.side
