@@ -1,183 +1,5 @@
 -- ============================================
--- Delta Hub Part 1-A
--- ============================================
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local oldGui = playerGui:FindFirstChild("DeltaUI")
-if oldGui then oldGui:Destroy() end
-
-local accentColor = Color3.fromRGB(0, 170, 255)
-local allThemeElements = {}
-local function reg(el, prop) table.insert(allThemeElements, {element = el, property = prop}) end
-
-_G.DeltaUI = {
-    accentColor = accentColor, allThemeElements = allThemeElements,
-    registerThemeElement = reg, currentSpeed = 16, currentJump = 50,
-    wallWalkEnabled = false, wallClipEnabled = false,
-    player = player, Players = Players,
-    UserInputService = UserInputService, RunService = RunService,
-}
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DeltaUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = playerGui
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 520, 0, 340)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -170)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
-
-local UIGradient = Instance.new("UIGradient")
-UIGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 40)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
-}
-UIGradient.Rotation = 45
-UIGradient.Parent = MainFrame
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = accentColor
-UIStroke.Thickness = 2
-UIStroke.Transparency = 0.3
-UIStroke.Parent = MainFrame
-
-local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 38)
-TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-TitleBar.BorderSizePixel = 0
-TitleBar.Parent = MainFrame
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 12)
-TitleCorner.Parent = TitleBar
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -50, 1, 0)
-Title.Position = UDim2.new(0, 14, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "DELTA HUB"
-Title.TextColor3 = accentColor
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 15
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TitleBar
-
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 26, 0, 26)
-CloseBtn.Position = UDim2.new(1, -34, 0, 6)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 12
-CloseBtn.BorderSizePixel = 0
-CloseBtn.Parent = TitleBar
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 8)
-CloseCorner.Parent = CloseBtn
-CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-
-local dragging, dragStart, startPos = false, nil, nil
-local targetPos = MainFrame.Position
-local currentPos = MainFrame.Position
-
-TitleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        currentPos = MainFrame.Position
-        targetPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-RunService.RenderStepped:Connect(function(dt)
-    if dragging then
-        currentPos = currentPos:Lerp(targetPos, math.clamp(dt * 30, 0, 1))
-        MainFrame.Position = currentPos
-    end
-end)
-
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 110, 1, -38)
-Sidebar.Position = UDim2.new(0, 0, 0, 38)
-Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-Sidebar.BorderSizePixel = 0
-Sidebar.Parent = MainFrame
-local SidebarCorner = Instance.new("UICorner")
-SidebarCorner.CornerRadius = UDim.new(0, 12)
-SidebarCorner.Parent = Sidebar
-local SidebarFix = Instance.new("Frame")
-SidebarFix.Size = UDim2.new(0, 10, 1, 0)
-SidebarFix.Position = UDim2.new(1, -10, 0, 0)
-SidebarFix.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-SidebarFix.BorderSizePixel = 0
-SidebarFix.Parent = Sidebar
-
-local tabButtons = {}
-local function createTab(name, yPos, onClick)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 42)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 12
-    btn.BorderSizePixel = 0
-    btn.Parent = Sidebar
-    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = btn
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = accentColor; stroke.Thickness = 1; stroke.Transparency = 1; stroke.Parent = btn
-    btn.MouseButton1Click:Connect(onClick)
-    table.insert(tabButtons, {button = btn, stroke = stroke})
-    return btn
-end
-
-local ContentArea = Instance.new("Frame")
-ContentArea.Size = UDim2.new(1, -110, 1, -38)
-ContentArea.Position = UDim2.new(0, 110, 0, 38)
-ContentArea.BackgroundTransparency = 1
-ContentArea.Parent = MainFrame
-
--- 参照を次のパートへ渡す
-_G.DeltaUI.ScreenGui = ScreenGui
-_G.DeltaUI.MainFrame = MainFrame
-_G.DeltaUI.Sidebar = Sidebar
-_G.DeltaUI.ContentArea = ContentArea
-_G.DeltaUI.TitleBar = TitleBar
-_G.DeltaUI.Title = Title
-_G.DeltaUI.UIStroke = UIStroke
-_G.DeltaUI.createTab = createTab
-_G.DeltaUI.tabButtons = tabButtons
-
-print("Part 1-A Loaded!")
--- ============================================
--- Delta Hub Part 1-B
+-- Delta Hub Part 1-B（修正版）
 -- ============================================
 local D = _G.DeltaUI
 if not D then warn("Part 1-A を先に実行！") return end
@@ -188,39 +10,39 @@ local RunService = D.RunService
 local accentColor = D.accentColor
 local reg = D.registerThemeElement
 
--- スライダー関数
+-- スライダー関数（文字小さめ・はみ出し解消）
 local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, callback)
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(1, -30, 0, 72)
-    Container.Position = UDim2.new(0, 15, 0, yPos)
+    Container.Size = UDim2.new(1, -24, 0, 66)
+    Container.Position = UDim2.new(0, 12, 0, yPos)
     Container.BackgroundTransparency = 1
     Container.Parent = parent
 
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -70, 0, 22)
+    Label.Size = UDim2.new(1, -56, 0, 20)
     Label.BackgroundTransparency = 1
     Label.Text = name
     Label.TextColor3 = Color3.fromRGB(220, 220, 220)
     Label.Font = Enum.Font.GothamMedium
-    Label.TextSize = 12
+    Label.TextSize = 11
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Container
 
     local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Size = UDim2.new(0, 60, 0, 22)
-    ValueLabel.Position = UDim2.new(1, -60, 0, 0)
+    ValueLabel.Size = UDim2.new(0, 50, 0, 20)
+    ValueLabel.Position = UDim2.new(1, -50, 0, 0)
     ValueLabel.BackgroundTransparency = 1
     ValueLabel.Text = string.format("%.0f", defaultVal)
     ValueLabel.TextColor3 = accentColor
     ValueLabel.Font = Enum.Font.GothamBold
-    ValueLabel.TextSize = 12
+    ValueLabel.TextSize = 11
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     ValueLabel.Parent = Container
     reg(ValueLabel, "TextColor3")
 
     local SliderBg = Instance.new("Frame")
-    SliderBg.Size = UDim2.new(1, 0, 0, 12)
-    SliderBg.Position = UDim2.new(0, 0, 0, 38)
+    SliderBg.Size = UDim2.new(1, 0, 0, 10)
+    SliderBg.Position = UDim2.new(0, 0, 0, 36)
     SliderBg.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
     SliderBg.BorderSizePixel = 0
     SliderBg.Parent = Container
@@ -235,8 +57,8 @@ local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, call
     local FillCorner = Instance.new("UICorner"); FillCorner.CornerRadius = UDim.new(1, 0); FillCorner.Parent = Fill
 
     local Knob = Instance.new("Frame")
-    Knob.Size = UDim2.new(0, 26, 0, 26)
-    Knob.Position = UDim2.new((defaultVal - minVal) / (maxVal - minVal), -13, 0.5, -13)
+    Knob.Size = UDim2.new(0, 22, 0, 22)
+    Knob.Position = UDim2.new((defaultVal - minVal) / (maxVal - minVal), -11, 0.5, -11)
     Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Knob.BorderSizePixel = 0
     Knob.Parent = SliderBg
@@ -274,7 +96,7 @@ local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, call
         if not sliderDragging then return end
         currentRelX = currentRelX + (targetRelX - currentRelX) * math.clamp(dt * 22, 0, 1)
         Fill.Size = UDim2.new(currentRelX, 0, 1, 0)
-        Knob.Position = UDim2.new(currentRelX, -13, 0.5, -13)
+        Knob.Position = UDim2.new(currentRelX, -11, 0.5, -11)
         local value = minVal + (maxVal - minVal) * currentRelX
         ValueLabel.Text = string.format("%.0f", value)
         callback(value)
@@ -282,16 +104,16 @@ local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, call
     return Container
 end
 
--- トグル関数
-local function createToggle(parent, name, yPos, callback)
+-- トグル関数（自動オフ対応）
+local function createToggle(parent, name, yPos, callback, autoOffTime)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -30, 0, 34)
-    btn.Position = UDim2.new(0, 15, 0, yPos)
+    btn.Size = UDim2.new(1, -24, 0, 32)
+    btn.Position = UDim2.new(0, 12, 0, yPos)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(220, 220, 220)
     btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.BorderSizePixel = 0
     btn.Parent = parent
@@ -299,7 +121,9 @@ local function createToggle(parent, name, yPos, callback)
     local stroke = Instance.new("UIStroke")
     stroke.Color = accentColor; stroke.Thickness = 1; stroke.Transparency = 0.6; stroke.Parent = btn
     reg(stroke, "Color")
+
     local state = false
+    local busy = false
     local indicator = Instance.new("Frame")
     indicator.Size = UDim2.new(0, 8, 0, 8)
     indicator.Position = UDim2.new(1, -18, 0.5, -4)
@@ -307,10 +131,24 @@ local function createToggle(parent, name, yPos, callback)
     indicator.BorderSizePixel = 0
     indicator.Parent = btn
     local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(1, 0); ic.Parent = indicator
-    btn.MouseButton1Click:Connect(function()
-        state = not state
+
+    local function setState(newState)
+        state = newState
         indicator.BackgroundColor3 = state and D.accentColor or Color3.fromRGB(100, 100, 100)
         callback(state)
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        if autoOffTime then
+            if busy then return end
+            busy = true
+            setState(true)
+            task.wait(autoOffTime)
+            setState(false)
+            busy = false
+        else
+            setState(not state)
+        end
     end)
     return btn
 end
@@ -326,24 +164,24 @@ PlayerPage.CanvasSize = UDim2.new(0, 0, 0, 0)
 PlayerPage.Parent = D.ContentArea
 reg(PlayerPage, "ScrollBarImageColor3")
 local playerPageLayout = Instance.new("UIListLayout")
-playerPageLayout.Padding = UDim.new(0, 5)
+playerPageLayout.Padding = UDim.new(0, 4)
 playerPageLayout.Parent = PlayerPage
 
-createSlider(PlayerPage, "Speed", 15, 1, 500, 16, function(value)
+createSlider(PlayerPage, "Speed", 12, 1, 500, 16, function(value)
     D.currentSpeed = value
     local char = player.Character
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     if humanoid then humanoid.WalkSpeed = value end
 end)
 
-createSlider(PlayerPage, "Jump Power", 90, 1, 500, 50, function(value)
+createSlider(PlayerPage, "Jump Power", 82, 1, 500, 50, function(value)
     D.currentJump = value
     local char = player.Character
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     if humanoid then humanoid.JumpPower = value; humanoid.UseJumpPower = true end
 end)
 
-createToggle(PlayerPage, "Wall Walk", 170, function(state)
+createToggle(PlayerPage, "Wall Walk", 152, function(state)
     D.wallWalkEnabled = state
     local char = player.Character
     if not char then return end
@@ -356,7 +194,7 @@ createToggle(PlayerPage, "Wall Walk", 170, function(state)
     end
 end)
 
-createToggle(PlayerPage, "Wall Clip (NoClip)", 215, function(state)
+createToggle(PlayerPage, "Wall Clip (NoClip)", 190, function(state)
     D.wallClipEnabled = state
     local char = player.Character
     if not char then return end
@@ -374,44 +212,26 @@ createToggle(PlayerPage, "Wall Clip (NoClip)", 215, function(state)
     end
 end)
 
-local respawnBtn = Instance.new("TextButton")
-respawnBtn.Size = UDim2.new(1, -30, 0, 34)
-respawnBtn.Position = UDim2.new(0, 15, 0, 260)
-respawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-respawnBtn.Text = "Respawn"
-respawnBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
-respawnBtn.Font = Enum.Font.GothamMedium
-respawnBtn.TextSize = 12
-respawnBtn.TextXAlignment = Enum.TextXAlignment.Left
-respawnBtn.BorderSizePixel = 0
-respawnBtn.Parent = PlayerPage
-local rc = Instance.new("UICorner"); rc.CornerRadius = UDim.new(0, 6); rc.Parent = respawnBtn
-local rs = Instance.new("UIStroke"); rs.Color = accentColor; rs.Thickness = 1; rs.Transparency = 0.6; rs.Parent = respawnBtn
-reg(rs, "Color")
-respawnBtn.MouseButton1Click:Connect(function()
-    local char = player.Character
-    if char then
-        local humanoid = char:FindFirstChildOfClass("Humanoid")
-        if humanoid then humanoid.Health = 0 end
+-- リスポーン（ONにした瞬間1秒後に自動OFF）
+createToggle(PlayerPage, "Respawn", 228, function(state)
+    if state then
+        local char = player.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid.Health = 0 end
+        end
+    end
+end, 1)
+
+-- 退出（トグル化：ONにした瞬間に退出）
+createToggle(PlayerPage, "Leave Game", 266, function(state)
+    if state then
+        player:Kick("Left via Delta Hub")
     end
 end)
 
-local leaveBtn = Instance.new("TextButton")
-leaveBtn.Size = UDim2.new(1, -30, 0, 34)
-leaveBtn.Position = UDim2.new(0, 15, 0, 305)
-leaveBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-leaveBtn.Text = "Leave Game"
-leaveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-leaveBtn.Font = Enum.Font.GothamBold
-leaveBtn.TextSize = 12
-leaveBtn.TextXAlignment = Enum.TextXAlignment.Left
-leaveBtn.BorderSizePixel = 0
-leaveBtn.Parent = PlayerPage
-local lc = Instance.new("UICorner"); lc.CornerRadius = UDim.new(0, 6); lc.Parent = leaveBtn
-leaveBtn.MouseButton1Click:Connect(function() player:Kick("Left via Delta Hub") end)
-
 playerPageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    PlayerPage.CanvasSize = UDim2.new(0, 0, 0, playerPageLayout.AbsoluteContentSize.Y + 15)
+    PlayerPage.CanvasSize = UDim2.new(0, 0, 0, playerPageLayout.AbsoluteContentSize.Y + 12)
 end)
 
 -- Teleportページ枠
@@ -436,7 +256,7 @@ local function createSubTab(name, xPos, width, onClick)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.BorderSizePixel = 0
     btn.Parent = subTabBar
     local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 6); c.Parent = btn
@@ -489,7 +309,7 @@ themeLabel.BackgroundTransparency = 1
 themeLabel.Text = "Accent Color"
 themeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 themeLabel.Font = Enum.Font.GothamMedium
-themeLabel.TextSize = 12
+themeLabel.TextSize = 11
 themeLabel.TextXAlignment = Enum.TextXAlignment.Left
 themeLabel.Parent = SettingsPage
 
