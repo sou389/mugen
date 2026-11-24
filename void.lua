@@ -8,7 +8,7 @@ if pg:FindFirstChild("DeltaUI") then pg.DeltaUI:Destroy() end
 local accent = Color3.fromRGB(0,170,255)
 local themeEls = {}
 local function reg(e,p) table.insert(themeEls,{element=e,property=p}) end
-_G.D = {accent=accent, themeEls=themeEls, reg=reg, speed=16, jump=50}
+_G.D = {accent=accent, themeEls=themeEls, reg=reg, speed=16, jump=50, plr=plr}
 
 local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
@@ -71,7 +71,7 @@ content.Size=UDim2.new(1,-110,1,-38) content.Position=UDim2.new(0,110,0,38)
 content.BackgroundTransparency=1 content.Parent=main
 
 _G.D.gui=gui _G.D.main=main _G.D.side=side _G.D.content=content
-_G.D.title=title _G.D.ms=ms _G.D.plr=plr
+_G.D.title=title _G.D.ms=ms
 
 print("Part 1 OK")
 local D=_G.D
@@ -82,29 +82,88 @@ local RS=game:GetService("RunService")
 local accent=D.accent
 local reg=D.reg
 
-local tabBtns={}
-local function createTab(name,y,fn)
- local b=Instance.new("TextButton")
- b.Size=UDim2.new(1,-20,0,38) b.Position=UDim2.new(0,10,0,y)
- b.BackgroundColor3=Color3.fromRGB(30,30,45) b.Text=name
- b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
- b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
- local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
- local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
- b.MouseButton1Click:Connect(fn)
- table.insert(tabBtns,{button=b,stroke=s})
- return b
+local lang = "EN"
+local texts = {
+    EN = {
+        player = "Player", item = "Item", teleport = "Teleport", settings = "Settings",
+        speed = "Speed", jump = "Jump Power", infjump = "Infinite Jump", wallwalk = "Wall Walk",
+        wallclip = "Wall Clip", fly = "Fly", respawn = "Respawn", leave = "Leave Game",
+        spin = "Spin", applyspin = "Apply Spin", ghost = "Ghost Mode", transparent = "Transparent",
+        accentcolor = "Accent Color", language = "Language"
+    },
+    JA = {
+        player = "プレイヤー", item = "アイテム", teleport = "テレポート", settings = "設定",
+        speed = "スピード", jump = "ジャンプ力", infjump = "無限ジャンプ", wallwalk = "壁歩き",
+        wallclip = "壁抜け", fly = "フライ", respawn = "リスポーン", leave = "退出",
+        spin = "スピン", applyspin = "スピン適用", ghost = "ゴーストモード", transparent = "透明化",
+        accentcolor = "テーマカラー", language = "言語"
+    }
+}
+local function T(key) return texts[lang][key] or key end
+
+local uiRefs = { tabs = {}, toggles = {}, labels = {}, subs = {} }
+
+local function createToggle(parent, nameKey, y, cb, autoOff)
+ local cont=Instance.new("Frame")
+ cont.Size=UDim2.new(1,-24,0,36) cont.Position=UDim2.new(0,12,0,y)
+ cont.BackgroundColor3=Color3.fromRGB(30,30,45) cont.BorderSizePixel=0 cont.Parent=parent
+ local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=cont
+ local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.6 s.Parent=cont
+ reg(s,"Color")
+
+ local lbl=Instance.new("TextLabel")
+ lbl.Size=UDim2.new(1,-60,1,0) lbl.Position=UDim2.new(0,12,0,0)
+ lbl.BackgroundTransparency=1 lbl.Text=T(nameKey)
+ lbl.TextColor3=Color3.fromRGB(220,220,220) lbl.Font=Enum.Font.GothamMedium
+ lbl.TextSize=11 lbl.TextXAlignment=Enum.TextXAlignment.Left lbl.Parent=cont
+ table.insert(uiRefs.toggles, {obj=lbl, key=nameKey})
+
+ local switchBg=Instance.new("Frame")
+ switchBg.Size=UDim2.new(0,34,0,18) switchBg.Position=UDim2.new(1,-46,0.5,-9)
+ switchBg.BackgroundColor3=Color3.fromRGB(80,80,90) switchBg.BorderSizePixel=0 switchBg.Parent=cont
+ local sbc=Instance.new("UICorner") sbc.CornerRadius=UDim.new(1,0) sbc.Parent=switchBg
+
+ local knob=Instance.new("Frame")
+ knob.Size=UDim2.new(0,14,0,14) knob.Position=UDim2.new(0,2,0.5,-7)
+ knob.BackgroundColor3=Color3.fromRGB(255,255,255) knob.BorderSizePixel=0 knob.Parent=switchBg
+ local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(1,0) kc.Parent=knob
+
+ local st=false
+ local busy=false
+ local function set(v)
+  st=v
+  if st then
+   switchBg.BackgroundColor3 = D.accent
+   knob.Position = UDim2.new(1,-16,0.5,-7)
+  else
+   switchBg.BackgroundColor3 = Color3.fromRGB(80,80,90)
+   knob.Position = UDim2.new(0,2,0.5,-7)
+  end
+  cb(st)
+ end
+
+ local btn=Instance.new("TextButton")
+ btn.Size=UDim2.new(1,0,1,0) btn.BackgroundTransparency=1 btn.Text=""
+ btn.Parent=cont
+ btn.MouseButton1Click:Connect(function()
+  if autoOff then
+   if busy then return end
+   busy=true set(true) task.wait(autoOff) set(false) busy=false
+  else set(not st) end
+ end)
+ return cont
 end
 
-local function createSlider(parent,name,y,mn,mx,dv,cb)
+local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,66) cont.Position=UDim2.new(0,12,0,y)
  cont.BackgroundTransparency=1 cont.Parent=parent
  local lbl=Instance.new("TextLabel")
  lbl.Size=UDim2.new(1,-56,0,20) lbl.BackgroundTransparency=1
- lbl.Text=name lbl.TextColor3=Color3.fromRGB(220,220,220)
+ lbl.Text=T(nameKey) lbl.TextColor3=Color3.fromRGB(220,220,220)
  lbl.Font=Enum.Font.GothamMedium lbl.TextSize=11
  lbl.TextXAlignment=Enum.TextXAlignment.Left lbl.Parent=cont
+ table.insert(uiRefs.toggles, {obj=lbl, key=nameKey})
  local vl=Instance.new("TextLabel")
  vl.Size=UDim2.new(0,50,0,20) vl.Position=UDim2.new(1,-50,0,0)
  vl.BackgroundTransparency=1 vl.Text=string.format("%.0f",dv)
@@ -155,35 +214,21 @@ local function createSlider(parent,name,y,mn,mx,dv,cb)
  return cont
 end
 
-local function createToggle(parent,name,y,cb,autoOff)
+local tabBtns={}
+local function createTab(key,y,fn)
  local b=Instance.new("TextButton")
- b.Size=UDim2.new(1,-24,0,32) b.Position=UDim2.new(0,12,0,y)
- b.BackgroundColor3=Color3.fromRGB(30,30,45) b.Text=name
- b.TextColor3=Color3.fromRGB(220,220,220) b.Font=Enum.Font.GothamMedium
- b.TextSize=11 b.TextXAlignment=Enum.TextXAlignment.Left
- b.BorderSizePixel=0 b.Parent=parent
- local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
- local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.6 s.Parent=b
- reg(s,"Color")
- local st=false
- local busy=false
- local ind=Instance.new("Frame")
- ind.Size=UDim2.new(0,8,0,8) ind.Position=UDim2.new(1,-18,0.5,-4)
- ind.BackgroundColor3=Color3.fromRGB(100,100,100) ind.BorderSizePixel=0 ind.Parent=b
- local ic=Instance.new("UICorner") ic.CornerRadius=UDim.new(1,0) ic.Parent=ind
- local function set(v)
-  st=v ind.BackgroundColor3=st and D.accent or Color3.fromRGB(100,100,100) cb(st)
- end
- b.MouseButton1Click:Connect(function()
-  if autoOff then
-   if busy then return end
-   busy=true set(true) task.wait(autoOff) set(false) busy=false
-  else set(not st) end
- end)
+ b.Size=UDim2.new(1,-20,0,38) b.Position=UDim2.new(0,10,0,y)
+ b.BackgroundColor3=Color3.fromRGB(30,30,45) b.Text=T(key)
+ b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
+ b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
+ local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
+ local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
+ b.MouseButton1Click:Connect(fn)
+ table.insert(tabBtns,{button=b,stroke=s})
+ table.insert(uiRefs.tabs, {obj=b, key=key})
  return b
 end
 
--- Playerページ
 local playerPage=Instance.new("ScrollingFrame")
 playerPage.Size=UDim2.new(1,0,1,0) playerPage.BackgroundTransparency=1
 playerPage.BorderSizePixel=0 playerPage.ScrollBarThickness=4
@@ -192,20 +237,17 @@ playerPage.Parent=D.content
 reg(playerPage,"ScrollBarImageColor3")
 local pl=Instance.new("UIListLayout") pl.Padding=UDim.new(0,4) pl.Parent=playerPage
 
-createSlider(playerPage,"Speed",12,1,500,16,function(v)
+createSlider(playerPage,"speed",12,1,500,16,function(v)
  D.speed=v local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
  if h then h.WalkSpeed=v end
 end)
-createSlider(playerPage,"Jump Power",82,1,500,50,function(v)
+createSlider(playerPage,"jump",82,1,500,50,function(v)
  D.jump=v local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
  if h then h.JumpPower=v h.UseJumpPower=true end
 end)
 
--- 無限ジャンプ
 local infJump=false
-createToggle(playerPage,"Infinite Jump",152,function(st)
- infJump=st
-end)
+createToggle(playerPage,"infjump",152,function(st) infJump=st end)
 UIS.JumpRequest:Connect(function()
  if infJump then
   local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
@@ -213,21 +255,17 @@ UIS.JumpRequest:Connect(function()
  end
 end)
 
--- 壁歩き
-createToggle(playerPage,"Wall Walk",190,function(st)
+createToggle(playerPage,"wallwalk",190,function(st)
  local ch=plr.Character if not ch then return end
  local h=ch:FindFirstChildOfClass("Humanoid") if not h then return end
  local r=ch:FindFirstChild("HumanoidRootPart")
  if st then
   h.PlatformStand=true
   if r then r.CFrame=r.CFrame*CFrame.Angles(math.rad(-90),0,0) end
- else
-  h.PlatformStand=false
- end
+ else h.PlatformStand=false end
 end)
 
--- 壁抜け
-createToggle(playerPage,"Wall Clip",228,function(st)
+createToggle(playerPage,"wallclip",228,function(st)
  local ch=plr.Character if not ch then return end
  for _,p in ipairs(ch:GetDescendants()) do
   if p:IsA("BasePart") and p.CanCollide then p.CanCollide=not st end
@@ -239,11 +277,10 @@ createToggle(playerPage,"Wall Clip",228,function(st)
  end) end
 end)
 
--- Fly
 local flyActive=false
 local bv=nil
 local bg=nil
-createToggle(playerPage,"Fly",266,function(st)
+createToggle(playerPage,"fly",266,function(st)
  flyActive=st
  local ch=plr.Character if not ch then return end
  local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
@@ -268,11 +305,11 @@ createToggle(playerPage,"Fly",266,function(st)
  end
 end)
 
-createToggle(playerPage,"Respawn",304,function(st)
+createToggle(playerPage,"respawn",304,function(st)
  if st then local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
   if h then h.Health=0 end end
 end,1)
-createToggle(playerPage,"Leave Game",342,function(st)
+createToggle(playerPage,"leave",342,function(st)
  if st then plr:Kick("Left via Delta Hub") end
 end)
 
@@ -280,19 +317,16 @@ pl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
  playerPage.CanvasSize=UDim2.new(0,0,0,pl.AbsoluteContentSize.Y+12)
 end)
 
--- Itemページ
 local itemPage=Instance.new("ScrollingFrame")
 itemPage.Size=UDim2.new(1,0,1,0) itemPage.BackgroundTransparency=1
 itemPage.BorderSizePixel=0 itemPage.ScrollBarThickness=4
 itemPage.ScrollBarImageColor3=accent itemPage.CanvasSize=UDim2.new(0,0,0,0)
 itemPage.Visible=false itemPage.Parent=D.content
 reg(itemPage,"ScrollBarImageColor3")
-local il=Instance.new("UIListLayout") il.Padding=UDim.new(0,6) il.Parent=itemPage
 
--- Spin
 local spinBox=Instance.new("TextBox")
 spinBox.Size=UDim2.new(1,-24,0,32) spinBox.Position=UDim2.new(0,12,0,12)
-spinBox.BackgroundColor3=Color3.fromRGB(30,30,45) spinBox.PlaceholderText="Enter Spin Speed"
+spinBox.BackgroundColor3=Color3.fromRGB(30,30,45) spinBox.PlaceholderText="Speed..."
 spinBox.Text="" spinBox.TextColor3=Color3.fromRGB(220,220,220)
 spinBox.Font=Enum.Font.GothamMedium spinBox.TextSize=11
 spinBox.BorderSizePixel=0 spinBox.Parent=itemPage
@@ -300,53 +334,44 @@ local sbc=Instance.new("UICorner") sbc.CornerRadius=UDim.new(0,6) sbc.Parent=spi
 
 local spinBtn=Instance.new("TextButton")
 spinBtn.Size=UDim2.new(1,-24,0,32) spinBtn.Position=UDim2.new(0,12,0,50)
-spinBtn.BackgroundColor3=accent spinBtn.Text="Apply Spin"
+spinBtn.BackgroundColor3=accent spinBtn.Text=T("applyspin")
 spinBtn.TextColor3=Color3.fromRGB(255,255,255) spinBtn.Font=Enum.Font.GothamBold
 spinBtn.TextSize=11 spinBtn.BorderSizePixel=0 spinBtn.Parent=itemPage
 reg(spinBtn,"BackgroundColor3")
 local spinc=Instance.new("UICorner") spinc.CornerRadius=UDim.new(0,6) spinc.Parent=spinBtn
+table.insert(uiRefs.toggles, {obj=spinBtn, key="applyspin"})
 
 spinBtn.MouseButton1Click:Connect(function()
  local n=tonumber(spinBox.Text)
  if n then
   local ch=plr.Character if not ch then return end
   local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
-  local bg=Instance.new("BodyAngularVelocity")
-  bg.AngularVelocity=Vector3.new(0,n,0)
-  bg.MaxTorque=Vector3.new(1e5,1e5,1e5)
-  bg.Parent=r
-  task.wait(1)
-  bg:Destroy()
+  local bgv=Instance.new("BodyAngularVelocity")
+  bgv.AngularVelocity=Vector3.new(0,n,0) bgv.MaxTorque=Vector3.new(1e5,1e5,1e5) bgv.Parent=r
+  task.wait(1) bgv:Destroy()
  end
 end)
 
--- ゴーストモード
 local ghostActive=false
-createToggle(itemPage,"Ghost Mode",96,function(st)
+createToggle(itemPage,"ghost",96,function(st)
  ghostActive=st
  local ch=plr.Character if not ch then return end
  for _,p in ipairs(ch:GetDescendants()) do
   if p:IsA("BasePart") or p:IsA("Decal") then
-   if p.Name~="HumanoidRootPart" then
-    p.LocalTransparencyModifier=st and 1 or 0
-   end
+   if p.Name~="HumanoidRootPart" then p.LocalTransparencyModifier=st and 1 or 0 end
   end
  end
 end)
 
--- 透明化
 local transparentActive=false
-createToggle(itemPage,"Transparent",134,function(st)
+createToggle(itemPage,"transparent",134,function(st)
  transparentActive=st
  local ch=plr.Character if not ch then return end
  for _,p in ipairs(ch:GetDescendants()) do
-  if p:IsA("BasePart") then
-   p.Transparency=st and 1 or 0
-  end
+  if p:IsA("BasePart") then p.Transparency=st and 1 or 0 end
  end
 end)
 
--- Teleportページ枠
 local tpPage=Instance.new("Frame")
 tpPage.Size=UDim2.new(1,0,1,0) tpPage.BackgroundTransparency=1
 tpPage.Visible=false tpPage.Parent=D.content
@@ -381,15 +406,16 @@ local savedSub=Instance.new("Frame")
 savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46)
 savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
 
--- Settingsページ
 local setPage=Instance.new("Frame")
 setPage.Size=UDim2.new(1,0,1,0) setPage.BackgroundTransparency=1
 setPage.Visible=false setPage.Parent=D.content
+
 local tlab=Instance.new("TextLabel")
 tlab.Size=UDim2.new(1,-30,0,22) tlab.Position=UDim2.new(0,15,0,12)
-tlab.BackgroundTransparency=1 tlab.Text="Accent Color"
+tlab.BackgroundTransparency=1 tlab.Text=T("accentcolor")
 tlab.TextColor3=Color3.fromRGB(220,220,220) tlab.Font=Enum.Font.GothamMedium
 tlab.TextSize=11 tlab.TextXAlignment=Enum.TextXAlignment.Left tlab.Parent=setPage
+table.insert(uiRefs.toggles, {obj=tlab, key="accentcolor"})
 local pal={
  {n="Blue",c=Color3.fromRGB(0,170,255)},
  {n="Purple",c=Color3.fromRGB(160,80,255)},
@@ -424,6 +450,43 @@ for i,d in ipairs(pal) do
  end)
 end
 
+local langLabel=Instance.new("TextLabel")
+langLabel.Size=UDim2.new(1,-30,0,22) langLabel.Position=UDim2.new(0,15,0,165)
+langLabel.BackgroundTransparency=1 langLabel.Text=T("language")
+langLabel.TextColor3=Color3.fromRGB(220,220,220) langLabel.Font=Enum.Font.GothamMedium
+langLabel.TextSize=11 langLabel.TextXAlignment=Enum.TextXAlignment.Left langLabel.Parent=setPage
+table.insert(uiRefs.toggles, {obj=langLabel, key="language"})
+
+local function createLangBtn(txt,x)
+ local b=Instance.new("TextButton")
+ b.Size=UDim2.new(0,80,0,32) b.Position=UDim2.new(0,x,0,195)
+ b.BackgroundColor3=Color3.fromRGB(30,30,45) b.Text=txt
+ b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamBold
+ b.TextSize=12 b.BorderSizePixel=0 b.Parent=setPage
+ local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
+ local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.6 s.Parent=b
+ reg(s,"Color")
+ return b
+end
+local enBtn=createLangBtn("English",15)
+local jaBtn=createLangBtn("Japanese",105)
+
+local function updateLang(newLang)
+ lang=newLang
+ for _,t in ipairs(uiRefs.tabs) do t.obj.Text=T(t.key) end
+ for _,t in ipairs(uiRefs.toggles) do t.obj.Text=T(t.key) end
+ if lang=="EN" then
+  enBtn.BackgroundColor3=accent enBtn.TextColor3=Color3.fromRGB(255,255,255)
+  jaBtn.BackgroundColor3=Color3.fromRGB(30,30,45) jaBtn.TextColor3=Color3.fromRGB(200,200,200)
+ else
+  jaBtn.BackgroundColor3=accent jaBtn.TextColor3=Color3.fromRGB(255,255,255)
+  enBtn.BackgroundColor3=Color3.fromRGB(30,30,45) enBtn.TextColor3=Color3.fromRGB(200,200,200)
+ end
+end
+enBtn.MouseButton1Click:Connect(function() updateLang("EN") end)
+jaBtn.MouseButton1Click:Connect(function() updateLang("JA") end)
+updateLang("EN")
+
 local pages={playerPage,itemPage,tpPage,setPage}
 local function showPage(page,btn)
  for _,p in ipairs(pages) do p.Visible=false end
@@ -439,10 +502,10 @@ local function showPage(page,btn)
  end
 end
 
-local pTab=createTab("Player",10,function() showPage(playerPage,pTab) end)
-local iTab=createTab("Item",52,function() showPage(itemPage,iTab) end)
-local tTab=createTab("Teleport",94,function() showPage(tpPage,tTab) end)
-local sTab=createTab("Settings",136,function() showPage(setPage,sTab) end)
+local pTab=createTab("player",10,function() showPage(playerPage,pTab) end)
+local iTab=createTab("item",52,function() showPage(itemPage,iTab) end)
+local tTab=createTab("teleport",94,function() showPage(tpPage,tTab) end)
+local sTab=createTab("settings",136,function() showPage(setPage,sTab) end)
 showPage(playerPage,pTab)
 
 local av=Instance.new("Frame")
