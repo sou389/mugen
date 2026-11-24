@@ -85,10 +85,10 @@ local reg=D.reg
 local tabBtns={}
 local function createTab(name,y,fn)
  local b=Instance.new("TextButton")
- b.Size=UDim2.new(1,-20,0,42) b.Position=UDim2.new(0,10,0,y)
+ b.Size=UDim2.new(1,-20,0,38) b.Position=UDim2.new(0,10,0,y)
  b.BackgroundColor3=Color3.fromRGB(30,30,45) b.Text=name
  b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
- b.TextSize=12 b.BorderSizePixel=0 b.Parent=D.side
+ b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
  b.MouseButton1Click:Connect(fn)
@@ -183,6 +183,7 @@ local function createToggle(parent,name,y,cb,autoOff)
  return b
 end
 
+-- Playerページ
 local playerPage=Instance.new("ScrollingFrame")
 playerPage.Size=UDim2.new(1,0,1,0) playerPage.BackgroundTransparency=1
 playerPage.BorderSizePixel=0 playerPage.ScrollBarThickness=4
@@ -199,14 +200,34 @@ createSlider(playerPage,"Jump Power",82,1,500,50,function(v)
  D.jump=v local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
  if h then h.JumpPower=v h.UseJumpPower=true end
 end)
-createToggle(playerPage,"Wall Walk",152,function(st)
+
+-- 無限ジャンプ
+local infJump=false
+createToggle(playerPage,"Infinite Jump",152,function(st)
+ infJump=st
+end)
+UIS.JumpRequest:Connect(function()
+ if infJump then
+  local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+  if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+ end
+end)
+
+-- 壁歩き
+createToggle(playerPage,"Wall Walk",190,function(st)
  local ch=plr.Character if not ch then return end
  local h=ch:FindFirstChildOfClass("Humanoid") if not h then return end
- h.PlatformStand=st
- if st then local r=ch:FindFirstChild("HumanoidRootPart")
-  if r then r.CFrame=r.CFrame*CFrame.Angles(math.rad(-90),0,0) end end
+ local r=ch:FindFirstChild("HumanoidRootPart")
+ if st then
+  h.PlatformStand=true
+  if r then r.CFrame=r.CFrame*CFrame.Angles(math.rad(-90),0,0) end
+ else
+  h.PlatformStand=false
+ end
 end)
-createToggle(playerPage,"Wall Clip",190,function(st)
+
+-- 壁抜け
+createToggle(playerPage,"Wall Clip",228,function(st)
  local ch=plr.Character if not ch then return end
  for _,p in ipairs(ch:GetDescendants()) do
   if p:IsA("BasePart") and p.CanCollide then p.CanCollide=not st end
@@ -217,11 +238,41 @@ createToggle(playerPage,"Wall Clip",190,function(st)
    if p:IsA("BasePart") then p.CanCollide=false end end
  end) end
 end)
-createToggle(playerPage,"Respawn",228,function(st)
+
+-- Fly
+local flyActive=false
+local bv=nil
+local bg=nil
+createToggle(playerPage,"Fly",266,function(st)
+ flyActive=st
+ local ch=plr.Character if not ch then return end
+ local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
+ if st then
+  bv=Instance.new("BodyVelocity") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Velocity=Vector3.new(0,0,0) bv.Parent=r
+  bg=Instance.new("BodyGyro") bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.Parent=r
+  RS.RenderStepped:Connect(function()
+   if not flyActive or not bv or not bg then return end
+   local cam=workspace.CurrentCamera
+   local move=Vector3.new(0,0,0)
+   if UIS:IsKeyDown(Enum.KeyCode.W) then move=move+cam.CFrame.LookVector end
+   if UIS:IsKeyDown(Enum.KeyCode.S) then move=move-cam.CFrame.LookVector end
+   if UIS:IsKeyDown(Enum.KeyCode.A) then move=move-cam.CFrame.RightVector end
+   if UIS:IsKeyDown(Enum.KeyCode.D) then move=move+cam.CFrame.RightVector end
+   if UIS:IsKeyDown(Enum.KeyCode.Space) then move=move+Vector3.new(0,1,0) end
+   bv.Velocity=move*50
+   bg.CFrame=cam.CFrame
+  end)
+ else
+  if bv then bv:Destroy() bv=nil end
+  if bg then bg:Destroy() bg=nil end
+ end
+end)
+
+createToggle(playerPage,"Respawn",304,function(st)
  if st then local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
   if h then h.Health=0 end end
 end,1)
-createToggle(playerPage,"Leave Game",266,function(st)
+createToggle(playerPage,"Leave Game",342,function(st)
  if st then plr:Kick("Left via Delta Hub") end
 end)
 
@@ -229,10 +280,76 @@ pl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
  playerPage.CanvasSize=UDim2.new(0,0,0,pl.AbsoluteContentSize.Y+12)
 end)
 
+-- Itemページ
+local itemPage=Instance.new("ScrollingFrame")
+itemPage.Size=UDim2.new(1,0,1,0) itemPage.BackgroundTransparency=1
+itemPage.BorderSizePixel=0 itemPage.ScrollBarThickness=4
+itemPage.ScrollBarImageColor3=accent itemPage.CanvasSize=UDim2.new(0,0,0,0)
+itemPage.Visible=false itemPage.Parent=D.content
+reg(itemPage,"ScrollBarImageColor3")
+local il=Instance.new("UIListLayout") il.Padding=UDim.new(0,6) il.Parent=itemPage
+
+-- Spin
+local spinBox=Instance.new("TextBox")
+spinBox.Size=UDim2.new(1,-24,0,32) spinBox.Position=UDim2.new(0,12,0,12)
+spinBox.BackgroundColor3=Color3.fromRGB(30,30,45) spinBox.PlaceholderText="Enter Spin Speed"
+spinBox.Text="" spinBox.TextColor3=Color3.fromRGB(220,220,220)
+spinBox.Font=Enum.Font.GothamMedium spinBox.TextSize=11
+spinBox.BorderSizePixel=0 spinBox.Parent=itemPage
+local sbc=Instance.new("UICorner") sbc.CornerRadius=UDim.new(0,6) sbc.Parent=spinBox
+
+local spinBtn=Instance.new("TextButton")
+spinBtn.Size=UDim2.new(1,-24,0,32) spinBtn.Position=UDim2.new(0,12,0,50)
+spinBtn.BackgroundColor3=accent spinBtn.Text="Apply Spin"
+spinBtn.TextColor3=Color3.fromRGB(255,255,255) spinBtn.Font=Enum.Font.GothamBold
+spinBtn.TextSize=11 spinBtn.BorderSizePixel=0 spinBtn.Parent=itemPage
+reg(spinBtn,"BackgroundColor3")
+local spinc=Instance.new("UICorner") spinc.CornerRadius=UDim.new(0,6) spinc.Parent=spinBtn
+
+spinBtn.MouseButton1Click:Connect(function()
+ local n=tonumber(spinBox.Text)
+ if n then
+  local ch=plr.Character if not ch then return end
+  local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
+  local bg=Instance.new("BodyAngularVelocity")
+  bg.AngularVelocity=Vector3.new(0,n,0)
+  bg.MaxTorque=Vector3.new(1e5,1e5,1e5)
+  bg.Parent=r
+  task.wait(1)
+  bg:Destroy()
+ end
+end)
+
+-- ゴーストモード
+local ghostActive=false
+createToggle(itemPage,"Ghost Mode",96,function(st)
+ ghostActive=st
+ local ch=plr.Character if not ch then return end
+ for _,p in ipairs(ch:GetDescendants()) do
+  if p:IsA("BasePart") or p:IsA("Decal") then
+   if p.Name~="HumanoidRootPart" then
+    p.LocalTransparencyModifier=st and 1 or 0
+   end
+  end
+ end
+end)
+
+-- 透明化
+local transparentActive=false
+createToggle(itemPage,"Transparent",134,function(st)
+ transparentActive=st
+ local ch=plr.Character if not ch then return end
+ for _,p in ipairs(ch:GetDescendants()) do
+  if p:IsA("BasePart") then
+   p.Transparency=st and 1 or 0
+  end
+ end
+end)
+
+-- Teleportページ枠
 local tpPage=Instance.new("Frame")
 tpPage.Size=UDim2.new(1,0,1,0) tpPage.BackgroundTransparency=1
 tpPage.Visible=false tpPage.Parent=D.content
-
 local subBar=Instance.new("Frame")
 subBar.Size=UDim2.new(1,-30,0,30) subBar.Position=UDim2.new(0,15,0,8)
 subBar.BackgroundTransparency=1 subBar.Parent=tpPage
@@ -250,7 +367,6 @@ local function createSub(name,x,w,fn)
  table.insert(subTabs,{button=b,stroke=s})
  return b
 end
-
 local playersSub=Instance.new("Frame")
 playersSub.Size=UDim2.new(1,0,1,-46) playersSub.Position=UDim2.new(0,0,0,46)
 playersSub.BackgroundTransparency=1 playersSub.Parent=tpPage
@@ -261,11 +377,11 @@ plist.ScrollBarThickness=4 plist.ScrollBarImageColor3=accent
 plist.CanvasSize=UDim2.new(0,0,0,0) plist.Parent=playersSub
 reg(plist,"ScrollBarImageColor3")
 local pll=Instance.new("UIListLayout") pll.Padding=UDim.new(0,5) pll.Parent=plist
-
 local savedSub=Instance.new("Frame")
 savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46)
 savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
 
+-- Settingsページ
 local setPage=Instance.new("Frame")
 setPage.Size=UDim2.new(1,0,1,0) setPage.BackgroundTransparency=1
 setPage.Visible=false setPage.Parent=D.content
@@ -274,7 +390,6 @@ tlab.Size=UDim2.new(1,-30,0,22) tlab.Position=UDim2.new(0,15,0,12)
 tlab.BackgroundTransparency=1 tlab.Text="Accent Color"
 tlab.TextColor3=Color3.fromRGB(220,220,220) tlab.Font=Enum.Font.GothamMedium
 tlab.TextSize=11 tlab.TextXAlignment=Enum.TextXAlignment.Left tlab.Parent=setPage
-
 local pal={
  {n="Blue",c=Color3.fromRGB(0,170,255)},
  {n="Purple",c=Color3.fromRGB(160,80,255)},
@@ -309,7 +424,7 @@ for i,d in ipairs(pal) do
  end)
 end
 
-local pages={playerPage,tpPage,setPage}
+local pages={playerPage,itemPage,tpPage,setPage}
 local function showPage(page,btn)
  for _,p in ipairs(pages) do p.Visible=false end
  page.Visible=true
@@ -324,9 +439,10 @@ local function showPage(page,btn)
  end
 end
 
-local pTab=createTab("Player",15,function() showPage(playerPage,pTab) end)
-local tTab=createTab("Teleport",65,function() showPage(tpPage,tTab) end)
-local sTab=createTab("Settings",115,function() showPage(setPage,sTab) end)
+local pTab=createTab("Player",10,function() showPage(playerPage,pTab) end)
+local iTab=createTab("Item",52,function() showPage(itemPage,iTab) end)
+local tTab=createTab("Teleport",94,function() showPage(tpPage,tTab) end)
+local sTab=createTab("Settings",136,function() showPage(setPage,sTab) end)
 showPage(playerPage,pTab)
 
 local av=Instance.new("Frame")
