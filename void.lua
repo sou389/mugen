@@ -17,7 +17,8 @@ local main = Instance.new("Frame")
 main.Size=UDim2.new(0,520,0,340)
 main.Position=UDim2.new(0.5,-260,0.5,-170)
 main.BackgroundColor3=Color3.fromRGB(20,20,30)
-main.BackgroundTransparency=0.3 main.BorderSizePixel=0 main.Parent=gui
+main.BackgroundTransparency=0.4 -- 全体を少し透過
+main.BorderSizePixel=0 main.Parent=gui
 local mc=Instance.new("UICorner") mc.CornerRadius=UDim.new(0,12) mc.Parent=main
 local ms=Instance.new("UIStroke") ms.Color=accent ms.Thickness=2 ms.Transparency=0.3 ms.Parent=main
 
@@ -62,8 +63,7 @@ end)
 
 local side=Instance.new("Frame")
 side.Size=UDim2.new(0,110,1,-38) side.Position=UDim2.new(0,0,0,38)
-side.BackgroundColor3=Color3.fromRGB(18,18,28) side.BackgroundTransparency=0.5 side.BorderSizePixel=0 side.Parent=main
-local sc=Instance.new("UICorner") sc.CornerRadius=UDim.new(0,12) sc.Parent=side
+side.BackgroundTransparency=1 side.BorderSizePixel=0 side.Parent=main -- 完全透明
 
 local content=Instance.new("Frame")
 content.Size=UDim2.new(1,-110,1,-38) content.Position=UDim2.new(0,110,0,38)
@@ -80,6 +80,7 @@ local RS=game:GetService("RunService")
 local accent=D.accent
 local reg=D.reg
 
+-- スライダー（丸を小さく 16x16）
 local function createSlider(parent,name,y,mn,mx,dv,cb)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,66) cont.Position=UDim2.new(0,12,0,y)
@@ -94,15 +95,16 @@ local function createSlider(parent,name,y,mn,mx,dv,cb)
  vl.TextColor3=accent vl.Font=Enum.Font.GothamBold vl.TextSize=11 vl.TextXAlignment=Enum.TextXAlignment.Right vl.Parent=cont
  reg(vl,"TextColor3")
  local bg=Instance.new("Frame")
- bg.Size=UDim2.new(1,0,0,10) bg.Position=UDim2.new(0,0,0,36)
+ bg.Size=UDim2.new(1,0,0,6) bg.Position=UDim2.new(0,0,0,36) -- バーを少し細く
  bg.BackgroundColor3=Color3.fromRGB(50,50,70) bg.BorderSizePixel=0 bg.Parent=cont
  local bgc=Instance.new("UICorner") bgc.CornerRadius=UDim.new(1,0) bgc.Parent=bg
  local fill=Instance.new("Frame")
  fill.Size=UDim2.new((dv-mn)/(mx-mn),0,1,0) fill.BackgroundColor3=accent fill.BorderSizePixel=0 fill.Parent=bg
  reg(fill,"BackgroundColor3")
  local fc=Instance.new("UICorner") fc.CornerRadius=UDim.new(1,0) fc.Parent=fill
+ -- 小さくした丸 (16x16)
  local knob=Instance.new("Frame")
- knob.Size=UDim2.new(0,22,0,22) knob.Position=UDim2.new((dv-mn)/(mx-mn),-11,0.5,-11)
+ knob.Size=UDim2.new(0,16,0,16) knob.Position=UDim2.new((dv-mn)/(mx-mn),-8,0.5,-8)
  knob.BackgroundColor3=Color3.fromRGB(255,255,255) knob.BorderSizePixel=0 knob.Parent=bg
  local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(1,0) kc.Parent=knob
  local ks=Instance.new("UIStroke") ks.Color=accent ks.Thickness=2 ks.Parent=knob
@@ -114,7 +116,7 @@ local function createSlider(parent,name,y,mn,mx,dv,cb)
  RS.RenderStepped:Connect(function(dt)
   if not sd then return end
   crx=crx+(trx-crx)*math.clamp(dt*22,0,1)
-  fill.Size=UDim2.new(crx,0,1,0) knob.Position=UDim2.new(crx,-11,0.5,-11)
+  fill.Size=UDim2.new(crx,0,1,0) knob.Position=UDim2.new(crx,-8,0.5,-8)
   local v=mn+(mx-mn)*crx vl.Text=string.format("%.0f",v) cb(v)
  end)
  return cont
@@ -123,9 +125,9 @@ end
 local function createToggle(parent,name,y,cb,autoOff)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,36) cont.Position=UDim2.new(0,12,0,y)
- cont.BackgroundColor3=Color3.fromRGB(30,30,45) cont.BackgroundTransparency=0.5 cont.BorderSizePixel=0 cont.Parent=parent
+ cont.BackgroundTransparency=1 cont.BorderSizePixel=0 cont.Parent=parent
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=cont
- local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.6 s.Parent=cont
+ local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.8 s.Parent=cont
  reg(s,"Color")
  local lbl=Instance.new("TextLabel")
  lbl.Size=UDim2.new(1,-60,1,0) lbl.Position=UDim2.new(0,12,0,0)
@@ -161,9 +163,9 @@ local tabBtns={}
 local function createTab(name,y,fn)
  local b=Instance.new("TextButton")
  b.Size=UDim2.new(1,-20,0,38) b.Position=UDim2.new(0,10,0,y)
- b.BackgroundColor3=Color3.fromRGB(30,30,45) b.BackgroundTransparency=0.5 b.Text=name
- b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
- b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
+ b.BackgroundTransparency=1 -- 完全透明
+ b.Text=name b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
+ b.TextSize=12 b.BorderSizePixel=0 b.Parent=D.side
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
  b.MouseButton1Click:Connect(fn)
@@ -195,10 +197,20 @@ createToggle(playerPage,"Wall Walk",190,function(st)
  else h.PlatformStand=false end
 end)
 
+-- 勝手に壁抜けしないように修正（オフの時は必ず戻す）
+local wallClipActive=false
 createToggle(playerPage,"Wall Clip",228,function(st)
+ wallClipActive=st
  local ch=plr.Character if not ch then return end
- for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=not st end end
- if st then RS.Stepped:Connect(function() local c=plr.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end end) end
+ if not st then
+  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end
+ else
+  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
+  RS.Stepped:Connect(function()
+   if not wallClipActive then return end
+   local c=plr.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end
+  end)
+ end
 end)
 
 local flyActive=false local bv,bg
@@ -238,12 +250,12 @@ itemPage.BorderSizePixel=0 itemPage.ScrollBarThickness=4
 itemPage.ScrollBarImageColor3=accent itemPage.CanvasSize=UDim2.new(0,0,0,0) itemPage.Visible=false itemPage.Parent=D.content
 reg(itemPage,"ScrollBarImageColor3")
 
+-- スピン（数字入力 + スイッチ）
 local spinCont=Instance.new("Frame")
 spinCont.Size=UDim2.new(1,-24,0,36) spinCont.Position=UDim2.new(0,12,0,12)
-spinCont.BackgroundColor3=Color3.fromRGB(30,30,45) spinCont.BackgroundTransparency=0.5
-spinCont.BorderSizePixel=0 spinCont.Parent=itemPage
+spinCont.BackgroundTransparency=1 spinCont.BorderSizePixel=0 spinCont.Parent=itemPage
 local scC=Instance.new("UICorner") scC.CornerRadius=UDim.new(0,6) scC.Parent=spinCont
-local sStroke=Instance.new("UIStroke") sStroke.Color=accent sStroke.Thickness=1 sStroke.Transparency=0.6 sStroke.Parent=spinCont
+local sStroke=Instance.new("UIStroke") sStroke.Color=accent sStroke.Thickness=1 sStroke.Transparency=0.8 sStroke.Parent=spinCont
 reg(sStroke,"Color")
 
 local spinLbl=Instance.new("TextLabel")
@@ -285,10 +297,20 @@ local spinBtn=Instance.new("TextButton")
 spinBtn.Size=UDim2.new(1,0,1,0) spinBtn.BackgroundTransparency=1 spinBtn.Text="" spinBtn.Parent=spinCont
 spinBtn.MouseButton1Click:Connect(function() toggleSpin(not spinActive) end)
 
+-- ゴーストモード（透明化＋壁抜け）
 createToggle(itemPage,"Ghost Mode",60,function(st)
  local ch=plr.Character if not ch then return end
- for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = not st end end
- if st then RS.Stepped:Connect(function() local c=plr.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end end) end
+ for _,p in ipairs(ch:GetDescendants()) do
+  if p:IsA("BasePart") then
+   p.CanCollide = not st
+   if p.Name~="HumanoidRootPart" then p.LocalTransparencyModifier = st and 1 or 0 end
+  end
+ end
+ if st then
+  RS.Stepped:Connect(function()
+   local c=plr.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end
+  end)
+ end
 end)
 
 createToggle(itemPage,"Transparent",98,function(st)
@@ -297,17 +319,14 @@ createToggle(itemPage,"Transparent",98,function(st)
 end)
 
 local tpPage=Instance.new("Frame")
-tpPage.Size=UDim2.new(1,0,1,0) tpPage.BackgroundTransparency=1
-tpPage.Visible=false tpPage.Parent=D.content
+tpPage.Size=UDim2.new(1,0,1,0) tpPage.BackgroundTransparency=1 tpPage.Visible=false tpPage.Parent=D.content
 local subBar=Instance.new("Frame")
-subBar.Size=UDim2.new(1,-30,0,30) subBar.Position=UDim2.new(0,15,0,8)
-subBar.BackgroundTransparency=1 subBar.Parent=tpPage
+subBar.Size=UDim2.new(1,-30,0,30) subBar.Position=UDim2.new(0,15,0,8) subBar.BackgroundTransparency=1 subBar.Parent=tpPage
 local subTabs={}
 local function createSub(name,x,w,fn)
  local b=Instance.new("TextButton")
  b.Size=UDim2.new(0,w,1,0) b.Position=UDim2.new(0,x,0,0)
- b.BackgroundColor3=Color3.fromRGB(30,30,45) b.BackgroundTransparency=0.5 b.Text=name
- b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
+ b.BackgroundTransparency=1 b.Text=name b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
  b.TextSize=11 b.BorderSizePixel=0 b.Parent=subBar
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
@@ -315,8 +334,7 @@ local function createSub(name,x,w,fn)
  table.insert(subTabs,{button=b,stroke=s}) return b
 end
 local playersSub=Instance.new("Frame")
-playersSub.Size=UDim2.new(1,0,1,-46) playersSub.Position=UDim2.new(0,0,0,46)
-playersSub.BackgroundTransparency=1 playersSub.Parent=tpPage
+playersSub.Size=UDim2.new(1,0,1,-46) playersSub.Position=UDim2.new(0,0,0,46) playersSub.BackgroundTransparency=1 playersSub.Parent=tpPage
 local plist=Instance.new("ScrollingFrame")
 plist.Size=UDim2.new(1,-30,1,-10) plist.Position=UDim2.new(0,15,0,5)
 plist.BackgroundTransparency=1 plist.BorderSizePixel=0 plist.ScrollBarThickness=4
@@ -324,8 +342,7 @@ plist.ScrollBarImageColor3=accent plist.CanvasSize=UDim2.new(0,0,0,0) plist.Pare
 reg(plist,"ScrollBarImageColor3")
 local pll=Instance.new("UIListLayout") pll.Padding=UDim.new(0,5) pll.Parent=plist
 local savedSub=Instance.new("Frame")
-savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46)
-savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
+savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46) savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
 
 _G.D.pt3 = { itemPage=itemPage, tpPage=tpPage, playersSub=playersSub, savedSub=savedSub, plist=plist, pll=pll, createSub=createSub, subTabs=subTabs }
 print("Part 3 OK")
@@ -337,8 +354,7 @@ local UI=D.ui local P3=D.pt3 local createTab=UI.createTab local tabBtns=UI.tabBt
 local setPage=Instance.new("Frame")
 setPage.Size=UDim2.new(1,0,1,0) setPage.BackgroundTransparency=1 setPage.Visible=false setPage.Parent=D.content
 local tlab=Instance.new("TextLabel")
-tlab.Size=UDim2.new(1,-30,0,22) tlab.Position=UDim2.new(0,15,0,12)
-tlab.BackgroundTransparency=1 tlab.Text="Accent Color"
+tlab.Size=UDim2.new(1,-30,0,22) tlab.Position=UDim2.new(0,15,0,12) tlab.BackgroundTransparency=1 tlab.Text="Accent Color"
 tlab.TextColor3=Color3.fromRGB(220,220,220) tlab.Font=Enum.Font.GothamMedium
 tlab.TextSize=11 tlab.TextXAlignment=Enum.TextXAlignment.Left tlab.Parent=setPage
 
@@ -371,8 +387,8 @@ local function showPage(page,btn)
  for _,p in ipairs(pages) do p.Visible=false end
  page.Visible=true
  for _,t in ipairs(tabBtns) do
-  if t.button==btn then t.button.BackgroundColor3=Color3.fromRGB(40,40,60) t.button.TextColor3=D.accent t.stroke.Transparency=0.3
-  else t.button.BackgroundColor3=Color3.fromRGB(30,30,45) t.button.TextColor3=Color3.fromRGB(200,200,200) t.stroke.Transparency=1 end
+  if t.button==btn then t.button.BackgroundTransparency=0.8 t.button.TextColor3=D.accent t.stroke.Transparency=0.3
+  else t.button.BackgroundTransparency=1 t.button.TextColor3=Color3.fromRGB(200,200,200) t.stroke.Transparency=1 end
  end
 end
 
@@ -384,7 +400,7 @@ showPage(UI.playerPage,pTab)
 
 local av=Instance.new("Frame")
 av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58)
-av.BackgroundColor3=Color3.fromRGB(30,30,50) av.BackgroundTransparency=0.5 av.BorderSizePixel=0 av.Parent=D.side
+av.BackgroundTransparency=1 av.BorderSizePixel=0 av.Parent=D.side
 local avc=Instance.new("UICorner") avc.CornerRadius=UDim.new(1,0) avc.Parent=av
 local avs=Instance.new("UIStroke") avs.Color=accent avs.Thickness=2 avs.Parent=av
 D.avatarStroke=avs
@@ -397,8 +413,8 @@ avi.Image=string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150",plr.U
 D.showSub=function(page,btn)
  P3.playersSub.Visible=(page==P3.playersSub) P3.savedSub.Visible=(page==P3.savedSub)
  for _,t in ipairs(P3.subTabs) do
-  if t.button==btn then t.button.BackgroundColor3=Color3.fromRGB(40,40,60) t.button.TextColor3=D.accent t.stroke.Transparency=0.3
-  else t.button.BackgroundColor3=Color3.fromRGB(30,30,45) t.button.TextColor3=Color3.fromRGB(200,200,200) t.stroke.Transparency=1 end
+  if t.button==btn then t.button.BackgroundTransparency=0.8 t.button.TextColor3=D.accent t.stroke.Transparency=0.3
+  else t.button.BackgroundTransparency=1 t.button.TextColor3=Color3.fromRGB(200,200,200) t.stroke.Transparency=1 end
  end
 end
 
@@ -417,9 +433,8 @@ local function refresh()
  for _,p in ipairs(game:GetService("Players"):GetPlayers()) do
   if p~=plr then
    local b=Instance.new("TextButton")
-   b.Size=UDim2.new(1,-5,0,34) b.BackgroundColor3=Color3.fromRGB(30,30,45) b.BackgroundTransparency=0.5
-   b.Text="  "..p.Name b.TextColor3=Color3.fromRGB(220,220,220) b.Font=Enum.Font.GothamMedium
-   b.TextSize=12 b.TextXAlignment=Enum.TextXAlignment.Left b.BorderSizePixel=0 b.Parent=P3.plist
+   b.Size=UDim2.new(1,-5,0,34) b.BackgroundTransparency=0.8 b.Text="  "..p.Name b.TextColor3=Color3.fromRGB(220,220,220)
+   b.Font=Enum.Font.GothamMedium b.TextSize=12 b.TextXAlignment=Enum.TextXAlignment.Left b.BorderSizePixel=0 b.Parent=P3.plist
    local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
    local s=Instance.new("UIStroke") s.Color=D.accent s.Thickness=1 s.Transparency=0.6 s.Parent=b
    D.reg(s,"Color")
@@ -433,7 +448,7 @@ game:GetService("Players").PlayerRemoving:Connect(function() task.wait(0.5) refr
 refresh()
 
 local saveBtn=Instance.new("TextButton")
-saveBtn.Size=UDim2.new(1,-30,0,32) saveBtn.Position=UDim2.new(0,15,0,5)
+saveBtn.Size=UDim2.new(1,-30,0,32) saveBtn.Position=UDim2.new(0,15,0,5) saveBtn.BackgroundTransparency=0.5
 saveBtn.BackgroundColor3=D.accent saveBtn.Text="Save Location"
 saveBtn.TextColor3=Color3.fromRGB(255,255,255) saveBtn.Font=Enum.Font.GothamBold
 saveBtn.TextSize=12 saveBtn.BorderSizePixel=0 saveBtn.Parent=P3.savedSub
@@ -452,7 +467,7 @@ local function refreshSaved()
  for _,c in ipairs(savedList:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
  for i,d in ipairs(locs) do
   local r=Instance.new("Frame")
-  r.Size=UDim2.new(1,-5,0,34) r.BackgroundColor3=Color3.fromRGB(30,30,45) r.BackgroundTransparency=0.5 r.BorderSizePixel=0 r.Parent=savedList
+  r.Size=UDim2.new(1,-5,0,34) r.BackgroundTransparency=0.8 r.BorderSizePixel=0 r.Parent=savedList
   local rc=Instance.new("UICorner") rc.CornerRadius=UDim.new(0,6) rc.Parent=r
   local rs=Instance.new("UIStroke") rs.Color=D.accent rs.Thickness=1 rs.Transparency=0.6 rs.Parent=r
   D.reg(rs,"Color")
