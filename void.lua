@@ -17,23 +17,25 @@ _G.D.texts = {
            wallclip="Wall Clip", fly="Fly", respawn="Respawn", leave="Leave Game",
            spin="Spin", transparent="Transparent", target_id="Target ID", stick="Stick to Player",
            tp_to_id="Teleport to ID", accentcolor="Accent Color", language="Language",
-           fly_menu="FLY MENU", fly_speed="Fly Speed", stop_fly="STOP FLY", open_ui="OPEN UI" },
+           fly_menu="FLY MENU", fly_speed="Fly Speed", open_ui="OPEN UI",
+           save_loc="Save Location", players="Players", saved="Saved" },
     JA = { player="プレイヤー", item="アイテム", other="その他", teleport="テレポート", settings="設定",
            speed="スピード", jump="ジャンプ", infjump="無限ジャンプ", wallwalk="壁歩き",
            wallclip="壁抜け", fly="飛ぶ", respawn="リスポーン", leave="退出",
            spin="スピン", transparent="透明化", target_id="相手のID", stick="くっつく",
            tp_to_id="IDにテレポート", accentcolor="テーマカラー", language="言語",
-           fly_menu="フライメニュー", fly_speed="飛ぶ速度", stop_fly="フライ停止", open_ui="UIを開く" }
+           fly_menu="フライメニュー", fly_speed="飛ぶ速度", open_ui="UIを開く",
+           save_loc="場所を保存", players="プレイヤー", saved="保存場所" }
 }
 function _G.D.T(key) return _G.D.texts[_G.D.lang][key] or key end
 
 local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
 
--- メインUI (少し小さく: 460x300)
+-- メインUI（サイズを 520x340 に戻す）
 local main = Instance.new("Frame")
-main.Size=UDim2.new(0,460,0,300) main.Position=UDim2.new(0.5,-230,0.5,-150)
-main.BackgroundColor3=Color3.fromRGB(20,20,30) main.BackgroundTransparency=0.4
+main.Size=UDim2.new(0,520,0,340) main.Position=UDim2.new(0.5,-260,0.5,-170)
+main.BackgroundColor3=Color3.fromRGB(20,20,30) main.BackgroundTransparency=0.3
 main.BorderSizePixel=0 main.Parent=gui
 local mc=Instance.new("UICorner") mc.CornerRadius=UDim.new(0,12) mc.Parent=main
 local ms=Instance.new("UIStroke") ms.Color=accent ms.Thickness=2 ms.Transparency=0.3 ms.Parent=main
@@ -48,7 +50,6 @@ title.Size=UDim2.new(1,-90,1,0) title.Position=UDim2.new(0,14,0,0)
 title.BackgroundTransparency=1 title.Text="DELTA HUB" title.TextColor3=accent
 title.Font=Enum.Font.GothamBold title.TextSize=15 title.TextXAlignment=Enum.TextXAlignment.Left title.Parent=tb
 
--- 最小化ボタン(-)
 local minBtn=Instance.new("TextButton")
 minBtn.Size=UDim2.new(0,26,0,26) minBtn.Position=UDim2.new(1,-64,0,6)
 minBtn.BackgroundColor3=Color3.fromRGB(200,150,50) minBtn.Text="-"
@@ -56,7 +57,6 @@ minBtn.TextColor3=Color3.fromRGB(255,255,255) minBtn.Font=Enum.Font.GothamBold
 minBtn.TextSize=18 minBtn.BorderSizePixel=0 minBtn.Parent=tb
 local mbc=Instance.new("UICorner") mbc.CornerRadius=UDim.new(0,8) mbc.Parent=minBtn
 
--- 閉じるボタン(X)
 local close=Instance.new("TextButton")
 close.Size=UDim2.new(0,26,0,26) close.Position=UDim2.new(1,-34,0,6)
 close.BackgroundColor3=Color3.fromRGB(200,50,50) close.Text="X"
@@ -65,22 +65,16 @@ close.TextSize=12 close.BorderSizePixel=0 close.Parent=tb
 local cc=Instance.new("UICorner") cc.CornerRadius=UDim.new(0,8) cc.Parent=close
 close.MouseButton1Click:Connect(function() gui:Destroy() end)
 
--- 再表示用の小さなボタン
 local openBtn=Instance.new("TextButton")
 openBtn.Size=UDim2.new(0,80,0,30) openBtn.Position=UDim2.new(0,10,0,10)
 openBtn.BackgroundColor3=accent openBtn.Text="OPEN UI" openBtn.TextColor3=Color3.fromRGB(255,255,255)
 openBtn.Font=Enum.Font.GothamBold openBtn.TextSize=12 openBtn.BorderSizePixel=0 openBtn.Visible=false openBtn.Parent=gui
 local obc=Instance.new("UICorner") obc.CornerRadius=UDim.new(0,6) obc.Parent=openBtn
 openBtn.MouseButton1Click:Connect(function() main.Visible=true openBtn.Visible=false end)
-
 minBtn.MouseButton1Click:Connect(function() main.Visible=false openBtn.Visible=true end)
-table.insert(_G.D.themeEls, {element=openBtn, property="BackgroundColor3"})
+reg(openBtn, "BackgroundColor3")
 
-local dragging=false
-local dragStart=nil
-local startPos=nil
-local tPos=main.Position
-local cPos=main.Position
+local dragging=false dragStart=nil startPos=nil tPos=main.Position cPos=main.Position
 tb.InputBegan:Connect(function(i)
  if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
   dragging=true dragStart=i.Position startPos=main.Position cPos=main.Position tPos=main.Position
@@ -98,11 +92,11 @@ RS.RenderStepped:Connect(function(dt)
 end)
 
 local side=Instance.new("Frame")
-side.Size=UDim2.new(0,100,1,-38) side.Position=UDim2.new(0,0,0,38)
-side.BackgroundTransparency=1 side.BorderSizePixel=0 side.Parent=main
-
+side.Size=UDim2.new(0,110,1,-38) side.Position=UDim2.new(0,0,0,38)
+side.BackgroundTransparency=0.8 side.BorderSizePixel=0 side.Parent=main
+local sc=Instance.new("UICorner") sc.CornerRadius=UDim.new(0,12) sc.Parent=side
 local content=Instance.new("Frame")
-content.Size=UDim2.new(1,-100,1,-38) content.Position=UDim2.new(0,100,0,38)
+content.Size=UDim2.new(1,-110,1,-38) content.Position=UDim2.new(0,110,0,38)
 content.BackgroundTransparency=1 content.Parent=main
 
 _G.D.gui=gui _G.D.main=main _G.D.side=side _G.D.content=content
@@ -117,7 +111,7 @@ local uiRefs = { tabs = {}, labels = {} }
 
 local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  local cont=Instance.new("Frame")
- cont.Size=UDim2.new(1,-24,0,66) cont.Position=UDim2.new(0,12,0,y)
+ cont.Size=UDim2.new(1,-24,0,60) cont.Position=UDim2.new(0,12,0,y)
  cont.BackgroundTransparency=1 cont.Parent=parent
  local lbl=Instance.new("TextLabel")
  lbl.Size=UDim2.new(1,-56,0,20) lbl.BackgroundTransparency=1
@@ -130,7 +124,7 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  vl.TextColor3=accent vl.Font=Enum.Font.GothamBold vl.TextSize=11 vl.TextXAlignment=Enum.TextXAlignment.Right vl.Parent=cont
  reg(vl,"TextColor3")
  local bg=Instance.new("Frame")
- bg.Size=UDim2.new(1,0,0,6) bg.Position=UDim2.new(0,0,0,36)
+ bg.Size=UDim2.new(1,0,0,6) bg.Position=UDim2.new(0,0,0,30)
  bg.BackgroundColor3=Color3.fromRGB(50,50,70) bg.BorderSizePixel=0 bg.Parent=cont
  local bgc=Instance.new("UICorner") bgc.CornerRadius=UDim.new(1,0) bgc.Parent=bg
  local fill=Instance.new("Frame")
@@ -138,11 +132,9 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  reg(fill,"BackgroundColor3")
  local fc=Instance.new("UICorner") fc.CornerRadius=UDim.new(1,0) fc.Parent=fill
  local knob=Instance.new("Frame")
- knob.Size=UDim2.new(0,16,0,16) knob.Position=UDim2.new((dv-mn)/(mx-mn),-8,0.5,-8)
+ knob.Size=UDim2.new(0,14,0,14) knob.Position=UDim2.new((dv-mn)/(mx-mn),-7,0.5,-7)
  knob.BackgroundColor3=Color3.fromRGB(255,255,255) knob.BorderSizePixel=0 knob.Parent=bg
  local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(1,0) kc.Parent=knob
- local ks=Instance.new("UIStroke") ks.Color=accent ks.Thickness=2 ks.Parent=knob
- reg(ks,"Color")
  local sd=false trx=(dv-mn)/(mx-mn) crx=trx
  bg.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then sd=true trx=math.clamp((i.Position.X-bg.AbsolutePosition.X)/bg.AbsoluteSize.X,0,1) end end)
  UIS.InputChanged:Connect(function(i) if sd and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then trx=math.clamp((i.Position.X-bg.AbsolutePosition.X)/bg.AbsoluteSize.X,0,1) end end)
@@ -150,7 +142,7 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  RS.RenderStepped:Connect(function(dt)
   if not sd then return end
   crx=crx+(trx-crx)*math.clamp(dt*22,0,1)
-  fill.Size=UDim2.new(crx,0,1,0) knob.Position=UDim2.new(crx,-8,0.5,-8)
+  fill.Size=UDim2.new(crx,0,1,0) knob.Position=UDim2.new(crx,-7,0.5,-7)
   local v=mn+(mx-mn)*crx vl.Text=string.format("%.0f",v) cb(v)
  end)
  return cont
@@ -191,7 +183,6 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
    busy=true set(true) task.wait(autoOff) set(false) busy=false
   else set(not st) end
  end)
- -- 外部から状態を変える用
  cont.SetState = set
  return cont
 end
@@ -200,7 +191,7 @@ local tabBtns={}
 local function createTab(key,y,fn)
  local b=Instance.new("TextButton")
  b.Size=UDim2.new(1,-20,0,34) b.Position=UDim2.new(0,10,0,y)
- b.BackgroundTransparency=1 b.Text=T(key) b.TextColor3=Color3.fromRGB(200,200,200)
+ b.BackgroundTransparency=0.8 b.Text=T(key) b.TextColor3=Color3.fromRGB(200,200,200)
  b.Font=Enum.Font.GothamMedium b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
@@ -239,11 +230,8 @@ createToggle(playerPage,"wallclip",228,function(st)
  end
 end)
 
--- Fly(飛ぶ) のトグル（ここからPart 4の飛ぶUIを呼び出す）
-local flyActive=false
-local flyFuncRef = nil
 local flyToggle = createToggle(playerPage,"fly",266,function(st)
- if flyFuncRef then flyFuncRef(st) end
+ if D.flyFunc then D.flyFunc(st) end
 end)
 
 createToggle(playerPage,"respawn",304,function(st) if st then local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") if h then h.Health=0 end end end,1)
@@ -252,12 +240,11 @@ createToggle(playerPage,"leave",342,function(st) if st then plr:Kick("Left") end
 pl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() playerPage.CanvasSize=UDim2.new(0,0,0,pl.AbsoluteContentSize.Y+12) end)
 
 _G.D.ui = { createSlider=createSlider, createToggle=createToggle, createTab=createTab, tabBtns=tabBtns, playerPage=playerPage, uiRefs=uiRefs, flyToggle=flyToggle }
-_G.D.setFlyFunc = function(f) flyFuncRef = f end
 print("Part 2 OK")
 local D=_G.D
 if not D then warn("Part 1,2 を先に！") return end
 local plr=D.plr local accent=D.accent local reg=D.reg local RS=game:GetService("RunService") local T=D.T
-local UI=D.ui local createToggle=UI.createToggle local createTab=UI.createTab local tabBtns=UI.tabBtns
+local UI=D.ui local createToggle=UI.createToggle local tabBtns=UI.tabBtns
 
 local itemPage=Instance.new("ScrollingFrame")
 itemPage.Size=UDim2.new(1,0,1,0) itemPage.BackgroundTransparency=1
@@ -463,14 +450,12 @@ local function updateLang(newLang)
  end
  if D.flyMini then
   D.flyMini.title.Text = T("fly_menu")
-  D.flyMini.speedLbl.Text = T("fly_speed")
-  D.flyMini.stopBtn.Text = T("stop_fly")
+  D.flyMini.speedLbl.Text = T("fly_speed")..": "..flySpeed
  end
  D.openBtn.Text = T("open_ui")
 end
 enBtn.MouseButton1Click:Connect(function() updateLang("EN") end)
 jaBtn.MouseButton1Click:Connect(function() updateLang("JA") end)
-updateLang("EN")
 
 local pages={UI.playerPage,P3.itemPage,P3.otherPage,P3.tpPage,setPage}
 local function showPage(page,btn)
@@ -490,7 +475,7 @@ local sTab=createTab("settings",165,function() showPage(setPage,sTab) end)
 showPage(UI.playerPage,pTab)
 
 local av=Instance.new("Frame")
-av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58) av.BackgroundTransparency=1 av.BorderSizePixel=0 av.Parent=D.side
+av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58) av.BackgroundTransparency=0.5 av.BorderSizePixel=0 av.Parent=D.side
 local avc=Instance.new("UICorner") avc.CornerRadius=UDim.new(1,0) avc.Parent=av
 local avs=Instance.new("UIStroke") avs.Color=accent avs.Thickness=2 avs.Parent=av
 D.avatarStroke=avs
@@ -507,8 +492,10 @@ D.showSub=function(page,btn)
  end
 end
 
-local pSub=P3.createSub("Players",0,100,function() D.showSub(P3.playersSub,pSub) end)
-local sSub=P3.createSub("Saved",108,100,function() D.showSub(P3.savedSub,sSub) end)
+local pSub=P3.createSub(T("players"),0,100,function() D.showSub(P3.playersSub,pSub) end)
+local sSub=P3.createSub(T("saved"),108,100,function() D.showSub(P3.savedSub,sSub) end)
+table.insert(uiRefs.labels, {obj=pSub, key="players"})
+table.insert(uiRefs.labels, {obj=sSub, key="saved"})
 D.showSub(P3.playersSub,pSub)
 
 local function tpTo(ch)
@@ -537,9 +524,10 @@ refresh()
 
 local saveBtn=Instance.new("TextButton")
 saveBtn.Size=UDim2.new(1,-30,0,32) saveBtn.Position=UDim2.new(0,15,0,5) saveBtn.BackgroundTransparency=0.5
-saveBtn.BackgroundColor3=D.accent saveBtn.Text="Save Location" saveBtn.TextColor3=Color3.fromRGB(255,255,255)
+saveBtn.BackgroundColor3=D.accent saveBtn.Text=T("save_loc") saveBtn.TextColor3=Color3.fromRGB(255,255,255)
 saveBtn.Font=Enum.Font.GothamBold saveBtn.TextSize=12 saveBtn.BorderSizePixel=0 saveBtn.Parent=P3.savedSub
 D.reg(saveBtn,"BackgroundColor3")
+table.insert(uiRefs.labels, {obj=saveBtn, key="save_loc"})
 local sbc=Instance.new("UICorner") sbc.CornerRadius=UDim.new(0,6) sbc.Parent=saveBtn
 
 local savedList=Instance.new("ScrollingFrame")
@@ -577,13 +565,10 @@ saveBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================
--- Fly (飛ぶ) 専用ミニUIと機能実装
+-- Fly専用の小さなUI
 -- ============================================
-local flyActive=false
-local flySpeed=50
-local bv,bg
+local flyActive=false local flySpeed=50 local bv,bg
 
--- ミニUI作成
 local flyMini=Instance.new("Frame")
 flyMini.Size=UDim2.new(0,200,0,110) flyMini.Position=UDim2.new(0.5,-100,0.8,0)
 flyMini.BackgroundColor3=Color3.fromRGB(20,20,30) flyMini.BackgroundTransparency=0.2
@@ -622,16 +607,8 @@ fmKnob.Size=UDim2.new(0,14,0,14) fmKnob.Position=UDim2.new(0.5,-7,0.5,-7) fmKnob
 fmKnob.BorderSizePixel=0 fmKnob.Parent=fmSliderBg
 local fmkc=Instance.new("UICorner") fmkc.CornerRadius=UDim.new(1,0) fmkc.Parent=fmKnob
 
-local fmStopBtn=Instance.new("TextButton")
-fmStopBtn.Size=UDim2.new(1,-20,0,24) fmStopBtn.Position=UDim2.new(0,10,0,75)
-fmStopBtn.BackgroundColor3=Color3.fromRGB(200,50,50) fmStopBtn.Text=T("stop_fly")
-fmStopBtn.TextColor3=Color3.fromRGB(255,255,255) fmStopBtn.Font=Enum.Font.GothamBold
-fmStopBtn.TextSize=11 fmStopBtn.BorderSizePixel=0 fmStopBtn.Parent=flyMini
-local fmsc=Instance.new("UICorner") fmsc.CornerRadius=UDim.new(0,4) fmsc.Parent=fmStopBtn
+D.flyMini = {title=fmTitle, speedLbl=fmSpeedLbl}
 
-D.flyMini = {title=fmTitle, speedLbl=fmSpeedLbl, stopBtn=fmStopBtn}
-
--- スライダー処理
 local fmDragging=false
 local function updateFMSlider(inputX)
  local relX=math.clamp((inputX-fmSliderBg.AbsolutePosition.X)/fmSliderBg.AbsoluteSize.X,0,1)
@@ -643,9 +620,7 @@ fmSliderBg.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType
 UIS.InputChanged:Connect(function(i) if fmDragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then updateFMSlider(i.Position.X) end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then fmDragging=false end end)
 
--- ミニUIのドラッグ移動
-local fmDrag=false
-local fmStart,fmStartPos
+local fmDrag=false fmStart=nil fmStartPos=nil
 fmTitle.InputBegan:Connect(function(i)
  if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
   fmDrag=true fmStart=i.Position fmStartPos=flyMini.Position
@@ -659,7 +634,6 @@ UIS.InputChanged:Connect(function(i)
  end
 end)
 
--- Fly 状態切り替え関数
 local function toggleFly(st)
  flyActive=st
  local ch=plr.Character if not ch then return end
@@ -670,20 +644,17 @@ local function toggleFly(st)
   if bg then bg:Destroy() end
   bv=Instance.new("BodyVelocity") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=r
   bg=Instance.new("BodyGyro") bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.Parent=r
-  -- メインのトグルもONにする
   if UI.flyToggle and UI.flyToggle.SetState then UI.flyToggle.SetState(true) end
  else
   flyMini.Visible=false
   if bv then bv:Destroy() bv=nil end
   if bg then bg:Destroy() bg=nil end
-  -- メインのトグルもOFFにする
   if UI.flyToggle and UI.flyToggle.SetState then UI.flyToggle.SetState(false) end
  end
 end
+D.flyFunc = toggleFly
 
 fmClose.MouseButton1Click:Connect(function() toggleFly(false) end)
-fmStopBtn.MouseButton1Click:Connect(function() toggleFly(false) end)
-D.setFlyFunc(toggleFly)
 
 RS.RenderStepped:Connect(function()
  if not flyActive or not bv or not bg then return end
@@ -711,4 +682,5 @@ UIS.InputBegan:Connect(function(i,gp)
  end
 end)
 
+updateLang("EN")
 print("Part 4 OK")
