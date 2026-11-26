@@ -10,7 +10,6 @@ local themeEls = {}
 local function reg(e,p) table.insert(themeEls,{element=e,property=p}) end
 _G.D = {accent=accent, themeEls=themeEls, reg=reg, speed=16, jump=50, plr=plr}
 
--- 言語設定 (初期は英語)
 _G.D.lang = "EN"
 _G.D.texts = {
     EN = { player="Player", item="Item", other="Other", teleport="Teleport", settings="Settings",
@@ -77,7 +76,6 @@ RS.RenderStepped:Connect(function(dt)
  if dragging then cPos=cPos:Lerp(tPos,math.clamp(dt*30,0,1)) main.Position=cPos end
 end)
 
--- 左側メニュー（ここだけ完全透明）
 local side=Instance.new("Frame")
 side.Size=UDim2.new(0,110,1,-38) side.Position=UDim2.new(0,0,0,38)
 side.BackgroundTransparency=1 side.BorderSizePixel=0 side.Parent=main
@@ -137,10 +135,10 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  return cont
 end
 
+-- スイッチ（背景タップでは反応せず、スイッチ部分だけ反応するように修正）
 local function createToggle(parent,nameKey,y,cb,autoOff)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,36) cont.Position=UDim2.new(0,12,0,y)
- -- トグルの枠は半透明で表示
  cont.BackgroundColor3=Color3.fromRGB(30,30,45) cont.BackgroundTransparency=0.5 cont.BorderSizePixel=0 cont.Parent=parent
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=cont
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=0.6 s.Parent=cont
@@ -165,8 +163,10 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
   else sBg.BackgroundColor3=Color3.fromRGB(80,80,90) kn.Position=UDim2.new(0,2,0.5,-7) end
   cb(st)
  end
+ -- ボタンをスイッチ部分にのみ配置
  local btn=Instance.new("TextButton")
- btn.Size=UDim2.new(1,0,1,0) btn.BackgroundTransparency=1 btn.Text="" btn.Parent=cont
+ btn.Size=UDim2.new(0,34,0,18) btn.Position=UDim2.new(1,-46,0.5,-9)
+ btn.BackgroundTransparency=1 btn.Text="" btn.Parent=cont
  btn.MouseButton1Click:Connect(function()
   if autoOff then
    if busy then return end
@@ -180,9 +180,8 @@ local tabBtns={}
 local function createTab(key,y,fn)
  local b=Instance.new("TextButton")
  b.Size=UDim2.new(1,-20,0,36) b.Position=UDim2.new(0,10,0,y)
- b.BackgroundTransparency=1 b.Text=T(key)
- b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
- b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
+ b.BackgroundTransparency=1 b.Text=T(key) b.TextColor3=Color3.fromRGB(200,200,200)
+ b.Font=Enum.Font.GothamMedium b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
  b.MouseButton1Click:Connect(fn)
@@ -299,20 +298,31 @@ local function toggleSpin(st)
  end
 end
 local spinBtn=Instance.new("TextButton")
-spinBtn.Size=UDim2.new(1,0,1,0) spinBtn.BackgroundTransparency=1 spinBtn.Text="" spinBtn.Parent=spinCont
+spinBtn.Size=UDim2.new(0,34,0,18) spinBtn.Position=UDim2.new(1,-46,0.5,-9) spinBtn.BackgroundTransparency=1 spinBtn.Text="" spinBtn.Parent=spinCont
 spinBtn.MouseButton1Click:Connect(function() toggleSpin(not spinActive) end)
 
+-- ゴーストモード（オフで壁抜け解除・HP自動回復）
+local ghostActive=false
 createToggle(itemPage,"ghost",60,function(st)
+ ghostActive=st
  local ch=plr.Character if not ch then return end
- for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = not st end end
- if st then RS.Stepped:Connect(function() local c=plr.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end end) end
+ if st then
+  RS.Stepped:Connect(function()
+   if not ghostActive then return end
+   local c=plr.Character if not c then return end
+   for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
+   local h=c:FindFirstChildOfClass("Humanoid") if h then h.Health=h.MaxHealth end
+  end)
+ else
+  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end
+ end
 end)
+
 createToggle(itemPage,"transparent",98,function(st)
  local ch=plr.Character if not ch then return end
  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.Transparency=st and 1 or 0 end end
 end)
 
--- Other タブ (ID指定関連)
 local otherPage=Instance.new("ScrollingFrame")
 otherPage.Size=UDim2.new(1,0,1,0) otherPage.BackgroundTransparency=1
 otherPage.BorderSizePixel=0 otherPage.ScrollBarThickness=4
@@ -361,7 +371,7 @@ stickBtn.MouseButton1Click:Connect(function()
  if mh and th then
   local bv=Instance.new("BodyPosition") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=mh
   task.spawn(function() while bv.Parent do bv.Position=th.Position task.wait() end end)
-  task.delay(3, function() if bv then bv:Destroy() end end) -- 3秒で解除
+  task.delay(3, function() if bv then bv:Destroy() end end)
  end
 end)
 
