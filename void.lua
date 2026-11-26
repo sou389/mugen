@@ -15,23 +15,24 @@ _G.D.texts = {
     EN = { player="Player", item="Item", other="Other", teleport="Teleport", settings="Settings",
            speed="Speed", jump="Jump", infjump="Infinite Jump", wallwalk="Wall Walk",
            wallclip="Wall Clip", fly="Fly", respawn="Respawn", leave="Leave Game",
-           spin="Spin", ghost="Ghost Mode", transparent="Transparent",
-           target_id="Target ID", stick="Stick to Player", tp_to_id="Teleport to ID",
-           accentcolor="Accent Color", language="Language" },
+           spin="Spin", transparent="Transparent", target_id="Target ID", stick="Stick to Player",
+           tp_to_id="Teleport to ID", accentcolor="Accent Color", language="Language",
+           fly_menu="FLY MENU", fly_speed="Fly Speed", stop_fly="STOP FLY", open_ui="OPEN UI" },
     JA = { player="プレイヤー", item="アイテム", other="その他", teleport="テレポート", settings="設定",
            speed="スピード", jump="ジャンプ", infjump="無限ジャンプ", wallwalk="壁歩き",
            wallclip="壁抜け", fly="飛ぶ", respawn="リスポーン", leave="退出",
-           spin="スピン", ghost="ゴーストモード", transparent="透明化",
-           target_id="相手のID", stick="くっつく", tp_to_id="IDにテレポート",
-           accentcolor="テーマカラー", language="言語" }
+           spin="スピン", transparent="透明化", target_id="相手のID", stick="くっつく",
+           tp_to_id="IDにテレポート", accentcolor="テーマカラー", language="言語",
+           fly_menu="フライメニュー", fly_speed="飛ぶ速度", stop_fly="フライ停止", open_ui="UIを開く" }
 }
 function _G.D.T(key) return _G.D.texts[_G.D.lang][key] or key end
 
 local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
 
+-- メインUI (少し小さく: 460x300)
 local main = Instance.new("Frame")
-main.Size=UDim2.new(0,520,0,340) main.Position=UDim2.new(0.5,-260,0.5,-170)
+main.Size=UDim2.new(0,460,0,300) main.Position=UDim2.new(0.5,-230,0.5,-150)
 main.BackgroundColor3=Color3.fromRGB(20,20,30) main.BackgroundTransparency=0.4
 main.BorderSizePixel=0 main.Parent=gui
 local mc=Instance.new("UICorner") mc.CornerRadius=UDim.new(0,12) mc.Parent=main
@@ -43,10 +44,19 @@ tb.BackgroundTransparency=0.5 tb.BorderSizePixel=0 tb.Parent=main
 local tbc=Instance.new("UICorner") tbc.CornerRadius=UDim.new(0,12) tbc.Parent=tb
 
 local title=Instance.new("TextLabel")
-title.Size=UDim2.new(1,-50,1,0) title.Position=UDim2.new(0,14,0,0)
+title.Size=UDim2.new(1,-90,1,0) title.Position=UDim2.new(0,14,0,0)
 title.BackgroundTransparency=1 title.Text="DELTA HUB" title.TextColor3=accent
 title.Font=Enum.Font.GothamBold title.TextSize=15 title.TextXAlignment=Enum.TextXAlignment.Left title.Parent=tb
 
+-- 最小化ボタン(-)
+local minBtn=Instance.new("TextButton")
+minBtn.Size=UDim2.new(0,26,0,26) minBtn.Position=UDim2.new(1,-64,0,6)
+minBtn.BackgroundColor3=Color3.fromRGB(200,150,50) minBtn.Text="-"
+minBtn.TextColor3=Color3.fromRGB(255,255,255) minBtn.Font=Enum.Font.GothamBold
+minBtn.TextSize=18 minBtn.BorderSizePixel=0 minBtn.Parent=tb
+local mbc=Instance.new("UICorner") mbc.CornerRadius=UDim.new(0,8) mbc.Parent=minBtn
+
+-- 閉じるボタン(X)
 local close=Instance.new("TextButton")
 close.Size=UDim2.new(0,26,0,26) close.Position=UDim2.new(1,-34,0,6)
 close.BackgroundColor3=Color3.fromRGB(200,50,50) close.Text="X"
@@ -54,6 +64,17 @@ close.TextColor3=Color3.fromRGB(255,255,255) close.Font=Enum.Font.GothamBold
 close.TextSize=12 close.BorderSizePixel=0 close.Parent=tb
 local cc=Instance.new("UICorner") cc.CornerRadius=UDim.new(0,8) cc.Parent=close
 close.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+-- 再表示用の小さなボタン
+local openBtn=Instance.new("TextButton")
+openBtn.Size=UDim2.new(0,80,0,30) openBtn.Position=UDim2.new(0,10,0,10)
+openBtn.BackgroundColor3=accent openBtn.Text="OPEN UI" openBtn.TextColor3=Color3.fromRGB(255,255,255)
+openBtn.Font=Enum.Font.GothamBold openBtn.TextSize=12 openBtn.BorderSizePixel=0 openBtn.Visible=false openBtn.Parent=gui
+local obc=Instance.new("UICorner") obc.CornerRadius=UDim.new(0,6) obc.Parent=openBtn
+openBtn.MouseButton1Click:Connect(function() main.Visible=true openBtn.Visible=false end)
+
+minBtn.MouseButton1Click:Connect(function() main.Visible=false openBtn.Visible=true end)
+table.insert(_G.D.themeEls, {element=openBtn, property="BackgroundColor3"})
 
 local dragging=false
 local dragStart=nil
@@ -77,22 +98,22 @@ RS.RenderStepped:Connect(function(dt)
 end)
 
 local side=Instance.new("Frame")
-side.Size=UDim2.new(0,110,1,-38) side.Position=UDim2.new(0,0,0,38)
+side.Size=UDim2.new(0,100,1,-38) side.Position=UDim2.new(0,0,0,38)
 side.BackgroundTransparency=1 side.BorderSizePixel=0 side.Parent=main
 
 local content=Instance.new("Frame")
-content.Size=UDim2.new(1,-110,1,-38) content.Position=UDim2.new(0,110,0,38)
+content.Size=UDim2.new(1,-100,1,-38) content.Position=UDim2.new(0,100,0,38)
 content.BackgroundTransparency=1 content.Parent=main
 
 _G.D.gui=gui _G.D.main=main _G.D.side=side _G.D.content=content
-_G.D.title=title _G.D.ms=ms
+_G.D.title=title _G.D.ms=ms _G.D.openBtn=openBtn
 print("Part 1 OK")
 local D=_G.D
 if not D then warn("Part 1 を先に！") return end
 local plr=D.plr local UIS=game:GetService("UserInputService") local RS=game:GetService("RunService")
 local accent=D.accent local reg=D.reg local T=D.T
 
-local uiRefs = { tabs = {}, labels = {}, subs = {} }
+local uiRefs = { tabs = {}, labels = {} }
 
 local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  local cont=Instance.new("Frame")
@@ -135,7 +156,6 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  return cont
 end
 
--- スイッチ（背景タップでは反応せず、スイッチ部分だけ反応するように修正）
 local function createToggle(parent,nameKey,y,cb,autoOff)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,36) cont.Position=UDim2.new(0,12,0,y)
@@ -163,23 +183,23 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
   else sBg.BackgroundColor3=Color3.fromRGB(80,80,90) kn.Position=UDim2.new(0,2,0.5,-7) end
   cb(st)
  end
- -- ボタンをスイッチ部分にのみ配置
  local btn=Instance.new("TextButton")
- btn.Size=UDim2.new(0,34,0,18) btn.Position=UDim2.new(1,-46,0.5,-9)
- btn.BackgroundTransparency=1 btn.Text="" btn.Parent=cont
+ btn.Size=UDim2.new(0,34,0,18) btn.Position=UDim2.new(1,-46,0.5,-9) btn.BackgroundTransparency=1 btn.Text="" btn.Parent=cont
  btn.MouseButton1Click:Connect(function()
   if autoOff then
    if busy then return end
    busy=true set(true) task.wait(autoOff) set(false) busy=false
   else set(not st) end
  end)
+ -- 外部から状態を変える用
+ cont.SetState = set
  return cont
 end
 
 local tabBtns={}
 local function createTab(key,y,fn)
  local b=Instance.new("TextButton")
- b.Size=UDim2.new(1,-20,0,36) b.Position=UDim2.new(0,10,0,y)
+ b.Size=UDim2.new(1,-20,0,34) b.Position=UDim2.new(0,10,0,y)
  b.BackgroundTransparency=1 b.Text=T(key) b.TextColor3=Color3.fromRGB(200,200,200)
  b.Font=Enum.Font.GothamMedium b.TextSize=11 b.BorderSizePixel=0 b.Parent=D.side
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,8) c.Parent=b
@@ -219,23 +239,11 @@ createToggle(playerPage,"wallclip",228,function(st)
  end
 end)
 
-local flyActive=false local bv,bg
-createToggle(playerPage,"fly",266,function(st)
- flyActive=st local ch=plr.Character if not ch then return end local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
- if st then
-  bv=Instance.new("BodyVelocity") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=r
-  bg=Instance.new("BodyGyro") bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.Parent=r
-  RS.RenderStepped:Connect(function()
-   if not flyActive or not bv then return end
-   local cam=workspace.CurrentCamera local move=Vector3.new(0,0,0)
-   if UIS:IsKeyDown(Enum.KeyCode.W) then move=move+cam.CFrame.LookVector end
-   if UIS:IsKeyDown(Enum.KeyCode.S) then move=move-cam.CFrame.LookVector end
-   if UIS:IsKeyDown(Enum.KeyCode.A) then move=move-cam.CFrame.RightVector end
-   if UIS:IsKeyDown(Enum.KeyCode.D) then move=move+cam.CFrame.RightVector end
-   if UIS:IsKeyDown(Enum.KeyCode.Space) then move=move+Vector3.new(0,1,0) end
-   bv.Velocity=move*50 bg.CFrame=cam.CFrame
-  end)
- else if bv then bv:Destroy() bv=nil end if bg then bg:Destroy() bg=nil end end
+-- Fly(飛ぶ) のトグル（ここからPart 4の飛ぶUIを呼び出す）
+local flyActive=false
+local flyFuncRef = nil
+local flyToggle = createToggle(playerPage,"fly",266,function(st)
+ if flyFuncRef then flyFuncRef(st) end
 end)
 
 createToggle(playerPage,"respawn",304,function(st) if st then local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") if h then h.Health=0 end end end,1)
@@ -243,7 +251,8 @@ createToggle(playerPage,"leave",342,function(st) if st then plr:Kick("Left") end
 
 pl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() playerPage.CanvasSize=UDim2.new(0,0,0,pl.AbsoluteContentSize.Y+12) end)
 
-_G.D.ui = { createSlider=createSlider, createToggle=createToggle, createTab=createTab, tabBtns=tabBtns, playerPage=playerPage, uiRefs=uiRefs }
+_G.D.ui = { createSlider=createSlider, createToggle=createToggle, createTab=createTab, tabBtns=tabBtns, playerPage=playerPage, uiRefs=uiRefs, flyToggle=flyToggle }
+_G.D.setFlyFunc = function(f) flyFuncRef = f end
 print("Part 2 OK")
 local D=_G.D
 if not D then warn("Part 1,2 を先に！") return end
@@ -301,24 +310,7 @@ local spinBtn=Instance.new("TextButton")
 spinBtn.Size=UDim2.new(0,34,0,18) spinBtn.Position=UDim2.new(1,-46,0.5,-9) spinBtn.BackgroundTransparency=1 spinBtn.Text="" spinBtn.Parent=spinCont
 spinBtn.MouseButton1Click:Connect(function() toggleSpin(not spinActive) end)
 
--- ゴーストモード（オフで壁抜け解除・HP自動回復）
-local ghostActive=false
-createToggle(itemPage,"ghost",60,function(st)
- ghostActive=st
- local ch=plr.Character if not ch then return end
- if st then
-  RS.Stepped:Connect(function()
-   if not ghostActive then return end
-   local c=plr.Character if not c then return end
-   for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
-   local h=c:FindFirstChildOfClass("Humanoid") if h then h.Health=h.MaxHealth end
-  end)
- else
-  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end
- end
-end)
-
-createToggle(itemPage,"transparent",98,function(st)
+createToggle(itemPage,"transparent",60,function(st)
  local ch=plr.Character if not ch then return end
  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.Transparency=st and 1 or 0 end end
 end)
@@ -405,7 +397,7 @@ _G.D.pt3 = { itemPage=itemPage, otherPage=otherPage, tpPage=tpPage, playersSub=p
 print("Part 3 OK")
 local D=_G.D
 if not D then warn("Part 1,2,3 を先に！") return end
-local plr=D.plr local accent=D.accent local reg=D.reg local T=D.T
+local plr=D.plr local accent=D.accent local reg=D.reg local T=D.T local RS=game:GetService("RunService") local UIS=game:GetService("UserInputService")
 local UI=D.ui local P3=D.pt3 local createTab=UI.createTab local tabBtns=UI.tabBtns local uiRefs=UI.uiRefs
 
 local setPage=Instance.new("Frame")
@@ -469,6 +461,12 @@ local function updateLang(newLang)
   jaBtn.BackgroundColor3=accent jaBtn.TextColor3=Color3.fromRGB(255,255,255)
   enBtn.BackgroundColor3=Color3.fromRGB(30,30,45) enBtn.TextColor3=Color3.fromRGB(200,200,200)
  end
+ if D.flyMini then
+  D.flyMini.title.Text = T("fly_menu")
+  D.flyMini.speedLbl.Text = T("fly_speed")
+  D.flyMini.stopBtn.Text = T("stop_fly")
+ end
+ D.openBtn.Text = T("open_ui")
 end
 enBtn.MouseButton1Click:Connect(function() updateLang("EN") end)
 jaBtn.MouseButton1Click:Connect(function() updateLang("JA") end)
@@ -578,6 +576,126 @@ saveBtn.MouseButton1Click:Connect(function()
  if h then table.insert(locs,{name="Loc "..(#locs+1),cframe=h.CFrame}) refreshSaved() end
 end)
 
+-- ============================================
+-- Fly (飛ぶ) 専用ミニUIと機能実装
+-- ============================================
+local flyActive=false
+local flySpeed=50
+local bv,bg
+
+-- ミニUI作成
+local flyMini=Instance.new("Frame")
+flyMini.Size=UDim2.new(0,200,0,110) flyMini.Position=UDim2.new(0.5,-100,0.8,0)
+flyMini.BackgroundColor3=Color3.fromRGB(20,20,30) flyMini.BackgroundTransparency=0.2
+flyMini.BorderSizePixel=0 flyMini.Visible=false flyMini.Parent=D.gui
+local fmc=Instance.new("UICorner") fmc.CornerRadius=UDim.new(0,8) fmc.Parent=flyMini
+local fms=Instance.new("UIStroke") fms.Color=D.accent fms.Thickness=2 fms.Parent=flyMini
+D.reg(fms,"Color")
+
+local fmTitle=Instance.new("TextLabel")
+fmTitle.Size=UDim2.new(1,-40,0,24) fmTitle.Position=UDim2.new(0,10,0,0)
+fmTitle.BackgroundTransparency=1 fmTitle.Text=T("fly_menu") fmTitle.TextColor3=D.accent
+fmTitle.Font=Enum.Font.GothamBold fmTitle.TextSize=12 fmTitle.TextXAlignment=Enum.TextXAlignment.Left fmTitle.Parent=flyMini
+D.reg(fmTitle,"TextColor3")
+
+local fmClose=Instance.new("TextButton")
+fmClose.Size=UDim2.new(0,20,0,20) fmClose.Position=UDim2.new(1,-26,0,2)
+fmClose.BackgroundColor3=Color3.fromRGB(200,50,50) fmClose.Text="X" fmClose.TextColor3=Color3.fromRGB(255,255,255)
+fmClose.Font=Enum.Font.GothamBold fmClose.TextSize=10 fmClose.BorderSizePixel=0 fmClose.Parent=flyMini
+local fmc2=Instance.new("UICorner") fmc2.CornerRadius=UDim.new(0,4) fmc2.Parent=fmClose
+
+local fmSpeedLbl=Instance.new("TextLabel")
+fmSpeedLbl.Size=UDim2.new(1,-20,0,20) fmSpeedLbl.Position=UDim2.new(0,10,0,30)
+fmSpeedLbl.BackgroundTransparency=1 fmSpeedLbl.Text=T("fly_speed")..": 50"
+fmSpeedLbl.TextColor3=Color3.fromRGB(220,220,220) fmSpeedLbl.Font=Enum.Font.GothamMedium fmSpeedLbl.TextSize=11 fmSpeedLbl.TextXAlignment=Enum.TextXAlignment.Left fmSpeedLbl.Parent=flyMini
+
+local fmSliderBg=Instance.new("Frame")
+fmSliderBg.Size=UDim2.new(1,-20,0,6) fmSliderBg.Position=UDim2.new(0,10,0,55)
+fmSliderBg.BackgroundColor3=Color3.fromRGB(50,50,70) fmSliderBg.BorderSizePixel=0 fmSliderBg.Parent=flyMini
+local fmsb=Instance.new("UICorner") fmsb.CornerRadius=UDim.new(1,0) fmsb.Parent=fmSliderBg
+local fmFill=Instance.new("Frame")
+fmFill.Size=UDim2.new(0.5,0,1,0) fmFill.BackgroundColor3=D.accent fmFill.BorderSizePixel=0 fmFill.Parent=fmSliderBg
+D.reg(fmFill,"BackgroundColor3")
+local fmfc=Instance.new("UICorner") fmfc.CornerRadius=UDim.new(1,0) fmfc.Parent=fmFill
+local fmKnob=Instance.new("Frame")
+fmKnob.Size=UDim2.new(0,14,0,14) fmKnob.Position=UDim2.new(0.5,-7,0.5,-7) fmKnob.BackgroundColor3=Color3.fromRGB(255,255,255)
+fmKnob.BorderSizePixel=0 fmKnob.Parent=fmSliderBg
+local fmkc=Instance.new("UICorner") fmkc.CornerRadius=UDim.new(1,0) fmkc.Parent=fmKnob
+
+local fmStopBtn=Instance.new("TextButton")
+fmStopBtn.Size=UDim2.new(1,-20,0,24) fmStopBtn.Position=UDim2.new(0,10,0,75)
+fmStopBtn.BackgroundColor3=Color3.fromRGB(200,50,50) fmStopBtn.Text=T("stop_fly")
+fmStopBtn.TextColor3=Color3.fromRGB(255,255,255) fmStopBtn.Font=Enum.Font.GothamBold
+fmStopBtn.TextSize=11 fmStopBtn.BorderSizePixel=0 fmStopBtn.Parent=flyMini
+local fmsc=Instance.new("UICorner") fmsc.CornerRadius=UDim.new(0,4) fmsc.Parent=fmStopBtn
+
+D.flyMini = {title=fmTitle, speedLbl=fmSpeedLbl, stopBtn=fmStopBtn}
+
+-- スライダー処理
+local fmDragging=false
+local function updateFMSlider(inputX)
+ local relX=math.clamp((inputX-fmSliderBg.AbsolutePosition.X)/fmSliderBg.AbsoluteSize.X,0,1)
+ fmFill.Size=UDim2.new(relX,0,1,0) fmKnob.Position=UDim2.new(relX,-7,0.5,-7)
+ flySpeed=math.floor(10+relX*290)
+ fmSpeedLbl.Text=T("fly_speed")..": "..flySpeed
+end
+fmSliderBg.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then fmDragging=true updateFMSlider(i.Position.X) end end)
+UIS.InputChanged:Connect(function(i) if fmDragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then updateFMSlider(i.Position.X) end end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then fmDragging=false end end)
+
+-- ミニUIのドラッグ移動
+local fmDrag=false
+local fmStart,fmStartPos
+fmTitle.InputBegan:Connect(function(i)
+ if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+  fmDrag=true fmStart=i.Position fmStartPos=flyMini.Position
+  i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then fmDrag=false end end)
+ end
+end)
+UIS.InputChanged:Connect(function(i)
+ if fmDrag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+  local d=i.Position-fmStart
+  flyMini.Position=UDim2.new(fmStartPos.X.Scale,fmStartPos.X.Offset+d.X,fmStartPos.Y.Scale,fmStartPos.Y.Offset+d.Y)
+ end
+end)
+
+-- Fly 状態切り替え関数
+local function toggleFly(st)
+ flyActive=st
+ local ch=plr.Character if not ch then return end
+ local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
+ if st then
+  flyMini.Visible=true
+  if bv then bv:Destroy() end
+  if bg then bg:Destroy() end
+  bv=Instance.new("BodyVelocity") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=r
+  bg=Instance.new("BodyGyro") bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.Parent=r
+  -- メインのトグルもONにする
+  if UI.flyToggle and UI.flyToggle.SetState then UI.flyToggle.SetState(true) end
+ else
+  flyMini.Visible=false
+  if bv then bv:Destroy() bv=nil end
+  if bg then bg:Destroy() bg=nil end
+  -- メインのトグルもOFFにする
+  if UI.flyToggle and UI.flyToggle.SetState then UI.flyToggle.SetState(false) end
+ end
+end
+
+fmClose.MouseButton1Click:Connect(function() toggleFly(false) end)
+fmStopBtn.MouseButton1Click:Connect(function() toggleFly(false) end)
+D.setFlyFunc(toggleFly)
+
+RS.RenderStepped:Connect(function()
+ if not flyActive or not bv or not bg then return end
+ local cam=workspace.CurrentCamera local move=Vector3.new(0,0,0)
+ if UIS:IsKeyDown(Enum.KeyCode.W) then move=move+cam.CFrame.LookVector end
+ if UIS:IsKeyDown(Enum.KeyCode.S) then move=move-cam.CFrame.LookVector end
+ if UIS:IsKeyDown(Enum.KeyCode.A) then move=move-cam.CFrame.RightVector end
+ if UIS:IsKeyDown(Enum.KeyCode.D) then move=move+cam.CFrame.RightVector end
+ if UIS:IsKeyDown(Enum.KeyCode.Space) then move=move+Vector3.new(0,1,0) end
+ bv.Velocity=move*flySpeed bg.CFrame=cam.CFrame
+end)
+
 local function apply(ch)
  local h=ch:WaitForChild("Humanoid",5)
  if h then h.WalkSpeed=D.speed h.JumpPower=D.jump h.UseJumpPower=true end
@@ -585,9 +703,12 @@ end
 plr.CharacterAdded:Connect(apply)
 if plr.Character then apply(plr.Character) end
 
-game:GetService("UserInputService").InputBegan:Connect(function(i,gp)
+UIS.InputBegan:Connect(function(i,gp)
  if gp then return end
- if i.KeyCode==Enum.KeyCode.Return then D.main.Visible=not D.main.Visible end
+ if i.KeyCode==Enum.KeyCode.Return then 
+  D.main.Visible=not D.main.Visible 
+  D.openBtn.Visible = not D.main.Visible
+ end
 end)
 
 print("Part 4 OK")
