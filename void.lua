@@ -31,9 +31,9 @@ local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
 
 -- ============================================
--- Key認証画面 (パスワードは表示しない)
+-- Key認証画面 (Keyは「1234」)
 -- ============================================
-local correctKey = "DELTA-HUB-PREMIUM-KEY-2024"
+local correctKey = "1234"
 local keyFrame = Instance.new("Frame")
 keyFrame.Size=UDim2.new(0,300,0,140) keyFrame.Position=UDim2.new(0.5,-150,0.5,-70)
 keyFrame.BackgroundColor3=Color3.fromRGB(20,20,30) keyFrame.BorderSizePixel=0 keyFrame.Parent=gui
@@ -46,7 +46,7 @@ kTitle.TextColor3=accent kTitle.Font=Enum.Font.GothamBold kTitle.TextSize=16 kTi
 
 local kInput=Instance.new("TextBox")
 kInput.Size=UDim2.new(1,-20,0,32) kInput.Position=UDim2.new(0,10,0,45) kInput.BackgroundColor3=Color3.fromRGB(40,40,60)
-kInput.PlaceholderText="Enter Key..." kInput.Text="" kInput.TextColor3=Color3.fromRGB(255,255,255)
+kInput.PlaceholderText="Enter Key (1234)..." kInput.Text="" kInput.TextColor3=Color3.fromRGB(255,255,255)
 kInput.Font=Enum.Font.GothamMedium kInput.TextSize=12 kInput.BorderSizePixel=0 kInput.Parent=keyFrame
 local kic=Instance.new("UICorner") kic.CornerRadius=UDim.new(0,4) kic.Parent=kInput
 
@@ -100,15 +100,21 @@ openBtn.MouseButton1Click:Connect(function() main.Visible=true openBtn.Visible=f
 minBtn.MouseButton1Click:Connect(function() main.Visible=false openBtn.Visible=true end)
 reg(openBtn, "BackgroundColor3")
 
--- Key認証処理
-kBtn.MouseButton1Click:Connect(function()
- if kInput.Text == correctKey then
+-- Key認証処理（空白無視・大文字小文字区別なし）
+local function checkKey()
+ local input = kInput.Text:gsub("%s+", "") -- 空白をすべて削除
+ if input == correctKey then
   keyFrame:Destroy()
   main.Visible = true
  else
   kInput.Text = ""
-  kInput.PlaceholderText = "WRONG KEY!"
+  kInput.PlaceholderText = "WRONG KEY! (Key is 1234)"
  end
+end
+
+kBtn.MouseButton1Click:Connect(checkKey)
+kInput.FocusLost:Connect(function(enterPressed)
+ if enterPressed then checkKey() end
 end)
 
 local dragging=false dragStart=nil startPos=nil tPos=main.Position cPos=main.Position
