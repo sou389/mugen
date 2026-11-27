@@ -31,11 +31,11 @@ local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
 
 -- ============================================
--- Key認証画面 (最初に出る)
+-- Key認証画面 (パスワードは表示しない)
 -- ============================================
-local correctKey = "DELTA-HUB-PREMIUM-KEY-2024-ENGLISH"
+local correctKey = "DELTA-HUB-PREMIUM-KEY-2024"
 local keyFrame = Instance.new("Frame")
-keyFrame.Size=UDim2.new(0,350,0,180) keyFrame.Position=UDim2.new(0.5,-175,0.5,-90)
+keyFrame.Size=UDim2.new(0,300,0,140) keyFrame.Position=UDim2.new(0.5,-150,0.5,-70)
 keyFrame.BackgroundColor3=Color3.fromRGB(20,20,30) keyFrame.BorderSizePixel=0 keyFrame.Parent=gui
 local kfc=Instance.new("UICorner") kfc.CornerRadius=UDim.new(0,12) kfc.Parent=keyFrame
 local kfs=Instance.new("UIStroke") kfs.Color=accent kfs.Thickness=2 kfs.Parent=keyFrame
@@ -44,21 +44,15 @@ local kTitle=Instance.new("TextLabel")
 kTitle.Size=UDim2.new(1,0,0,40) kTitle.BackgroundTransparency=1 kTitle.Text="KEY AUTHENTICATION"
 kTitle.TextColor3=accent kTitle.Font=Enum.Font.GothamBold kTitle.TextSize=16 kTitle.Parent=keyFrame
 
-local kDisplay=Instance.new("TextLabel")
-kDisplay.Size=UDim2.new(1,-20,0,24) kDisplay.Position=UDim2.new(0,10,0,50) kDisplay.BackgroundColor3=Color3.fromRGB(30,30,45)
-kDisplay.Text=correctKey kDisplay.TextColor3=Color3.fromRGB(0,255,100) kDisplay.Font=Enum.Font.GothamBold
-kDisplay.TextSize=12 kDisplay.Parent=keyFrame
-local kdc=Instance.new("UICorner") kdc.CornerRadius=UDim.new(0,4) kdc.Parent=kDisplay
-
 local kInput=Instance.new("TextBox")
-kInput.Size=UDim2.new(1,-20,0,28) kInput.Position=UDim2.new(0,10,0,85) kInput.BackgroundColor3=Color3.fromRGB(40,40,60)
-kInput.PlaceholderText="Enter Key Here..." kInput.Text="" kInput.TextColor3=Color3.fromRGB(255,255,255)
+kInput.Size=UDim2.new(1,-20,0,32) kInput.Position=UDim2.new(0,10,0,45) kInput.BackgroundColor3=Color3.fromRGB(40,40,60)
+kInput.PlaceholderText="Enter Key..." kInput.Text="" kInput.TextColor3=Color3.fromRGB(255,255,255)
 kInput.Font=Enum.Font.GothamMedium kInput.TextSize=12 kInput.BorderSizePixel=0 kInput.Parent=keyFrame
 local kic=Instance.new("UICorner") kic.CornerRadius=UDim.new(0,4) kic.Parent=kInput
 
 local kBtn=Instance.new("TextButton")
-kBtn.Size=UDim2.new(1,-20,0,32) kBtn.Position=UDim2.new(0,10,0,125) kBtn.BackgroundColor3=accent
-kBtn.Text="VERIFY & OPEN UI" kBtn.TextColor3=Color3.fromRGB(255,255,255)
+kBtn.Size=UDim2.new(1,-20,0,32) kBtn.Position=UDim2.new(0,10,0,90) kBtn.BackgroundColor3=accent
+kBtn.Text="VERIFY" kBtn.TextColor3=Color3.fromRGB(255,255,255)
 kBtn.Font=Enum.Font.GothamBold kBtn.TextSize=12 kBtn.BorderSizePixel=0 kBtn.Parent=keyFrame
 local kbc=Instance.new("UICorner") kbc.CornerRadius=UDim.new(0,6) kbc.Parent=kBtn
 
@@ -245,9 +239,6 @@ local function createTab(key,y,fn)
  return b
 end
 
--- ============================================
--- Player ページ
--- ============================================
 local playerPage=Instance.new("ScrollingFrame")
 playerPage.Size=UDim2.new(1,0,1,0) playerPage.BackgroundTransparency=1
 playerPage.BorderSizePixel=0 playerPage.ScrollBarThickness=4
@@ -277,17 +268,8 @@ createToggle(playerPage,"wallclip",228,function(st)
  end
 end)
 
--- Fly トグル
-local flyActive=false local flySpeed=50 local bv,bg
 local flyToggle = createToggle(playerPage,"fly",266,function(st)
- flyActive=st local ch=plr.Character if not ch then return end local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
- if st then
-  if bv then bv:Destroy() end if bg then bg:Destroy() end
-  bv=Instance.new("BodyVelocity") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=r
-  bg=Instance.new("BodyGyro") bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.Parent=r
- else
-  if bv then bv:Destroy() bv=nil end if bg then bg:Destroy() bg=nil end
- end
+ if D.flyFunc then D.flyFunc(st) end
 end)
 
 createToggle(playerPage,"respawn",304,function(st) if st then local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") if h then h.Health=0 end end end,1)
@@ -295,9 +277,13 @@ createToggle(playerPage,"leave",342,function(st) if st then plr:Kick("Left") end
 
 pl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() playerPage.CanvasSize=UDim2.new(0,0,0,pl.AbsoluteContentSize.Y+12) end)
 
--- ============================================
--- Item ページ
--- ============================================
+_G.D.ui = { createSlider=createSlider, createToggle=createToggle, createTab=createTab, tabBtns=tabBtns, playerPage=playerPage, uiRefs=uiRefs, flyToggle=flyToggle }
+print("Part 2 OK")
+local D=_G.D
+if not D then warn("Part 1,2 を先に！") return end
+local plr=D.plr local accent=D.accent local reg=D.reg local RS=game:GetService("RunService") local T=D.T
+local UI=D.ui local createToggle=UI.createToggle local tabBtns=UI.tabBtns
+
 local itemPage=Instance.new("ScrollingFrame")
 itemPage.Size=UDim2.new(1,0,1,0) itemPage.BackgroundTransparency=1
 itemPage.BorderSizePixel=0 itemPage.ScrollBarThickness=4
@@ -354,9 +340,6 @@ createToggle(itemPage,"transparent",60,function(st)
  for _,p in ipairs(ch:GetDescendants()) do if p:IsA("BasePart") then p.Transparency=st and 1 or 0 end end
 end)
 
--- ============================================
--- Other ページ
--- ============================================
 local otherPage=Instance.new("ScrollingFrame")
 otherPage.Size=UDim2.new(1,0,1,0) otherPage.BackgroundTransparency=1
 otherPage.BorderSizePixel=0 otherPage.ScrollBarThickness=4
@@ -403,51 +386,17 @@ stickBtn.MouseButton1Click:Connect(function()
  local mh=plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
  local th=target.Character:FindFirstChild("HumanoidRootPart")
  if mh and th then
-  local bp=Instance.new("BodyPosition") bp.MaxForce=Vector3.new(1e5,1e5,1e5) bp.Parent=mh
-  task.spawn(function() while bp.Parent do bp.Position=th.Position task.wait() end end)
-  task.delay(3, function() if bp then bp:Destroy() end end)
+  local bv=Instance.new("BodyPosition") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=mh
+  task.spawn(function() while bv.Parent do bv.Position=th.Position task.wait() end end)
+  task.delay(3, function() if bv then bv:Destroy() end end)
  end
 end)
-
-_G.D.ui = { createSlider=createSlider, createToggle=createToggle, createTab=createTab, tabBtns=tabBtns, playerPage=playerPage, itemPage=itemPage, otherPage=otherPage, uiRefs=uiRefs, flyToggle=flyToggle }
-_G.D.flyState = { getActive = function() return flyActive end, getSpeed = function() return flySpeed end, getBV = function() return bv end, getBG = function() return bg end }
-print("Part 2 OK")
-local D=_G.D
-if not D then warn("Part 1,2 を先に！") return end
-local plr=D.plr local accent=D.accent local reg=D.reg local T=D.T
-local UI=D.ui local P3=D.pt3 local createTab=UI.createTab local tabBtns=UI.tabBtns local uiRefs=UI.uiRefs
-local createSub=UI.createSub local subTabs=UI.subTabs local playersSub=UI.playersSub local savedSub=UI.savedSub local plist=UI.plist local pll=UI.pll
 
 local tpPage=Instance.new("Frame")
 tpPage.Size=UDim2.new(1,0,1,0) tpPage.BackgroundTransparency=1 tpPage.Visible=false tpPage.Parent=D.content
 local subBar=Instance.new("Frame")
 subBar.Size=UDim2.new(1,-30,0,30) subBar.Position=UDim2.new(0,15,0,8) subBar.BackgroundTransparency=1 subBar.Parent=tpPage
-
-local function createSubTab(name,x,w,fn)
- local b=Instance.new("TextButton")
- b.Size=UDim2.new(0,w,1,0) b.Position=UDim2.new(0,x,0,0)
- b.BackgroundTransparency=1 b.Text=name b.TextColor3=Color3.fromRGB(200,200,200) b.Font=Enum.Font.GothamMedium
- b.TextSize=11 b.BorderSizePixel=0 b.Parent=subBar
- local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
- local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
- reg(s,"Color") b.MouseButton1Click:Connect(fn)
- table.insert(uiRefs.labels, {obj=b, key=name})
- return b
-end
-
-local playersSub=Instance.new("Frame")
-playersSub.Size=UDim2.new(1,0,1,-46) playersSub.Position=UDim2.new(0,0,0,46) playersSub.BackgroundTransparency=1 playersSub.Parent=tpPage
-local plist=Instance.new("ScrollingFrame")
-plist.Size=UDim2.new(1,-30,1,-10) plist.Position=UDim2.new(0,15,0,5)
-plist.BackgroundTransparency=1 plist.BorderSizePixel=0 plist.ScrollBarThickness=4
-plist.ScrollBarImageColor3=accent plist.CanvasSize=UDim2.new(0,0,0,0) plist.Parent=playersSub
-reg(plist,"ScrollBarImageColor3")
-local pll=Instance.new("UIListLayout") pll.Padding=UDim.new(0,5) pll.Parent=plist
-
-local savedSub=Instance.new("Frame")
-savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46) savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
-
-UI.subTabs = {}
+local subTabs={}
 local function createSub(name,x,w,fn)
  local b=Instance.new("TextButton")
  b.Size=UDim2.new(0,w,1,0) b.Position=UDim2.new(0,x,0,0)
@@ -456,35 +405,26 @@ local function createSub(name,x,w,fn)
  local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,6) c.Parent=b
  local s=Instance.new("UIStroke") s.Color=accent s.Thickness=1 s.Transparency=1 s.Parent=b
  reg(s,"Color") b.MouseButton1Click:Connect(fn)
- table.insert(UI.subTabs,{button=b,stroke=s})
- table.insert(uiRefs.labels, {obj=b, key=name})
- return b
+ table.insert(subTabs,{button=b,stroke=s}) return b
 end
+local playersSub=Instance.new("Frame")
+playersSub.Size=UDim2.new(1,0,1,-46) playersSub.Position=UDim2.new(0,0,0,46) playersSub.BackgroundTransparency=1 playersSub.Parent=tpPage
+local plist=Instance.new("ScrollingFrame")
+plist.Size=UDim2.new(1,-30,1,-10) plist.Position=UDim2.new(0,15,0,5)
+plist.BackgroundTransparency=1 plist.BorderSizePixel=0 plist.ScrollBarThickness=4
+plist.ScrollBarImageColor3=accent plist.CanvasSize=UDim2.new(0,0,0,0) plist.Parent=playersSub
+reg(plist,"ScrollBarImageColor3")
+local pll=Instance.new("UIListLayout") pll.Padding=UDim.new(0,5) pll.Parent=plist
+local savedSub=Instance.new("Frame")
+savedSub.Size=UDim2.new(1,0,1,-46) savedSub.Position=UDim2.new(0,0,0,46) savedSub.BackgroundTransparency=1 savedSub.Visible=false savedSub.Parent=tpPage
 
-local pSub=createSub("players",0,100,function() D.showSub(playersSub,pSub) end)
-local sSub=createSub("saved",108,100,function() D.showSub(savedSub,sSub) end)
+_G.D.pt3 = { itemPage=itemPage, otherPage=otherPage, tpPage=tpPage, playersSub=playersSub, savedSub=savedSub, plist=plist, pll=pll, createSub=createSub, subTabs=subTabs }
+print("Part 3 OK")
+local D=_G.D
+if not D then warn("Part 1,2,3 を先に！") return end
+local plr=D.plr local accent=D.accent local reg=D.reg local T=D.T local RS=game:GetService("RunService") local UIS=game:GetService("UserInputService")
+local UI=D.ui local P3=D.pt3 local createTab=UI.createTab local tabBtns=UI.tabBtns local uiRefs=UI.uiRefs
 
-D.showSub=function(page,btn)
- playersSub.Visible=(page==playersSub) savedSub.Visible=(page==savedSub)
- for _,t in ipairs(UI.subTabs) do
-  if t.button==btn then t.button.BackgroundTransparency=0.8 t.button.TextColor3=D.accent t.stroke.Transparency=0.3
-  else t.button.BackgroundTransparency=1 t.button.TextColor3=Color3.fromRGB(200,200,200) t.stroke.Transparency=1 end
- end
-end
-D.showSub(playersSub,pSub)
-
--- アバター
-local av=Instance.new("Frame")
-av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58) av.BackgroundTransparency=0.5 av.BorderSizePixel=0 av.Parent=D.side
-local avc=Instance.new("UICorner") avc.CornerRadius=UDim.new(1,0) avc.Parent=av
-local avs=Instance.new("UIStroke") avs.Color=accent avs.Thickness=2 avs.Parent=av
-D.avatarStroke=avs
-local avi=Instance.new("ImageLabel")
-avi.Size=UDim2.new(1,-4,1,-4) avi.Position=UDim2.new(0,2,0,2) avi.BackgroundTransparency=1 avi.Parent=av
-local avic=Instance.new("UICorner") avic.CornerRadius=UDim.new(1,0) avic.Parent=avi
-avi.Image=string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150",plr.UserId)
-
--- Settings
 local setPage=Instance.new("Frame")
 setPage.Size=UDim2.new(1,0,1,0) setPage.BackgroundTransparency=1 setPage.Visible=false setPage.Parent=D.content
 local tlab=Instance.new("TextLabel")
@@ -510,7 +450,7 @@ for i,d in ipairs(pal) do
   for _,it in ipairs(D.themeEls) do if it.element and it.element.Parent then it.element[it.property]=d.c end end
   D.ms.Color=d.c D.title.TextColor3=d.c
   for _,t in ipairs(tabBtns) do t.stroke.Color=d.c end
-  for _,t in ipairs(UI.subTabs) do t.stroke.Color=d.c end
+  for _,t in ipairs(P3.subTabs) do t.stroke.Color=d.c end
   if D.avatarStroke then D.avatarStroke.Color=d.c end
   for _,o in ipairs(setPage:GetChildren()) do if o:IsA("TextButton") and o:FindFirstChildOfClass("UIStroke") then o:FindFirstChildOfClass("UIStroke").Transparency=1 end end
   s.Transparency=0
@@ -550,9 +490,8 @@ local function updateLang(newLang)
 end
 enBtn.MouseButton1Click:Connect(function() updateLang("EN") end)
 jaBtn.MouseButton1Click:Connect(function() updateLang("JA") end)
-updateLang("EN")
 
-local pages={UI.playerPage,UI.itemPage,UI.otherPage,tpPage,setPage}
+local pages={UI.playerPage,P3.itemPage,P3.otherPage,P3.tpPage,setPage}
 local function showPage(page,btn)
  for _,p in ipairs(pages) do p.Visible=false end
  page.Visible=true
@@ -563,22 +502,36 @@ local function showPage(page,btn)
 end
 
 local pTab=createTab("player",5,function() showPage(UI.playerPage,pTab) end)
-local iTab=createTab("item",45,function() showPage(UI.itemPage,iTab) end)
-local oTab=createTab("other",85,function() showPage(UI.otherPage,oTab) end)
-local tTab=createTab("teleport",125,function() showPage(tpPage,tTab) end)
+local iTab=createTab("item",45,function() showPage(P3.itemPage,iTab) end)
+local oTab=createTab("other",85,function() showPage(P3.otherPage,oTab) end)
+local tTab=createTab("teleport",125,function() showPage(P3.tpPage,tTab) end)
 local sTab=createTab("settings",165,function() showPage(setPage,sTab) end)
 showPage(UI.playerPage,pTab)
 
-_G.D.pt3 = { tpPage=tpPage, playersSub=playersSub, savedSub=savedSub, plist=plist, pll=pll }
-print("Part 3 OK")
-local D=_G.D
-if not D then warn("Part 1,2,3 を先に！") return end
-local plr=D.plr local accent=D.accent local reg=D.reg local T=D.T local RS=game:GetService("RunService") local UIS=game:GetService("UserInputService")
-local UI=D.ui local P3=D.pt3
+local av=Instance.new("Frame")
+av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58) av.BackgroundTransparency=0.5 av.BorderSizePixel=0 av.Parent=D.side
+local avc=Instance.new("UICorner") avc.CornerRadius=UDim.new(1,0) avc.Parent=av
+local avs=Instance.new("UIStroke") avs.Color=accent avs.Thickness=2 avs.Parent=av
+D.avatarStroke=avs
+local avi=Instance.new("ImageLabel")
+avi.Size=UDim2.new(1,-4,1,-4) avi.Position=UDim2.new(0,2,0,2) avi.BackgroundTransparency=1 avi.Parent=av
+local avic=Instance.new("UICorner") avic.CornerRadius=UDim.new(1,0) avic.Parent=avi
+avi.Image=string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150",plr.UserId)
 
--- ============================================
--- テレポート処理
--- ============================================
+D.showSub=function(page,btn)
+ P3.playersSub.Visible=(page==P3.playersSub) P3.savedSub.Visible=(page==P3.savedSub)
+ for _,t in ipairs(P3.subTabs) do
+  if t.button==btn then t.button.BackgroundTransparency=0.8 t.button.TextColor3=D.accent t.stroke.Transparency=0.3
+  else t.button.BackgroundTransparency=1 t.button.TextColor3=Color3.fromRGB(200,200,200) t.stroke.Transparency=1 end
+ end
+end
+
+local pSub=P3.createSub("players",0,100,function() D.showSub(P3.playersSub,pSub) end)
+local sSub=P3.createSub("saved",108,100,function() D.showSub(P3.savedSub,sSub) end)
+table.insert(uiRefs.labels, {obj=pSub, key="players"})
+table.insert(uiRefs.labels, {obj=sSub, key="saved"})
+D.showSub(P3.playersSub,pSub)
+
 local function tpTo(ch)
  local mc=plr.Character if not mc or not ch then return end
  local th=ch:FindFirstChild("HumanoidRootPart") local mh=mc:FindFirstChild("HumanoidRootPart")
@@ -608,7 +561,7 @@ saveBtn.Size=UDim2.new(1,-30,0,32) saveBtn.Position=UDim2.new(0,15,0,5) saveBtn.
 saveBtn.BackgroundColor3=D.accent saveBtn.Text=T("save_loc") saveBtn.TextColor3=Color3.fromRGB(255,255,255)
 saveBtn.Font=Enum.Font.GothamBold saveBtn.TextSize=12 saveBtn.BorderSizePixel=0 saveBtn.Parent=P3.savedSub
 D.reg(saveBtn,"BackgroundColor3")
-UI.uiRefs.labels["saveBtn"] = {obj=saveBtn, key="save_loc"}
+table.insert(uiRefs.labels, {obj=saveBtn, key="save_loc"})
 local sbc=Instance.new("UICorner") sbc.CornerRadius=UDim.new(0,6) sbc.Parent=saveBtn
 
 local savedList=Instance.new("ScrollingFrame")
@@ -646,24 +599,33 @@ saveBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================
--- Fly 実行ループ
+-- Fly処理（元のシンプルなトグル動作）
 -- ============================================
+local flyActive=false local flySpeed=50 local bv,bg
+D.flyFunc = function(st)
+ flyActive=st
+ local ch=plr.Character if not ch then return end
+ local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
+ if st then
+  if bv then bv:Destroy() end
+  if bg then bg:Destroy() end
+  bv=Instance.new("BodyVelocity") bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Parent=r
+  bg=Instance.new("BodyGyro") bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.Parent=r
+ else
+  if bv then bv:Destroy() bv=nil end
+  if bg then bg:Destroy() bg=nil end
+ end
+end
+
 RS.RenderStepped:Connect(function()
- if not UI.flyToggle or not UI.flyToggle.GetState then return end
- -- flyToggleの状態を確認（前パートで保存したSetStateの逆）
- -- 実はPart 2のロジック内で bv と bg を作成しているため、ここではステート監視で移動を処理
- if not D.flyState.getActive() then return end
- local bv = D.flyState.getBV()
- local bg = D.flyState.getBG()
- if not bv or not bg then return end
+ if not flyActive or not bv or not bg then return end
  local cam=workspace.CurrentCamera local move=Vector3.new(0,0,0)
  if UIS:IsKeyDown(Enum.KeyCode.W) then move=move+cam.CFrame.LookVector end
  if UIS:IsKeyDown(Enum.KeyCode.S) then move=move-cam.CFrame.LookVector end
  if UIS:IsKeyDown(Enum.KeyCode.A) then move=move-cam.CFrame.RightVector end
  if UIS:IsKeyDown(Enum.KeyCode.D) then move=move+cam.CFrame.RightVector end
  if UIS:IsKeyDown(Enum.KeyCode.Space) then move=move+Vector3.new(0,1,0) end
- bv.Velocity=move*(D.flyState.getSpeed() or 50) 
- bg.CFrame=cam.CFrame
+ bv.Velocity=move*flySpeed bg.CFrame=cam.CFrame
 end)
 
 local function apply(ch)
@@ -681,4 +643,5 @@ UIS.InputBegan:Connect(function(i,gp)
  end
 end)
 
+updateLang("EN")
 print("Part 4 OK")
