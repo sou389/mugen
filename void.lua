@@ -32,50 +32,10 @@ function _G.D.T(key) return _G.D.texts[_G.D.lang][key] or key end
 local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
 
--- ============================================
--- Key認証システム (最初に出てくる)
--- ============================================
-local correctKey = "DELTA-HUB-PREMIUM-KEY-2024-ENGLISH"
-local keyFrame = Instance.new("Frame")
-keyFrame.Size=UDim2.new(0,350,0,180) keyFrame.Position=UDim2.new(0.5,-175,0.5,-90)
-keyFrame.BackgroundColor3=Color3.fromRGB(20,20,30) keyFrame.BorderSizePixel=0 keyFrame.Parent=gui
-local kfc=Instance.new("UICorner") kfc.CornerRadius=UDim.new(0,12) kfc.Parent=keyFrame
-local kfs=Instance.new("UIStroke") kfs.Color=accent kfs.Thickness=2 kfs.Parent=keyFrame
-
-local kTitle=Instance.new("TextLabel")
-kTitle.Size=UDim2.new(1,0,0,40) kTitle.BackgroundTransparency=1 kTitle.Text="KEY AUTHENTICATION"
-kTitle.TextColor3=accent kTitle.Font=Enum.Font.GothamBold kTitle.TextSize=16 kTitle.Parent=keyFrame
-
-local kDesc=Instance.new("TextLabel")
-kDesc.Size=UDim2.new(1,-20,0,20) kDesc.Position=UDim2.new(0,10,0,45) kDesc.BackgroundTransparency=1
-kDesc.Text="Copy the Key below and paste it:" kDesc.TextColor3=Color3.fromRGB(200,200,200)
-kDesc.Font=Enum.Font.GothamMedium kDesc.TextSize=12 kDesc.Parent=keyFrame
-
-local kDisplay=Instance.new("TextLabel")
-kDisplay.Size=UDim2.new(1,-20,0,24) kDisplay.Position=UDim2.new(0,10,0,65) kDisplay.BackgroundColor3=Color3.fromRGB(30,30,45)
-kDisplay.Text=correctKey kDisplay.TextColor3=Color3.fromRGB(0,255,100) kDisplay.Font=Enum.Font.GothamBold
-kDisplay.TextSize=12 kDisplay.Parent=keyFrame
-local kdc=Instance.new("UICorner") kdc.CornerRadius=UDim.new(0,4) kdc.Parent=kDisplay
-
-local kInput=Instance.new("TextBox")
-kInput.Size=UDim2.new(1,-20,0,28) kInput.Position=UDim2.new(0,10,0,100) kInput.BackgroundColor3=Color3.fromRGB(40,40,60)
-kInput.PlaceholderText="Enter Key Here..." kInput.Text="" kInput.TextColor3=Color3.fromRGB(255,255,255)
-kInput.Font=Enum.Font.GothamMedium kInput.TextSize=12 kInput.BorderSizePixel=0 kInput.Parent=keyFrame
-local kic=Instance.new("UICorner") kic.CornerRadius=UDim.new(0,4) kic.Parent=kInput
-
-local kBtn=Instance.new("TextButton")
-kBtn.Size=UDim2.new(1,-20,0,32) kBtn.Position=UDim2.new(0,10,0,140) kBtn.BackgroundColor3=accent
-kBtn.Text="VERIFY & OPEN UI" kBtn.TextColor3=Color3.fromRGB(255,255,255)
-kBtn.Font=Enum.Font.GothamBold kBtn.TextSize=12 kBtn.BorderSizePixel=0 kBtn.Parent=keyFrame
-local kbc=Instance.new("UICorner") kbc.CornerRadius=UDim.new(0,6) kbc.Parent=kBtn
-
--- ============================================
--- メインUI (最初は非表示)
--- ============================================
 local main = Instance.new("Frame")
 main.Size=UDim2.new(0,520,0,340) main.Position=UDim2.new(0.5,-260,0.5,-170)
 main.BackgroundColor3=Color3.fromRGB(20,20,30) main.BackgroundTransparency=0.3
-main.BorderSizePixel=0 main.Visible=false main.Parent=gui
+main.BorderSizePixel=0 main.Parent=gui
 local mc=Instance.new("UICorner") mc.CornerRadius=UDim.new(0,12) mc.Parent=main
 local ms=Instance.new("UIStroke") ms.Color=accent ms.Thickness=2 ms.Transparency=0.3 ms.Parent=main
 
@@ -85,9 +45,15 @@ tb.BackgroundTransparency=0.5 tb.BorderSizePixel=0 tb.Parent=main
 local tbc=Instance.new("UICorner") tbc.CornerRadius=UDim.new(0,12) tbc.Parent=tb
 
 local title=Instance.new("TextLabel")
-title.Size=UDim2.new(1,-90,1,0) title.Position=UDim2.new(0,14,0,0)
+title.Size=UDim2.new(1,-120,1,0) title.Position=UDim2.new(0,14,0,0)
 title.BackgroundTransparency=1 title.Text="DELTA HUB" title.TextColor3=accent
 title.Font=Enum.Font.GothamBold title.TextSize=15 title.TextXAlignment=Enum.TextXAlignment.Left title.Parent=tb
+
+-- タイトルの横のアイコン
+local titleIcon=Instance.new("ImageLabel")
+titleIcon.Size=UDim2.new(0,28,0,28) titleIcon.Position=UDim2.new(0,115,0,5)
+titleIcon.BackgroundTransparency=1 titleIcon.Image="rbxassetid://13086285673" -- 適当なマスクアイコン
+titleIcon.Parent=tb
 
 local minBtn=Instance.new("TextButton")
 minBtn.Size=UDim2.new(0,26,0,26) minBtn.Position=UDim2.new(1,-64,0,6)
@@ -113,18 +79,6 @@ openBtn.MouseButton1Click:Connect(function() main.Visible=true openBtn.Visible=f
 minBtn.MouseButton1Click:Connect(function() main.Visible=false openBtn.Visible=true end)
 reg(openBtn, "BackgroundColor3")
 
--- Key認証成功時の処理
-kBtn.MouseButton1Click:Connect(function()
- if kInput.Text == correctKey then
-  keyFrame:Destroy()
-  main.Visible = true
- else
-  kInput.Text = ""
-  kInput.PlaceholderText = "WRONG KEY!"
- end
-end)
-
--- ドラッグ処理
 local dragging=false dragStart=nil startPos=nil tPos=main.Position cPos=main.Position
 tb.InputBegan:Connect(function(i)
  if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
@@ -144,7 +98,7 @@ end)
 
 local side=Instance.new("Frame")
 side.Size=UDim2.new(0,110,1,-38) side.Position=UDim2.new(0,0,0,38)
-side.BackgroundTransparency=0.8 side.BorderSizePixel=0 side.Parent=main
+side.BackgroundTransparency=0.5 side.BorderSizePixel=0 side.Parent=main
 local sc=Instance.new("UICorner") sc.CornerRadius=UDim.new(0,12) sc.Parent=side
 local content=Instance.new("Frame")
 content.Size=UDim2.new(1,-110,1,-38) content.Position=UDim2.new(0,110,0,38)
@@ -183,7 +137,7 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  reg(fill,"BackgroundColor3")
  local fc=Instance.new("UICorner") fc.CornerRadius=UDim.new(1,0) fc.Parent=fill
  local knob=Instance.new("Frame")
- knob.Size=UDim2.new(0,14,0,14) knob.Position=UDim2.new((dv-mn)/(mx-mn),-7,0.5,-7)
+ knob.Size=UDim2.new(0,16,0,16) knob.Position=UDim2.new((dv-mn)/(mx-mn),-8,0.5,-8)
  knob.BackgroundColor3=Color3.fromRGB(255,255,255) knob.BorderSizePixel=0 knob.Parent=bg
  local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(1,0) kc.Parent=knob
  local sd=false trx=(dv-mn)/(mx-mn) crx=trx
@@ -193,12 +147,13 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  RS.RenderStepped:Connect(function(dt)
   if not sd then return end
   crx=crx+(trx-crx)*math.clamp(dt*22,0,1)
-  fill.Size=UDim2.new(crx,0,1,0) knob.Position=UDim2.new(crx,-7,0.5,-7)
+  fill.Size=UDim2.new(crx,0,1,0) knob.Position=UDim2.new(crx,-8,0.5,-8)
   local v=mn+(mx-mn)*crx vl.Text=string.format("%.0f",v) cb(v)
  end)
  return cont
 end
 
+-- スイッチ（枠全体をタップできるように修正）
 local function createToggle(parent,nameKey,y,cb,autoOff)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,36) cont.Position=UDim2.new(0,12,0,y)
@@ -227,7 +182,9 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
   cb(st)
  end
  local btn=Instance.new("TextButton")
- btn.Size=UDim2.new(0,34,0,18) btn.Position=UDim2.new(1,-46,0.5,-9) btn.BackgroundTransparency=1 btn.Text="" btn.Parent=cont
+ btn.Size=UDim2.new(1,0,1,0) -- 全体をタップ可能に
+ btn.Position=UDim2.new(0,0,0,0)
+ btn.BackgroundTransparency=1 btn.Text="" btn.Parent=cont
  btn.MouseButton1Click:Connect(function()
   if autoOff then
    if busy then return end
@@ -264,7 +221,12 @@ createSlider(playerPage,"jump",82,1,500,50,function(v) D.jump=v local h=plr.Char
 
 local infJump=false
 createToggle(playerPage,"infjump",152,function(st) infJump=st end)
-UIS.JumpRequest:Connect(function() if infJump then local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end end end)
+UIS.JumpRequest:Connect(function() 
+ if infJump then 
+  local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") 
+  if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end 
+ end 
+end)
 
 createToggle(playerPage,"wallwalk",190,function(st)
  local ch=plr.Character if not ch then return end local h=ch:FindFirstChildOfClass("Humanoid") if not h then return end
@@ -345,7 +307,7 @@ local function toggleSpin(st)
  end
 end
 local spinBtn=Instance.new("TextButton")
-spinBtn.Size=UDim2.new(0,34,0,18) spinBtn.Position=UDim2.new(1,-46,0.5,-9) spinBtn.BackgroundTransparency=1 spinBtn.Text="" spinBtn.Parent=spinCont
+spinBtn.Size=UDim2.new(1,0,1,0) spinBtn.Position=UDim2.new(0,0,0,0) spinBtn.BackgroundTransparency=1 spinBtn.Text="" spinBtn.Parent=spinCont
 spinBtn.MouseButton1Click:Connect(function() toggleSpin(not spinActive) end)
 
 createToggle(itemPage,"transparent",60,function(st)
