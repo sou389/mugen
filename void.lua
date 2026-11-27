@@ -32,11 +32,50 @@ function _G.D.T(key) return _G.D.texts[_G.D.lang][key] or key end
 local gui = Instance.new("ScreenGui")
 gui.Name="DeltaUI" gui.ResetOnSpawn=false gui.Parent=pg
 
--- メインUI（サイズを 520x340 に戻す）
+-- ============================================
+-- Key認証システム (最初に出てくる)
+-- ============================================
+local correctKey = "DELTA-HUB-PREMIUM-KEY-2024-ENGLISH"
+local keyFrame = Instance.new("Frame")
+keyFrame.Size=UDim2.new(0,350,0,180) keyFrame.Position=UDim2.new(0.5,-175,0.5,-90)
+keyFrame.BackgroundColor3=Color3.fromRGB(20,20,30) keyFrame.BorderSizePixel=0 keyFrame.Parent=gui
+local kfc=Instance.new("UICorner") kfc.CornerRadius=UDim.new(0,12) kfc.Parent=keyFrame
+local kfs=Instance.new("UIStroke") kfs.Color=accent kfs.Thickness=2 kfs.Parent=keyFrame
+
+local kTitle=Instance.new("TextLabel")
+kTitle.Size=UDim2.new(1,0,0,40) kTitle.BackgroundTransparency=1 kTitle.Text="KEY AUTHENTICATION"
+kTitle.TextColor3=accent kTitle.Font=Enum.Font.GothamBold kTitle.TextSize=16 kTitle.Parent=keyFrame
+
+local kDesc=Instance.new("TextLabel")
+kDesc.Size=UDim2.new(1,-20,0,20) kDesc.Position=UDim2.new(0,10,0,45) kDesc.BackgroundTransparency=1
+kDesc.Text="Copy the Key below and paste it:" kDesc.TextColor3=Color3.fromRGB(200,200,200)
+kDesc.Font=Enum.Font.GothamMedium kDesc.TextSize=12 kDesc.Parent=keyFrame
+
+local kDisplay=Instance.new("TextLabel")
+kDisplay.Size=UDim2.new(1,-20,0,24) kDisplay.Position=UDim2.new(0,10,0,65) kDisplay.BackgroundColor3=Color3.fromRGB(30,30,45)
+kDisplay.Text=correctKey kDisplay.TextColor3=Color3.fromRGB(0,255,100) kDisplay.Font=Enum.Font.GothamBold
+kDisplay.TextSize=12 kDisplay.Parent=keyFrame
+local kdc=Instance.new("UICorner") kdc.CornerRadius=UDim.new(0,4) kdc.Parent=kDisplay
+
+local kInput=Instance.new("TextBox")
+kInput.Size=UDim2.new(1,-20,0,28) kInput.Position=UDim2.new(0,10,0,100) kInput.BackgroundColor3=Color3.fromRGB(40,40,60)
+kInput.PlaceholderText="Enter Key Here..." kInput.Text="" kInput.TextColor3=Color3.fromRGB(255,255,255)
+kInput.Font=Enum.Font.GothamMedium kInput.TextSize=12 kInput.BorderSizePixel=0 kInput.Parent=keyFrame
+local kic=Instance.new("UICorner") kic.CornerRadius=UDim.new(0,4) kic.Parent=kInput
+
+local kBtn=Instance.new("TextButton")
+kBtn.Size=UDim2.new(1,-20,0,32) kBtn.Position=UDim2.new(0,10,0,140) kBtn.BackgroundColor3=accent
+kBtn.Text="VERIFY & OPEN UI" kBtn.TextColor3=Color3.fromRGB(255,255,255)
+kBtn.Font=Enum.Font.GothamBold kBtn.TextSize=12 kBtn.BorderSizePixel=0 kBtn.Parent=keyFrame
+local kbc=Instance.new("UICorner") kbc.CornerRadius=UDim.new(0,6) kbc.Parent=kBtn
+
+-- ============================================
+-- メインUI (最初は非表示)
+-- ============================================
 local main = Instance.new("Frame")
 main.Size=UDim2.new(0,520,0,340) main.Position=UDim2.new(0.5,-260,0.5,-170)
 main.BackgroundColor3=Color3.fromRGB(20,20,30) main.BackgroundTransparency=0.3
-main.BorderSizePixel=0 main.Parent=gui
+main.BorderSizePixel=0 main.Visible=false main.Parent=gui
 local mc=Instance.new("UICorner") mc.CornerRadius=UDim.new(0,12) mc.Parent=main
 local ms=Instance.new("UIStroke") ms.Color=accent ms.Thickness=2 ms.Transparency=0.3 ms.Parent=main
 
@@ -74,6 +113,18 @@ openBtn.MouseButton1Click:Connect(function() main.Visible=true openBtn.Visible=f
 minBtn.MouseButton1Click:Connect(function() main.Visible=false openBtn.Visible=true end)
 reg(openBtn, "BackgroundColor3")
 
+-- Key認証成功時の処理
+kBtn.MouseButton1Click:Connect(function()
+ if kInput.Text == correctKey then
+  keyFrame:Destroy()
+  main.Visible = true
+ else
+  kInput.Text = ""
+  kInput.PlaceholderText = "WRONG KEY!"
+ end
+end)
+
+-- ドラッグ処理
 local dragging=false dragStart=nil startPos=nil tPos=main.Position cPos=main.Position
 tb.InputBegan:Connect(function(i)
  if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
