@@ -51,7 +51,6 @@ title.Size=UDim2.new(1,-100,1,0) title.Position=UDim2.new(0,14,0,0)
 title.BackgroundTransparency=1 title.Text="DELTA HUB" title.TextColor3=accent
 title.Font=Enum.Font.GothamBold title.TextSize=15 title.TextXAlignment=Enum.TextXAlignment.Left title.Parent=tb
 
--- 最小化ボタン(-)
 local minBtn=Instance.new("TextButton")
 minBtn.Size=UDim2.new(0,26,0,26) minBtn.Position=UDim2.new(1,-64,0,6)
 minBtn.BackgroundColor3=Color3.fromRGB(200,150,50) minBtn.Text="-"
@@ -59,7 +58,6 @@ minBtn.TextColor3=Color3.fromRGB(255,255,255) minBtn.Font=Enum.Font.GothamBold
 minBtn.TextSize=18 minBtn.BorderSizePixel=0 minBtn.Parent=tb
 local mbc=Instance.new("UICorner") mbc.CornerRadius=UDim.new(0,8) mbc.Parent=minBtn
 
--- 閉じるボタン(X)
 local close=Instance.new("TextButton")
 close.Size=UDim2.new(0,26,0,26) close.Position=UDim2.new(1,-34,0,6)
 close.BackgroundColor3=Color3.fromRGB(200,50,50) close.Text="X"
@@ -67,7 +65,6 @@ close.TextColor3=Color3.fromRGB(255,255,255) close.Font=Enum.Font.GothamBold
 close.TextSize=12 close.BorderSizePixel=0 close.Parent=tb
 local cc=Instance.new("UICorner") cc.CornerRadius=UDim.new(0,8) cc.Parent=close
 
--- 再表示用のボタン
 local openBtn=Instance.new("TextButton")
 openBtn.Size=UDim2.new(0,80,0,30) openBtn.Position=UDim2.new(0,10,0,10)
 openBtn.BackgroundColor3=accent openBtn.Text="OPEN UI" openBtn.TextColor3=Color3.fromRGB(255,255,255)
@@ -87,19 +84,16 @@ local cgs=Instance.new("UIStroke") cgs.Color=Color3.fromRGB(255,60,60) cgs.Thick
 local cLabel=Instance.new("TextLabel")
 cLabel.Size=UDim2.new(1,-20,0,30) cLabel.Position=UDim2.new(0,10,0,10) cLabel.BackgroundTransparency=1
 cLabel.Text=_G.D.T("confirm_close") cLabel.TextColor3=Color3.fromRGB(255,255,255) cLabel.Font=Enum.Font.GothamBold cLabel.TextSize=14 cLabel.Parent=confirmGui
-_G.D.cLabel = cLabel
 
 local yesBtn=Instance.new("TextButton")
 yesBtn.Size=UDim2.new(0,80,0,30) yesBtn.Position=UDim2.new(0,15,0,60) yesBtn.BackgroundColor3=Color3.fromRGB(200,50,50)
 yesBtn.Text=_G.D.T("yes") yesBtn.TextColor3=Color3.fromRGB(255,255,255) yesBtn.Font=Enum.Font.GothamBold yesBtn.TextSize=12 yesBtn.BorderSizePixel=0 yesBtn.Parent=confirmGui
 local ybc=Instance.new("UICorner") ybc.CornerRadius=UDim.new(0,6) ybc.Parent=yesBtn
-_G.D.yesBtn = yesBtn
 
 local noBtn=Instance.new("TextButton")
 noBtn.Size=UDim2.new(0,80,0,30) noBtn.Position=UDim2.new(1,-95,0,60) noBtn.BackgroundColor3=Color3.fromRGB(50,50,70)
 noBtn.Text=_G.D.T("no") noBtn.TextColor3=Color3.fromRGB(255,255,255) noBtn.Font=Enum.Font.GothamBold noBtn.TextSize=12 noBtn.BorderSizePixel=0 noBtn.Parent=confirmGui
 local nbc=Instance.new("UICorner") nbc.CornerRadius=UDim.new(0,6) nbc.Parent=noBtn
-_G.D.noBtn = noBtn
 
 close.MouseButton1Click:Connect(function() confirmGui.Visible = true end)
 yesBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
@@ -120,7 +114,7 @@ UIS.InputChanged:Connect(function(i)
  end
 end)
 
--- サイドバー＆コンテンツ
+-- サイドバー
 local side=Instance.new("Frame")
 side.Size=UDim2.new(0,110,1,-38) side.Position=UDim2.new(0,0,0,38)
 side.BackgroundTransparency=0.8 side.BorderSizePixel=0 side.Parent=main
@@ -163,7 +157,7 @@ local function createSlider(parent,nameKey,y,mn,mx,dv,cb)
  end)
 end
 
--- iOS風スイッチ（スイッチ部分のみタップ可能）
+-- iOS風スイッチ
 local function createToggle(parent,nameKey,y,cb,autoOff)
  local cont=Instance.new("Frame")
  cont.Size=UDim2.new(1,-24,0,36) cont.Position=UDim2.new(0,12,0,y) cont.BackgroundColor3=Color3.fromRGB(30,30,45) cont.BackgroundTransparency=0.5 cont.BorderSizePixel=0 cont.Parent=parent
@@ -175,12 +169,10 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
  lbl.Size=UDim2.new(1,-60,1,0) lbl.Position=UDim2.new(0,12,0,0) lbl.BackgroundTransparency=1 lbl.Text=_G.D.T(nameKey) lbl.TextColor3=Color3.fromRGB(220,220,220) lbl.Font=Enum.Font.GothamMedium lbl.TextSize=11 lbl.TextXAlignment=Enum.TextXAlignment.Left lbl.Parent=cont
  table.insert(uiRefs.labels, {obj=lbl, key=nameKey})
  
- -- スイッチ背景
  local sBg=Instance.new("Frame")
  sBg.Size=UDim2.new(0,36,0,20) sBg.Position=UDim2.new(1,-48,0.5,-10) sBg.BackgroundColor3=Color3.fromRGB(80,80,90) sBg.BorderSizePixel=0 sBg.Parent=cont
  local sbc=Instance.new("UICorner") sbc.CornerRadius=UDim.new(1,0) sbc.Parent=sBg
  
- -- スイッチノブ
  local kn=Instance.new("Frame")
  kn.Size=UDim2.new(0,16,0,16) kn.Position=UDim2.new(0,2,0.5,-8) kn.BackgroundColor3=Color3.fromRGB(255,255,255) kn.BorderSizePixel=0 kn.Parent=sBg
  local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(1,0) kc.Parent=kn
@@ -193,7 +185,6 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
   cb(st)
  end
 
- -- スイッチ部分だけをタップ可能にする透明ボタン
  local btn=Instance.new("TextButton")
  btn.Size=UDim2.new(1,0,1,0) btn.Position=UDim2.new(0,0,0,0) btn.BackgroundTransparency=1 btn.Text="" btn.Parent=sBg
  btn.MouseButton1Click:Connect(function()
@@ -205,7 +196,6 @@ local function createToggle(parent,nameKey,y,cb,autoOff)
  return cont
 end
 
--- タブボタン関数
 local tabBtns={}
 local function createTab(key,y,fn)
  local b=Instance.new("TextButton")
@@ -218,7 +208,6 @@ local function createTab(key,y,fn)
  return b
 end
 
--- アバター
 local av=Instance.new("Frame")
 av.Size=UDim2.new(0,46,0,46) av.Position=UDim2.new(0,12,1,-58) av.BackgroundTransparency=0.5 av.BorderSizePixel=0 av.Parent=side
 local avc=Instance.new("UICorner") avc.CornerRadius=UDim.new(1,0) avc.Parent=av
@@ -230,6 +219,7 @@ local avic=Instance.new("UICorner") avic.CornerRadius=UDim.new(1,0) avic.Parent=
 avi.Image=string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150",plr.UserId)
 
 _G.D.gui=gui _G.D.main=main _G.D.side=side _G.D.content=content _G.D.ms=ms _G.D.openBtn=openBtn
+_G.D.cLabel=cLabel _G.D.yesBtn=yesBtn _G.D.noBtn=noBtn
 _G.D.ui = { createSlider=createSlider, createToggle=createToggle, createTab=createTab, tabBtns=tabBtns, uiRefs=uiRefs }
 print("Part 1 OK")
 local D=_G.D
@@ -237,7 +227,6 @@ if not D then return end
 local plr=D.plr local UIS=game:GetService("UserInputService") local RS=game:GetService("RunService") local accent=D.accent local T=D.T
 local UI=D.ui local createSlider=UI.createSlider local createToggle=UI.createToggle
 
--- Playerタブ
 local playerPage=Instance.new("ScrollingFrame")
 playerPage.Size=UDim2.new(1,0,1,0) playerPage.BackgroundTransparency=1 playerPage.BorderSizePixel=0 playerPage.ScrollBarThickness=4 playerPage.CanvasSize=UDim2.new(0,0,0,0) playerPage.Parent=D.content
 local pl=Instance.new("UIListLayout") pl.Padding=UDim.new(0,4) pl.Parent=playerPage
@@ -262,7 +251,6 @@ createToggle(playerPage,"wallclip",228,function(st)
 end)
 RS.Stepped:Connect(function() if wallClipActive then local c=plr.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end end end)
 
--- Fly
 local flyActive=false local bv,bg
 createToggle(playerPage,"fly",266,function(st)
  flyActive=st local ch=plr.Character if not ch then return end local r=ch:FindFirstChild("HumanoidRootPart") if not r then return end
@@ -284,7 +272,6 @@ RS.RenderStepped:Connect(function()
  bv.Velocity=move*50 bg.CFrame=cam.CFrame
 end)
 
--- リスポーン（1秒で自動オフ）
 createToggle(playerPage,"respawn",304,function(st) 
  if st then 
   local h=plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") 
@@ -292,7 +279,6 @@ createToggle(playerPage,"respawn",304,function(st)
  end 
 end, 1)
 
--- 退出（トグル）
 createToggle(playerPage,"leave",342,function(st) if st then plr:Kick("Left via Delta Hub") end end)
 
 -- Itemタブ
@@ -505,7 +491,6 @@ end
 enBtn.MouseButton1Click:Connect(function() updateLang("EN") end)
 jaBtn.MouseButton1Click:Connect(function() updateLang("JA") end)
 
--- タブ切り替え処理
 local pages={D.playerPage,D.itemPage,otherPage,tpPage,setPage}
 local function showPage(page,btn)
  for _,p in ipairs(pages) do p.Visible=false end
@@ -524,7 +509,6 @@ local sTab=createTab("settings",165,function() showPage(setPage,sTab) end)
 showPage(D.playerPage,pTab)
 updateLang("EN")
 
--- キャラクター適用
 local function apply(ch)
  local h=ch:WaitForChild("Humanoid",5)
  if h then h.WalkSpeed=D.speed h.JumpPower=D.jump h.UseJumpPower=true end
